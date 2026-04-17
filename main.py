@@ -2,79 +2,76 @@
 AI Daily News Roundup — Main Orchestrator
 ==========================================
 Run manually:   python main.py
-Scheduled:      runs daily at 8 AM via Windows Task Scheduler / cron
+Scheduled:      runs daily at 8 AM via Windows Task Scheduler
 
 Pipeline
 --------
-  fetch_news  →  analyze_article  →  format_section  →  generate_subjects
-                                                       ↘
-                                                  combine_sections  →  send_email
+  fetch_news (10 feeds, 15 articles)
+      → generate_brief (single Claude call → 9-section brief)
+      → generate_subject
+      → send_newsletter (dark professional HTML email)
 """
 
 import sys
 from datetime import datetime
 from dotenv import load_dotenv
 
-load_dotenv()  # loads ANTHROPIC_API_KEY, SMTP_USER, SMTP_PASSWORD from .env
+load_dotenv()
 
 from fetch_news import fetch_articles
-from analyze_news import analyze_article, format_section, generate_subjects, combine_sections
+from analyze_news import generate_brief, generate_subject
 from send_email import send_newsletter
 
 
 def run() -> None:
+    now = datetime.now()
+    display_date = now.strftime("%A, %B %-d, %Y")
+
     print(f"\n{'='*60}")
-    print(f"  AI Daily News Roundup  —  {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    print(f"  AI Daily News Roundup  —  {now.strftime('%Y-%m-%d %H:%M')}")
     print(f"{'='*60}\n")
 
     # ── STEP 1: Fetch ──────────────────────────────────────────
-    print("📡 Fetching news...")
+    print("📡 Fetching news from 10 sources...")
     articles = fetch_articles()
 
     if not articles:
         print("✓ No new articles today — skipping email.\n")
         return
 
-    print(f"✓ Found {len(articles)} new article(s)\n")
+    print(f"✓ Found {len(articles)} article(s)\n")
+    for i, a in enumerate(articles, 1):
+        print(f"  [{i:2}] [{a['source']}] {a['title'][:65]}")
 
-    # ── STEPS 2 + 3: Analyze + Format each article ─────────────
-    sections: list[str] = []
-    all_subjects: list[str] = []
+    # ── STEP 2: Generate 9-section brief ───────────────────────
+    print(f"\n🤖 Generating brief with AI ({len(articles)} articles)...")
+    brief_text = generate_brief(articles, display_date)
 
-    for i, article in enumerate(articles, 1):
-        print(f"🤖 Processing article {i}/{len(articles)}: {article['title'][:60]}...")
+    # ── STEP 3: Subject line ───────────────────────────────────
+    subject = generate_subject(brief_text, display_date)
+    print(f"✉️  Subject: {subject}")
 
-        # STEP 2 — Claude analysis
-        analysis = analyze_article(article)
-
-        # STEP 3 — Newsletter section
-        section = format_section(analysis)
-        sections.append(section)
-
-        # STEP 4 — Subject lines (use first article for the primary subject)
-        if i == 1:
-            all_subjects = generate_subjects(section)
-
-    # ── STEP 5: Combine into one email body ────────────────────
-    print("\n📝 Combining sections...")
-    newsletter_body = combine_sections(sections)
-
-    # ── Pick best subject line ──────────────────────────────────
-    subject = all_subjects[0] if all_subjects else "Your AI update for today"
-    print(f"\n✉️  Subject: {subject}")
-    print(f"\nSubject line candidates:")
-    for j, s in enumerate(all_subjects, 1):
-        marker = "→" if j == 1 else " "
-        print(f"  {marker} {j}. {s}")
-
-    # ── STEP 6: Send ───────────────────────────────────────────
+    # ── STEP 4: Send ───────────────────────────────────────────
     print("\n📬 Sending email...")
-    send_newsletter(subject, newsletter_body)
+    send_newsletter(subject, brief_text, articles, display_date)
 
     print(f"\n✅ Done!\n")
 
 
 if __name__ == "__main__":
+    # Windows strftime doesn't support %-d — patch it
+    import platform
+    if platform.system() == "Windows":
+        _orig_run = run
+        def run():
+            import datetime as _dt
+            _orig_strftime = _dt.datetime.strftime
+            def _patched(self, fmt):
+                fmt = fmt.replace("%-d", str(self.day))
+                return _orig_strftime(self, fmt)
+            _dt.datetime.strftime = _patched
+            _orig_run()
+            _dt.datetime.strftime = _orig_strftime
     try:
         run()
     except KeyboardInterrupt:
