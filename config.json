@@ -1,0 +1,32 @@
+{
+  "rss_feeds": [
+    {
+      "name": "TechCrunch AI",
+      "url": "https://techcrunch.com/category/artificial-intelligence/feed/"
+    },
+    {
+      "name": "The Verge AI",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/rss/index.xml"
+    },
+    {
+      "name": "OpenAI Blog",
+      "url": "https://openai.com/blog/rss.xml"
+    }
+  ],
+  "max_articles": 3,
+  "send_hour_utc": 13,
+  "email": {
+    "from_name": "Sean",
+    "from_address": "sean@boulderseomarketing.com",
+    "reply_to": "sean@boulderseomarketing.com",
+    "recipients": [
+      {
+        "first_name": "Sean",
+        "email": "sean@boulderseomarketing.com"
+      }
+    ],
+    "smtp_host": "smtp.gmail.com",
+    "smtp_port": 587
+  },
+  "seen_articles_file": "seen_articles.json"
+}
