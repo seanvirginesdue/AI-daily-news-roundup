@@ -1,44 +1,44 @@
 {
   "rss_feeds": [
     {
-      "name": "Google AI / Gemini",
-      "url": "https://news.google.com/rss/search?q=Google+Gemini+AI+update+OR+%22Google+AI+Studio%22&hl=en-US&gl=US&ceid=US:en"
+      "name": "TechCrunch AI",
+      "url": "https://techcrunch.com/category/artificial-intelligence/feed/"
     },
     {
-      "name": "OpenAI / ChatGPT",
-      "url": "https://news.google.com/rss/search?q=OpenAI+ChatGPT+update+OR+%22GPT+model%22+release&hl=en-US&gl=US&ceid=US:en"
+      "name": "The Verge AI",
+      "url": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml"
+    },
+    {
+      "name": "VentureBeat AI",
+      "url": "https://venturebeat.com/category/ai/feed/"
+    },
+    {
+      "name": "Wired AI",
+      "url": "https://www.wired.com/feed/tag/artificial-intelligence/rss"
+    },
+    {
+      "name": "Ars Technica",
+      "url": "https://feeds.arstechnica.com/arstechnica/index"
+    },
+    {
+      "name": "MIT Tech Review AI",
+      "url": "https://www.technologyreview.com/feed/"
+    },
+    {
+      "name": "AI News",
+      "url": "https://artificialintelligence-news.com/feed/"
     },
     {
       "name": "Anthropic / Claude",
       "url": "https://news.google.com/rss/search?q=Anthropic+Claude+update+OR+%22Claude+AI%22+model&hl=en-US&gl=US&ceid=US:en"
     },
     {
-      "name": "Claude Products",
-      "url": "https://news.google.com/rss/search?q=%22Claude+Code%22+OR+%22claude.ai%22+feature+OR+%22Anthropic+MCP%22&hl=en-US&gl=US&ceid=US:en"
-    },
-    {
-      "name": "Perplexity AI",
-      "url": "https://news.google.com/rss/search?q=Perplexity+AI+update&hl=en-US&gl=US&ceid=US:en"
-    },
-    {
-      "name": "AI Tools",
-      "url": "https://news.google.com/rss/search?q=%22AI+tool%22+launch+OR+%22AI+app%22+review+OR+%22AI+benchmark%22+2026&hl=en-US&gl=US&ceid=US:en"
-    },
-    {
-      "name": "AI Creative",
-      "url": "https://news.google.com/rss/search?q=%22AI+image+generator%22+OR+%22AI+video%22+tool+OR+%22AI+music%22+OR+Midjourney+OR+Runway+OR+Suno&hl=en-US&gl=US&ceid=US:en"
-    },
-    {
-      "name": "AI SEO Tools",
-      "url": "https://news.google.com/rss/search?q=%22AI+SEO+tool%22+OR+%22SEO+automation%22+OR+Surfer+OR+Clearscope+OR+MarketMuse&hl=en-US&gl=US&ceid=US:en"
+      "name": "OpenAI / ChatGPT",
+      "url": "https://news.google.com/rss/search?q=OpenAI+ChatGPT+update+OR+%22GPT-5%22+OR+%22GPT+model%22&hl=en-US&gl=US&ceid=US:en"
     },
     {
       "name": "SE Ranking Blog",
       "url": "https://seranking.com/blog/feed/"
-    },
-    {
-      "name": "Dev Tools / MCP",
-      "url": "https://news.google.com/rss/search?q=%22MCP+server%22+OR+%22AI+SaaS%22+builder+OR+%22n8n%22+automation+OR+%22AI+developer+tool%22&hl=en-US&gl=US&ceid=US:en"
     }
   ],
   "max_articles": 15,
