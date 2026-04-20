@@ -58,79 +58,56 @@ def _btn(label: str, url: str = "#", sm: bool = False) -> str:
             f'font-weight:700;padding:{p};border-radius:6px;text-decoration:none;'
             f'letter-spacing:0.3px;">{_esc(label)}</a>')
 
-# ── SVG icon library (Feather Icons style) ────────────────
-_ICONS = {
-    # service section — stroke on rose bg
-    "zap":        '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
-    "trending":   '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>'
-                  '<polyline points="17 6 23 6 23 12"/>',
-    "arrow-circ": '<circle cx="12" cy="12" r="10"/>'
-                  '<polyline points="12 8 16 12 12 16"/>'
-                  '<line x1="8" y1="12" x2="16" y2="12"/>',
-    # position section — white stroke on red bg
-    "bulb":       '<line x1="9" y1="18" x2="15" y2="18"/>'
-                  '<line x1="10" y1="22" x2="14" y2="22"/>'
-                  '<path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14z"/>',
-    "briefcase":  '<rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>'
-                  '<path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
-    "target":     '<circle cx="12" cy="12" r="10"/>'
-                  '<circle cx="12" cy="12" r="6"/>'
-                  '<circle cx="12" cy="12" r="2"/>',
-    # stats bar
-    "layers":     '<polygon points="12 2 2 7 12 12 22 7 12 2"/>'
-                  '<polyline points="2 17 12 22 22 17"/>'
-                  '<polyline points="2 12 12 17 22 12"/>',
-    "grid":       '<rect x="3" y="3" width="7" height="7"/>'
-                  '<rect x="14" y="3" width="7" height="7"/>'
-                  '<rect x="14" y="14" width="7" height="7"/>'
-                  '<rect x="3" y="14" width="7" height="7"/>',
-    "cpu":        '<rect x="4" y="4" width="16" height="16" rx="2"/>'
-                  '<rect x="9" y="9" width="6" height="6"/>'
-                  '<line x1="9" y1="1" x2="9" y2="4"/>'
-                  '<line x1="15" y1="1" x2="15" y2="4"/>'
-                  '<line x1="9" y1="20" x2="9" y2="23"/>'
-                  '<line x1="15" y1="20" x2="15" y2="23"/>'
-                  '<line x1="20" y1="9" x2="23" y2="9"/>'
-                  '<line x1="20" y1="14" x2="23" y2="14"/>'
-                  '<line x1="1" y1="9" x2="4" y2="9"/>'
-                  '<line x1="1" y1="14" x2="4" y2="14"/>',
-    "award":      '<circle cx="12" cy="8" r="6"/>'
-                  '<path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>',
+# ── Unicode icon characters (Gmail-safe, no SVG) ──────────
+_ICON_CHARS = {
+    "zap":        "&#9650;",   # ▲ triangle up
+    "trending":   "&#8599;",   # ↗ northeast arrow
+    "arrow-circ": "&#8594;",   # → right arrow
+    "bulb":       "&#9733;",   # ★ star
+    "briefcase":  "&#8801;",   # ≡ triple bar
+    "target":     "&#9678;",   # ◎ bullseye
+    "layers":     "&#8801;",   # ≡ triple bar
+    "grid":       "&#9632;",   # ■ black square
+    "cpu":        "&#9670;",   # ◆ diamond
+    "award":      "&#9733;",   # ★ star
 }
 
 def _circle_icon(name: str) -> str:
-    """Feather SVG icon in a 58px rose circle — services."""
+    """Unicode char in a 58px rose circle — services."""
+    char = _ICON_CHARS.get(name, "&#9650;")
     return (
         f'<table align="center" cellpadding="0" cellspacing="0" style="margin:0 auto 12px;">'
         f'<tr><td align="center" valign="middle" width="58" height="58" '
-        f'style="border-radius:50%;background:{_IC_BG};width:58px;height:58px;">'
-        f'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" '
-        f'stroke="{_RED}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
-        f'{_ICONS.get(name, _ICONS["zap"])}</svg>'
+        f'style="border-radius:50%;background:{_IC_BG};width:58px;height:58px;'
+        f'font-size:22px;color:{_RED};text-align:center;line-height:58px;'
+        f'font-family:Arial,Helvetica,sans-serif;">'
+        f'{char}'
         f'</td></tr></table>'
     )
 
 def _square_icon(name: str) -> str:
-    """Feather SVG icon in a 38px red rounded square — positions."""
+    """Unicode char in a 38px red rounded square — positions."""
+    char = _ICON_CHARS.get(name, "&#9733;")
     return (
         f'<table cellpadding="0" cellspacing="0">'
         f'<tr><td align="center" valign="middle" width="38" height="38" '
-        f'style="border-radius:9px;background:{_RED};width:38px;height:38px;">'
-        f'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" '
-        f'stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">'
-        f'{_ICONS.get(name, _ICONS["bulb"])}</svg>'
+        f'style="border-radius:9px;background:{_RED};width:38px;height:38px;'
+        f'font-size:17px;color:#ffffff;text-align:center;line-height:38px;'
+        f'font-family:Arial,Helvetica,sans-serif;">'
+        f'{char}'
         f'</td></tr></table>'
     )
 
 def _stat_icon(name: str, color: str, bg: str) -> str:
-    """Feather SVG icon in a 32px rounded square — stats bar."""
+    """Unicode char in a 32px rounded square — stats bar."""
+    char = _ICON_CHARS.get(name, "&#9632;")
     return (
         f'<table align="center" cellpadding="0" cellspacing="0" style="margin:0 auto 6px;">'
         f'<tr><td align="center" valign="middle" width="32" height="32" '
-        f'style="border-radius:8px;background:{bg};width:32px;height:32px;">'
-        f'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" '
-        f'stroke="{color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
-        f'{_ICONS.get(name, _ICONS["grid"])}</svg>'
+        f'style="border-radius:8px;background:{bg};width:32px;height:32px;'
+        f'font-size:14px;color:{color};text-align:center;line-height:32px;'
+        f'font-family:Arial,Helvetica,sans-serif;">'
+        f'{char}'
         f'</td></tr></table>'
     )
 
