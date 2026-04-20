@@ -58,58 +58,45 @@ def _btn(label: str, url: str = "#", sm: bool = False) -> str:
             f'font-weight:700;padding:{p};border-radius:6px;text-decoration:none;'
             f'letter-spacing:0.3px;">{_esc(label)}</a>')
 
-# ── Unicode icon characters (Gmail-safe, no SVG) ──────────
-_ICON_CHARS = {
-    "zap":        "&#9650;",   # ▲ triangle up
-    "trending":   "&#8599;",   # ↗ northeast arrow
-    "arrow-circ": "&#8594;",   # → right arrow
-    "bulb":       "&#9733;",   # ★ star
-    "briefcase":  "&#8801;",   # ≡ triple bar
-    "target":     "&#9678;",   # ◎ bullseye
-    "layers":     "&#8801;",   # ≡ triple bar
-    "grid":       "&#9632;",   # ■ black square
-    "cpu":        "&#9670;",   # ◆ diamond
-    "award":      "&#9733;",   # ★ star
+# ── Emoji icons for circles; numbers for red squares ──────
+_ICON_EMOJI = {
+    "zap":        "&#x26A1;",   # ⚡
+    "trending":   "&#x1F4C8;",  # 📈
+    "arrow-circ": "&#x1F3AF;",  # 🎯
+    "bulb":       "&#x1F4A1;",  # 💡
+    "briefcase":  "&#x1F4BC;",  # 💼
+    "target":     "&#x1F3AF;",  # 🎯
 }
+_ICON_NUMS = {"bulb": "01", "briefcase": "02", "target": "03"}
 
 def _circle_icon(name: str) -> str:
-    """Unicode char in a 58px rose circle — services."""
-    char = _ICON_CHARS.get(name, "&#9650;")
+    """Emoji in a 58px rose circle — services."""
+    emoji = _ICON_EMOJI.get(name, "&#x26A1;")
     return (
         f'<table align="center" cellpadding="0" cellspacing="0" style="margin:0 auto 12px;">'
         f'<tr><td align="center" valign="middle" width="58" height="58" '
         f'style="border-radius:50%;background:{_IC_BG};width:58px;height:58px;'
-        f'font-size:22px;color:{_RED};text-align:center;line-height:58px;'
-        f'font-family:Arial,Helvetica,sans-serif;">'
-        f'{char}'
+        f'font-size:26px;text-align:center;line-height:58px;">'
+        f'{emoji}'
         f'</td></tr></table>'
     )
 
 def _square_icon(name: str) -> str:
-    """Unicode char in a 38px red rounded square — positions."""
-    char = _ICON_CHARS.get(name, "&#9733;")
+    """Bold number in a 38px red rounded square — positions."""
+    num = _ICON_NUMS.get(name, "01")
     return (
         f'<table cellpadding="0" cellspacing="0">'
         f'<tr><td align="center" valign="middle" width="38" height="38" '
         f'style="border-radius:9px;background:{_RED};width:38px;height:38px;'
-        f'font-size:17px;color:#ffffff;text-align:center;line-height:38px;'
-        f'font-family:Arial,Helvetica,sans-serif;">'
-        f'{char}'
+        f'font-size:13px;font-weight:900;color:#ffffff;text-align:center;line-height:38px;'
+        f'font-family:Arial,Helvetica,sans-serif;letter-spacing:-0.5px;">'
+        f'{num}'
         f'</td></tr></table>'
     )
 
 def _stat_icon(name: str, color: str, bg: str) -> str:
-    """Unicode char in a 32px rounded square — stats bar."""
-    char = _ICON_CHARS.get(name, "&#9632;")
-    return (
-        f'<table align="center" cellpadding="0" cellspacing="0" style="margin:0 auto 6px;">'
-        f'<tr><td align="center" valign="middle" width="32" height="32" '
-        f'style="border-radius:8px;background:{bg};width:32px;height:32px;'
-        f'font-size:14px;color:{color};text-align:center;line-height:32px;'
-        f'font-family:Arial,Helvetica,sans-serif;">'
-        f'{char}'
-        f'</td></tr></table>'
-    )
+    """No icon — stat cards use the value as the focal point."""
+    return ""
 
 # ── Section parser ─────────────────────────────────────────
 _SKEYS = [
