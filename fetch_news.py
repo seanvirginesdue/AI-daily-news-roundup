@@ -91,25 +91,30 @@ def _parse_og(html: str) -> str:
 
 
 def _fetch_og_image(url: str) -> str:
-    """Fetch og:image — tries direct page fetch, then Microlink API."""
+    """Resolve Google News redirect → fetch og:image from actual article page."""
     if not url:
         return ""
 
-    # 1. Direct fetch (works for open-access sites like TechCrunch, The Verge)
+    import requests as _req
+
+    # Step 1: follow redirects to get the real article URL
+    article_url = url
     try:
-        import requests as _req
         r = _req.get(url, headers=_BROWSER_HEADERS, timeout=7, allow_redirects=True)
-        if r.status_code == 200:
+        # If we're no longer on google.com we have the real article URL
+        if "google.com" not in r.url and r.status_code == 200:
+            article_url = r.url
             img = _parse_og(r.content[:131072].decode("utf-8", errors="ignore"))
             if img:
                 return img
     except Exception:
         pass
 
-    # 2. Microlink API (handles paywalls, GDPR walls, JS redirects — free tier)
+    # Step 2: Microlink with the resolved (non-Google) URL
+    if "google.com" in article_url:
+        return ""   # couldn't resolve past Google — skip rather than return Google logo
     try:
-        import requests as _req
-        api = "https://api.microlink.io/?url=" + urllib.parse.quote(url, safe="")
+        api = "https://api.microlink.io/?url=" + urllib.parse.quote(article_url, safe="")
         r = _req.get(api, timeout=10)
         if r.status_code == 200:
             img_obj = r.json().get("data", {}).get("image") or {}
@@ -173,10 +178,10 @@ def fetch_articles() -> list[dict]:
     if collected:
         _save_seen(seen_path, seen_urls)
 
-    # Enrich missing images by fetching og:image from article pages in parallel
+    # Enrich missing images by resolving redirects + fetching og:image in parallel
     missing = [a for a in collected if not a["image"]]
     if missing:
-        print(f"  [IMG] Fetching og:image for {len(missing)} article(s)...")
+        print(f"  [IMG] Resolving images for {len(missing)} article(s)...")
         with ThreadPoolExecutor(max_workers=8) as pool:
             futures = {pool.submit(_fetch_og_image, a["url"]): a for a in missing}
             for fut in as_completed(futures):
