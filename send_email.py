@@ -58,6 +58,82 @@ def _btn(label: str, url: str = "#", sm: bool = False) -> str:
             f'font-weight:700;padding:{p};border-radius:6px;text-decoration:none;'
             f'letter-spacing:0.3px;">{_esc(label)}</a>')
 
+# ── SVG icon library (Feather Icons style) ────────────────
+_ICONS = {
+    # service section — stroke on rose bg
+    "zap":        '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+    "trending":   '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>'
+                  '<polyline points="17 6 23 6 23 12"/>',
+    "arrow-circ": '<circle cx="12" cy="12" r="10"/>'
+                  '<polyline points="12 8 16 12 12 16"/>'
+                  '<line x1="8" y1="12" x2="16" y2="12"/>',
+    # position section — white stroke on red bg
+    "bulb":       '<line x1="9" y1="18" x2="15" y2="18"/>'
+                  '<line x1="10" y1="22" x2="14" y2="22"/>'
+                  '<path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14z"/>',
+    "briefcase":  '<rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>'
+                  '<path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+    "target":     '<circle cx="12" cy="12" r="10"/>'
+                  '<circle cx="12" cy="12" r="6"/>'
+                  '<circle cx="12" cy="12" r="2"/>',
+    # stats bar
+    "layers":     '<polygon points="12 2 2 7 12 12 22 7 12 2"/>'
+                  '<polyline points="2 17 12 22 22 17"/>'
+                  '<polyline points="2 12 12 17 22 12"/>',
+    "grid":       '<rect x="3" y="3" width="7" height="7"/>'
+                  '<rect x="14" y="3" width="7" height="7"/>'
+                  '<rect x="14" y="14" width="7" height="7"/>'
+                  '<rect x="3" y="14" width="7" height="7"/>',
+    "cpu":        '<rect x="4" y="4" width="16" height="16" rx="2"/>'
+                  '<rect x="9" y="9" width="6" height="6"/>'
+                  '<line x1="9" y1="1" x2="9" y2="4"/>'
+                  '<line x1="15" y1="1" x2="15" y2="4"/>'
+                  '<line x1="9" y1="20" x2="9" y2="23"/>'
+                  '<line x1="15" y1="20" x2="15" y2="23"/>'
+                  '<line x1="20" y1="9" x2="23" y2="9"/>'
+                  '<line x1="20" y1="14" x2="23" y2="14"/>'
+                  '<line x1="1" y1="9" x2="4" y2="9"/>'
+                  '<line x1="1" y1="14" x2="4" y2="14"/>',
+    "award":      '<circle cx="12" cy="8" r="6"/>'
+                  '<path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>',
+}
+
+def _circle_icon(name: str) -> str:
+    """Feather SVG icon in a 58px rose circle — services."""
+    return (
+        f'<table align="center" cellpadding="0" cellspacing="0" style="margin:0 auto 12px;">'
+        f'<tr><td align="center" valign="middle" width="58" height="58" '
+        f'style="border-radius:50%;background:{_IC_BG};width:58px;height:58px;">'
+        f'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" '
+        f'stroke="{_RED}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+        f'{_ICONS.get(name, _ICONS["zap"])}</svg>'
+        f'</td></tr></table>'
+    )
+
+def _square_icon(name: str) -> str:
+    """Feather SVG icon in a 38px red rounded square — positions."""
+    return (
+        f'<table cellpadding="0" cellspacing="0">'
+        f'<tr><td align="center" valign="middle" width="38" height="38" '
+        f'style="border-radius:9px;background:{_RED};width:38px;height:38px;">'
+        f'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" '
+        f'stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">'
+        f'{_ICONS.get(name, _ICONS["bulb"])}</svg>'
+        f'</td></tr></table>'
+    )
+
+def _stat_icon(name: str, color: str, bg: str) -> str:
+    """Feather SVG icon in a 32px rounded square — stats bar."""
+    return (
+        f'<table align="center" cellpadding="0" cellspacing="0" style="margin:0 auto 6px;">'
+        f'<tr><td align="center" valign="middle" width="32" height="32" '
+        f'style="border-radius:8px;background:{bg};width:32px;height:32px;">'
+        f'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" '
+        f'stroke="{color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+        f'{_ICONS.get(name, _ICONS["grid"])}</svg>'
+        f'</td></tr></table>'
+    )
+
 # ── Section parser ─────────────────────────────────────────
 _SKEYS = [
     "what's hot today", "claude insider", "ai tool landscape",
@@ -172,10 +248,10 @@ def _build_html(brief_text: str, articles: list, display_date: str,
 
     # ── 3. STATS (warm beige bg) ───────────────────────────
     stats = [
-        (str(cnt),  "Sources Today",  "Articles collected across the AI landscape today."),
-        ("9",       "Brief Sections", "Structured categories covering all major AI topics."),
-        ("Claude",  "AI Powered",     "Anthropic's Sonnet model generates every insight.", True),
-        ("BSM",     "Intelligence",   "Boulder SEO Marketing daily AI briefing."),
+        ("layers",    str(cnt),  "Sources Today",  "Articles collected across the AI landscape."),
+        ("grid",      "9",       "Brief Sections", "Structured categories covering all AI topics."),
+        ("cpu",       "Claude",  "AI Powered",     "Anthropic Sonnet generates every insight.", True),
+        ("award",     "BSM",     "Intelligence",   "Boulder SEO Marketing daily AI briefing."),
     ]
     H += f"""
   <table width="100%" cellpadding="0" cellspacing="0" style="background:{_ST_BG};">
@@ -184,17 +260,19 @@ def _build_html(brief_text: str, articles: list, display_date: str,
     <p style="margin:0 0 24px;font-size:12px;color:{_T_MET};text-align:center;">{_esc(display_date)}</p>
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
 """
-    for val, lbl, desc, *hi in stats:
-        red = bool(hi)
-        bg  = _RED  if red else _WHITE
-        tc  = _WHITE if red else _T_HED
-        sc  = "rgba(255,255,255,0.8)" if red else _T_MET
-        brd = "" if red else f"border:1.5px solid {_BDR};"
+    for icon_name, val, lbl, desc, *hi in stats:
+        red  = bool(hi)
+        bg   = _RED   if red else _WHITE
+        tc   = _WHITE if red else _T_HED
+        sc   = "rgba(255,255,255,0.75)" if red else _T_MET
+        brd  = "" if red else f"border:1.5px solid {_BDR};"
+        ic   = _stat_icon(icon_name, "#fff" if red else _RED, "rgba(255,255,255,0.15)" if red else _IC_BG)
         H += f"""      <td style="width:25%;padding:0 5px;vertical-align:top;">
-        <div style="background:{bg};{brd}border-radius:12px;padding:18px 10px;text-align:center;">
-          <p style="margin:0 0 4px;font-size:22px;font-weight:900;color:{tc};">{_esc(val)}</p>
-          <p style="margin:0 0 8px;font-size:11px;font-weight:700;color:{tc};text-transform:uppercase;letter-spacing:0.5px;">{_esc(lbl)}</p>
-          <p style="margin:0;font-size:11px;color:{sc};line-height:1.5;">{_esc(desc)}</p>
+        <div style="background:{bg};{brd}border-radius:12px;padding:16px 10px;text-align:center;">
+          {ic}
+          <p style="margin:0 0 3px;font-size:20px;font-weight:900;color:{tc};">{_esc(val)}</p>
+          <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:{tc};text-transform:uppercase;letter-spacing:0.5px;">{_esc(lbl)}</p>
+          <p style="margin:0;font-size:10px;color:{sc};line-height:1.5;">{_esc(desc)}</p>
         </div>
       </td>
 """
@@ -202,9 +280,9 @@ def _build_html(brief_text: str, articles: list, display_date: str,
 
     # ── 4. SERVICES / AI INSIGHTS ─────────────────────────
     svcs = [
-        ("🤖", "BSM Must Try",   must[0]  if must            else "Explore today's top AI tool recommendation."),
-        ("📊", "SEO / AI Impact", must[1]  if len(must) > 1  else "Understand how AI is reshaping organic search."),
-        ("🚀", "Action Step",    must[2]  if len(must) > 2  else "Apply these insights to your client workflow today."),
+        ("zap",       "BSM Must Try",    must[0]  if must           else "Explore today's top AI tool recommendation."),
+        ("trending",  "SEO / AI Impact", must[1]  if len(must) > 1 else "Understand how AI is reshaping organic search."),
+        ("arrow-circ","Action Step",     must[2]  if len(must) > 2 else "Apply these insights to your client workflow today."),
     ]
     H += f"""
   <table width="100%" cellpadding="0" cellspacing="0" style="background:{_WHITE};">
@@ -215,10 +293,9 @@ def _build_html(brief_text: str, articles: list, display_date: str,
     </p>
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
 """
-    for icon, title, body in svcs:
+    for icon_key, title, body in svcs:
         H += f"""      <td style="width:33%;padding:0 10px;vertical-align:top;text-align:center;">
-        <div style="width:58px;height:58px;border-radius:50%;background:{_IC_BG};
-          margin:0 auto 12px;text-align:center;line-height:58px;font-size:26px;">{icon}</div>
+        {_circle_icon(icon_key)}
         <p style="margin:0 0 8px;font-size:11px;font-weight:700;color:{_T_HED};
           text-transform:uppercase;letter-spacing:0.5px;">{_esc(title)}</p>
         <p style="margin:0;font-size:12px;color:{_T_BOD};line-height:1.55;">{L(body)}</p>
@@ -253,7 +330,7 @@ def _build_html(brief_text: str, articles: list, display_date: str,
 """
 
     # ── 6. OPEN POSITIONS (BSM Sales Angle) ───────────────
-    icons3 = ["💡", "📈", "🎯"]
+    icons3  = ["bulb", "briefcase", "target"]
     titles3 = ["Client Opportunity", "BSM Sales Angle", "Action Talking Point"]
     H += f"""
   <table width="100%" cellpadding="0" cellspacing="0" style="background:{_WHITE};">
@@ -267,8 +344,7 @@ def _build_html(brief_text: str, articles: list, display_date: str,
         <td style="padding:16px 0;">
           <table width="100%" cellpadding="0" cellspacing="0"><tr>
             <td style="width:44px;vertical-align:top;padding-right:14px;">
-              <div style="width:38px;height:38px;background:{_RED};border-radius:9px;
-                text-align:center;line-height:38px;font-size:20px;">{icons3[i]}</div>
+              {_square_icon(icons3[i])}
             </td>
             <td style="vertical-align:top;">
               <p style="margin:0 0 3px;font-size:14px;font-weight:700;color:{_T_HED};">{titles3[i]}</p>
@@ -323,7 +399,7 @@ def _build_html(brief_text: str, articles: list, display_date: str,
         rows = "".join(
             f'<p style="margin:0 0 10px;font-size:13px;color:{_T_BOD};line-height:1.6;'
             f'padding:12px 14px;background:{_WHITE};border-radius:8px;border:1px solid {_BDR};">'
-            f'<span style="color:{_RED};font-weight:700;margin-right:6px;">📚</span>{L(p)}</p>'
+            f'<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:{_RED};margin-right:10px;vertical-align:middle;"></span>{L(p)}</p>'
             for p in prior
         )
         H += f"""
@@ -341,7 +417,7 @@ def _build_html(brief_text: str, articles: list, display_date: str,
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#1a1a3e;">
   <tr><td style="padding:26px 28px;">
     <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:{_RED};
-      text-transform:uppercase;letter-spacing:2px;">⚡ 2-Minute Read</p>
+      text-transform:uppercase;letter-spacing:2px;">2-MINUTE READ</p>
     <p style="margin:0;font-size:15px;color:#e8eaf0;line-height:1.7;font-style:italic;">{L(close[0])}</p>
   </td></tr>
   </table>
