@@ -3,6 +3,7 @@ Email sender — clean BSM-branded professional HTML template.
 Light theme matching Boulder SEO Marketing brand style.
 """
 
+import base64
 import os
 import re
 import smtplib
@@ -11,7 +12,16 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pathlib import Path
 
-CONFIG_FILE = Path(__file__).parent / "config.json"
+CONFIG_FILE  = Path(__file__).parent / "config.json"
+_LOGO_FILE   = Path(__file__).parent / "bsm_logo.png"
+
+
+def _logo_img_tag(height: int = 48) -> str:
+    if _LOGO_FILE.exists():
+        b64 = base64.b64encode(_LOGO_FILE.read_bytes()).decode()
+        return f'<img src="data:image/png;base64,{b64}" height="{height}" alt="BSM" style="display:block;">'
+    # Fallback to CSS logo if file missing
+    return f'<span style="color:{_BSM_RED};font-size:28px;font-weight:900;letter-spacing:1.5px;font-family:Arial,sans-serif;">BSM</span>'
 
 # ── BSM exact colour palette (extracted from brand screenshot) ──
 _BSM_RED       = "#d63c2f"   # BSM logo red
@@ -70,21 +80,9 @@ def _get_section_color(line: str) -> str | None:
     return None
 
 
-# BSM logo built entirely in HTML/CSS — matches brand screenshot exactly
-_BSM_LOGO = f"""
-<table cellpadding="0" cellspacing="0" border="0">
-  <tr>
-    <td style="padding-right:10px;vertical-align:middle;">
-      <div style="width:38px;height:38px;background:{_BSM_RED};border-radius:8px;text-align:center;line-height:38px;">
-        <span style="color:#fff;font-size:18px;font-weight:900;">&#x2197;</span>
-      </div>
-    </td>
-    <td style="vertical-align:middle;">
-      <span style="color:{_BSM_RED};font-size:28px;font-weight:900;letter-spacing:1.5px;font-family:Arial,sans-serif;">BSM</span>
-    </td>
-  </tr>
-</table>
-"""
+# Logo tag is built at call time so the base64 is only encoded once per send
+def _get_bsm_logo_html() -> str:
+    return _logo_img_tag(height=48)
 
 
 def _build_html(brief_text: str, articles: list[dict], display_date: str,
@@ -106,7 +104,7 @@ def _build_html(brief_text: str, articles: list[dict], display_date: str,
   <div style="background:{_CARD_BG};border-radius:10px;padding:18px 24px;margin-bottom:10px;border:1px solid {_CARD_BORDER};">
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr>
-        <td>{_BSM_LOGO}</td>
+        <td>{_get_bsm_logo_html()}</td>
       </tr>
     </table>
   </div>
