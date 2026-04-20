@@ -7,6 +7,8 @@ Also extracts thumbnail image URLs from RSS media tags.
 import json
 import os
 import re
+import urllib.request
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import feedparser
@@ -56,6 +58,33 @@ def _extract_image(entry) -> str:
     m = re.search(r'<img[^>]+src=["\']([^"\']+)["\']', raw)
     if m:
         return m.group(1)
+    return ""
+
+
+def _fetch_og_image(url: str) -> str:
+    """Fetch og:image / twitter:image from an article page."""
+    if not url:
+        return ""
+    try:
+        req = urllib.request.Request(
+            url, headers={"User-Agent": "Mozilla/5.0 (compatible; NewsBot/1.0)"}
+        )
+        with urllib.request.urlopen(req, timeout=6) as r:
+            html = r.read(65536).decode("utf-8", errors="ignore")
+        patterns = [
+            r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']',
+            r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']',
+            r'<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\']([^"\']+)["\']',
+            r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']twitter:image["\']',
+        ]
+        for pat in patterns:
+            m = re.search(pat, html, re.IGNORECASE)
+            if m:
+                img = m.group(1).strip()
+                if img.startswith("http"):
+                    return img
+    except Exception:
+        pass
     return ""
 
 
@@ -109,6 +138,18 @@ def fetch_articles() -> list[dict]:
 
     if collected:
         _save_seen(seen_path, seen_urls)
+
+    # Enrich missing images by fetching og:image from article pages in parallel
+    missing = [a for a in collected if not a["image"]]
+    if missing:
+        print(f"  [IMG] Fetching og:image for {len(missing)} article(s)...")
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            futures = {pool.submit(_fetch_og_image, a["url"]): a for a in missing}
+            for fut in as_completed(futures):
+                article = futures[fut]
+                img = fut.result()
+                if img:
+                    article["image"] = img
 
     return collected
 
