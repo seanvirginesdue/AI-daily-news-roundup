@@ -168,11 +168,17 @@ def _build_html(brief_text: str, articles: list[dict], display_date: str,
             is_footer = "2-minute read" in hdr.lower() or "minute read" in hdr.lower()
 
             if is_footer:
-                section_html = f'<div style="background:{_CARD_BG};border-radius:10px;padding:18px 24px;margin-bottom:10px;border:1px solid {_CARD_BORDER};border-top:3px solid {color};">'
-                section_html += f'<p style="margin:0;font-size:11px;font-weight:700;color:{color};text-transform:uppercase;letter-spacing:1.5px;">{_esc(hdr)}</p>'
+                section_html = f'<div style="background:{_CARD_BG};border-radius:10px;padding:20px 24px;margin-bottom:10px;border:1px solid {_CARD_BORDER};">'
+                section_html += f'<p style="margin:0;font-size:11px;font-weight:700;color:{_TEXT_LABEL};text-transform:uppercase;letter-spacing:1.5px;">{_esc(hdr)}</p>'
             else:
-                section_html = f'<div style="background:{_CARD_BG};border-radius:10px;padding:18px 24px;margin-bottom:10px;border:1px solid {_CARD_BORDER};border-left:4px solid {color};">'
-                section_html += f'<p style="margin:0 0 12px;font-size:11px;font-weight:700;color:{color};text-transform:uppercase;letter-spacing:1.5px;">{_esc(hdr)}</p>'
+                section_html = f'<div style="background:{_CARD_BG};border-radius:10px;padding:20px 24px;margin-bottom:10px;border:1px solid {_CARD_BORDER};">'
+                section_html += (
+                    f'<p style="margin:0 0 14px;font-size:11px;font-weight:700;'
+                    f'text-transform:uppercase;letter-spacing:1.5px;">'
+                    f'<span style="display:inline-block;width:7px;height:7px;border-radius:50%;'
+                    f'background:{color};margin-right:7px;vertical-align:middle;"></span>'
+                    f'<span style="color:{_TEXT_LABEL};">{_esc(hdr)}</span></p>'
+                )
             continue
 
         if cur_color is None:
@@ -199,8 +205,8 @@ def _build_html(brief_text: str, articles: list[dict], display_date: str,
                 row_bg = _CARD_BG if (section_html.count('<tr') % 2 == 0) else _PAGE_BG
                 section_html += (
                     f'<tr style="background:{row_bg};">'
-                    f'<td style="padding:9px 12px;font-size:12px;color:{_TEXT_PRIMARY};font-weight:600;border-bottom:1px solid {_DIVIDER};vertical-align:top;">{label}</td>'
-                    f'<td style="padding:9px 12px;font-size:13px;color:{_TEXT_BODY};border-bottom:1px solid {_DIVIDER};">{value}</td>'
+                    f'<td style="padding:10px 12px;font-size:13px;color:{_TEXT_PRIMARY};font-weight:600;border-bottom:1px solid {_DIVIDER};vertical-align:top;">{label}</td>'
+                    f'<td style="padding:10px 12px;font-size:14px;color:{_TEXT_BODY};border-bottom:1px solid {_DIVIDER};line-height:1.5;">{value}</td>'
                     f'</tr>'
                 )
             continue
@@ -209,7 +215,7 @@ def _build_html(brief_text: str, articles: list[dict], display_date: str,
         if is_cards_section:
             section_html += (
                 f'<div style="background:{_PAGE_BG};border:1px solid {_CARD_BORDER};border-radius:8px;'
-                f'padding:12px 16px;margin-bottom:8px;font-size:13px;line-height:1.65;color:{_TEXT_BODY};">'
+                f'padding:14px 16px;margin-bottom:8px;font-size:14px;line-height:1.65;color:{_TEXT_BODY};">'
                 f'{linked}</div>'
             )
             continue
@@ -224,10 +230,9 @@ def _build_html(brief_text: str, articles: list[dict], display_date: str,
             section_html += '<ul style="margin:0;padding-left:0;list-style:none;">'
             in_list = True
         section_html += (
-            f'<li style="padding:9px 0;border-bottom:1px solid {_DIVIDER};font-size:13px;'
-            f'line-height:1.6;color:{_TEXT_BODY};display:flex;gap:8px;">'
-            f'<span style="color:{_TEXT_LABEL};flex-shrink:0;font-size:11px;padding-top:2px;">●</span>'
-            f'<span>{linked}</span></li>'
+            f'<li style="padding:11px 0;border-bottom:1px solid {_DIVIDER};font-size:14px;'
+            f'line-height:1.65;color:{_TEXT_BODY};">'
+            f'{linked}</li>'
         )
 
     close_section()
