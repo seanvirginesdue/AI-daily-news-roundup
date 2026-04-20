@@ -21,16 +21,33 @@ if _backend == "groq":
             _client = _GroqClient(api_key=os.environ["GROQ_API_KEY"])
         return _client
 
+    # Model priority: best quality first, fall back to higher-limit models
+    _GROQ_MODELS = [
+        "llama-3.3-70b-versatile",   # 100K tokens/day
+        "llama-3.1-8b-instant",      # 500K tokens/day
+        "gemma2-9b-it",              # 500K tokens/day
+    ]
+
     def _call(system: str, user: str) -> str:
-        response = _get_client().chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            max_tokens=4000,
-            messages=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": user},
-            ],
-        )
-        return response.choices[0].message.content.strip()
+        last_err = None
+        for model in _GROQ_MODELS:
+            try:
+                response = _get_client().chat.completions.create(
+                    model=model,
+                    max_tokens=4000,
+                    messages=[
+                        {"role": "system", "content": system},
+                        {"role": "user", "content": user},
+                    ],
+                )
+                return response.choices[0].message.content.strip()
+            except Exception as e:
+                if "rate_limit" in str(e).lower() or "429" in str(e):
+                    print(f"  [WARN] {model} rate-limited, trying next model...")
+                    last_err = e
+                else:
+                    raise
+        raise last_err
 
 else:
     import anthropic
