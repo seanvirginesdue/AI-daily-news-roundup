@@ -7,6 +7,7 @@ Also extracts thumbnail image URLs from RSS media tags.
 import json
 import os
 import re
+import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -79,29 +80,45 @@ _OG_PATTERNS = [
 ]
 
 
-def _fetch_og_image(url: str) -> str:
-    """Fetch og:image / twitter:image from an article page."""
-    if not url:
-        return ""
-    try:
-        # Try requests first (better redirect + cookie handling)
-        import requests as _req
-        r = _req.get(url, headers=_BROWSER_HEADERS, timeout=8, allow_redirects=True)
-        html = r.content[:131072].decode("utf-8", errors="ignore")
-    except Exception:
-        try:
-            req = urllib.request.Request(url, headers=_BROWSER_HEADERS)
-            with urllib.request.urlopen(req, timeout=8) as r:
-                html = r.read(131072).decode("utf-8", errors="ignore")
-        except Exception:
-            return ""
-
+def _parse_og(html: str) -> str:
     for pat in _OG_PATTERNS:
         m = re.search(pat, html, re.IGNORECASE)
         if m:
             img = m.group(1).strip()
             if img.startswith("http"):
                 return img
+    return ""
+
+
+def _fetch_og_image(url: str) -> str:
+    """Fetch og:image — tries direct page fetch, then Microlink API."""
+    if not url:
+        return ""
+
+    # 1. Direct fetch (works for open-access sites like TechCrunch, The Verge)
+    try:
+        import requests as _req
+        r = _req.get(url, headers=_BROWSER_HEADERS, timeout=7, allow_redirects=True)
+        if r.status_code == 200:
+            img = _parse_og(r.content[:131072].decode("utf-8", errors="ignore"))
+            if img:
+                return img
+    except Exception:
+        pass
+
+    # 2. Microlink API (handles paywalls, GDPR walls, JS redirects — free tier)
+    try:
+        import requests as _req
+        api = "https://api.microlink.io/?url=" + urllib.parse.quote(url, safe="")
+        r = _req.get(api, timeout=10)
+        if r.status_code == 200:
+            img_obj = r.json().get("data", {}).get("image") or {}
+            src = img_obj.get("url", "") if isinstance(img_obj, dict) else ""
+            if src and src.startswith("http"):
+                return src
+    except Exception:
+        pass
+
     return ""
 
 
