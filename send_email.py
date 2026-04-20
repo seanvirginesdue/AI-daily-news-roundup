@@ -3,7 +3,8 @@ Email sender — pixel-perfect codeflair-style AI newsletter.
 Table-based layout, inline CSS, Gmail-compatible.
 """
 
-import base64, os, re, smtplib, json
+import os, re, smtplib, json
+from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pathlib import Path
@@ -40,8 +41,7 @@ def _lnk(text: str, arts: list) -> str:
 
 def _logo(h: int = 36) -> str:
     if _LOGO_FILE.exists():
-        b64 = base64.b64encode(_LOGO_FILE.read_bytes()).decode()
-        return f'<img src="data:image/png;base64,{b64}" height="{h}" style="display:block;" alt="BSM">'
+        return f'<img src="cid:bsm_logo" height="{h}" style="display:block;" alt="BSM">'
     return f'<span style="color:{_RED};font-size:22px;font-weight:900;font-family:Arial;">BSM</span>'
 
 def _img(url: str, alt: str = "", w: int = 200, h: int = 140, r: int = 10) -> str:
@@ -478,19 +478,34 @@ def send_newsletter(subject: str, brief_text: str,
     config    = json.loads(CONFIG_FILE.read_text())
     ec        = config["email"]
     from_name = ec.get("from_name", "Sean")
+    logo_data = _LOGO_FILE.read_bytes() if _LOGO_FILE.exists() else None
 
     for recip in ec["recipients"]:
-        fn  = recip.get("first_name", "there")
-        msg = MIMEMultipart("alternative")
-        msg["Subject"]  = subject
-        msg["From"]     = f"{from_name} <{ec['from_address']}>"
-        msg["To"]       = recip["email"]
-        msg["Reply-To"] = ec.get("reply_to", ec["from_address"])
-        msg.attach(MIMEText(_build_plain(brief_text, fn, from_name), "plain"))
-        msg.attach(MIMEText(_build_html(brief_text, articles, display_date, fn, from_name), "html"))
+        fn = recip.get("first_name", "there")
+
+        # multipart/related wraps html + inline logo image
+        related = MIMEMultipart("related")
+
+        # multipart/alternative holds plain + html
+        alt = MIMEMultipart("alternative")
+        alt.attach(MIMEText(_build_plain(brief_text, fn, from_name), "plain"))
+        alt.attach(MIMEText(_build_html(brief_text, articles, display_date, fn, from_name), "html"))
+        related.attach(alt)
+
+        # attach logo with Content-ID so <img src="cid:bsm_logo"> works in Gmail
+        if logo_data:
+            img = MIMEImage(logo_data, "png")
+            img.add_header("Content-ID", "<bsm_logo>")
+            img.add_header("Content-Disposition", "inline", filename="bsm_logo.png")
+            related.attach(img)
+
+        related["Subject"]  = subject
+        related["From"]     = f"{from_name} <{ec['from_address']}>"
+        related["To"]       = recip["email"]
+        related["Reply-To"] = ec.get("reply_to", ec["from_address"])
 
         with smtplib.SMTP(ec["smtp_host"], ec["smtp_port"]) as s:
             s.ehlo(); s.starttls()
             s.login(os.environ["SMTP_USER"], os.environ["SMTP_PASSWORD"])
-            s.sendmail(ec["from_address"], recip["email"], msg.as_string())
+            s.sendmail(ec["from_address"], recip["email"], related.as_string())
         print(f"  ✓ Sent to {recip['email']}")
