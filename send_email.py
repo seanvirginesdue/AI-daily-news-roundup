@@ -136,7 +136,7 @@ def _build_html(brief_text: str, articles: list, display_date: str,
     imgs  = [a for a in articles if a.get("image")]
     feat  = imgs[0] if imgs else (articles[0] if articles else {})
     feat2 = imgs[1] if len(imgs) > 1 else feat
-    g3    = (imgs + [{}] * 3)[:3]   # always 3 items, padded with {}
+    g3    = (articles + [{}] * 3)[:3]  # first 3 articles regardless of image
 
     def L(t): return _lnk(t, articles)
 

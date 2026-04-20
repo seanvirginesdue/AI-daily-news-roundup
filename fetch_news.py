@@ -61,30 +61,47 @@ def _extract_image(entry) -> str:
     return ""
 
 
+_BROWSER_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+}
+
+_OG_PATTERNS = [
+    r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']',
+    r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']',
+    r'<meta[^>]+name=["\']twitter:image(?::src)?["\'][^>]+content=["\']([^"\']+)["\']',
+    r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']twitter:image(?::src)?["\']',
+]
+
+
 def _fetch_og_image(url: str) -> str:
     """Fetch og:image / twitter:image from an article page."""
     if not url:
         return ""
     try:
-        req = urllib.request.Request(
-            url, headers={"User-Agent": "Mozilla/5.0 (compatible; NewsBot/1.0)"}
-        )
-        with urllib.request.urlopen(req, timeout=6) as r:
-            html = r.read(65536).decode("utf-8", errors="ignore")
-        patterns = [
-            r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']',
-            r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']',
-            r'<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\']([^"\']+)["\']',
-            r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']twitter:image["\']',
-        ]
-        for pat in patterns:
-            m = re.search(pat, html, re.IGNORECASE)
-            if m:
-                img = m.group(1).strip()
-                if img.startswith("http"):
-                    return img
+        # Try requests first (better redirect + cookie handling)
+        import requests as _req
+        r = _req.get(url, headers=_BROWSER_HEADERS, timeout=8, allow_redirects=True)
+        html = r.content[:131072].decode("utf-8", errors="ignore")
     except Exception:
-        pass
+        try:
+            req = urllib.request.Request(url, headers=_BROWSER_HEADERS)
+            with urllib.request.urlopen(req, timeout=8) as r:
+                html = r.read(131072).decode("utf-8", errors="ignore")
+        except Exception:
+            return ""
+
+    for pat in _OG_PATTERNS:
+        m = re.search(pat, html, re.IGNORECASE)
+        if m:
+            img = m.group(1).strip()
+            if img.startswith("http"):
+                return img
     return ""
 
 
