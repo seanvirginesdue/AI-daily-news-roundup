@@ -1,0 +1,35 @@
+name: Daily AI Newsletter
+
+on:
+  schedule:
+    - cron: "0 14 * * *"   # 10 PM Philippine time (UTC+8 = 14:00 UTC)
+  workflow_dispatch:        # allow manual trigger from GitHub UI
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run newsletter
+        env:
+          AI_BACKEND: groq
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+        run: python main.py
+
+      - name: Save seen articles
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f seen_articles.json
+          git diff --staged --quiet || git commit -m "chore: update seen articles [skip ci]"
+          git push
