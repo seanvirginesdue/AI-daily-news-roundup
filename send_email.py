@@ -124,35 +124,34 @@ def _parse(brief: str) -> dict:
 # ── Main HTML builder ──────────────────────────────────────
 
 def _yt_card(video: dict) -> str:
-    """YouTube thumbnail with play button overlay — email-safe, links to video."""
+    """YouTube video card — thumbnail, title, watch button."""
     thumb = _esc(video.get("thumbnail", ""))
     url   = _esc(video.get("url", "#"))
-    title = _esc(video.get("title", "")[:70])
+    title = _esc(video.get("title", "")[:65])
     ch    = _esc(video.get("channel", "YouTube"))
     if not thumb:
         return ""
     return f"""
-<table cellpadding="0" cellspacing="0" style="border-radius:14px;overflow:hidden;">
-<tr><td style="position:relative;line-height:0;">
-  <a href="{url}" target="_blank" style="display:block;position:relative;">
+<table cellpadding="0" cellspacing="0" style="width:270px;">
+<tr><td style="line-height:0;border-radius:12px;overflow:hidden;">
+  <a href="{url}" target="_blank">
     <img src="{thumb}" width="270" height="152"
-      style="width:270px;height:152px;object-fit:cover;display:block;border:0;border-radius:14px;">
+      style="width:270px;height:152px;object-fit:cover;display:block;border:0;border-radius:12px;">
   </a>
 </td></tr>
-<tr><td style="background:#1a1a1a;border-radius:0 0 14px 14px;padding:10px 12px;">
-  <table width="100%" cellpadding="0" cellspacing="0"><tr>
-    <td style="vertical-align:middle;padding-right:10px;">
-      <a href="{url}" target="_blank"
-        style="display:inline-block;background:#ff0000;border-radius:6px;
-        padding:5px 12px;text-decoration:none;font-size:11px;font-weight:700;
-        color:#fff;letter-spacing:0.3px;">&#x25B6; Watch Now</a>
-    </td>
-    <td style="vertical-align:middle;">
-      <p style="margin:0;font-size:10px;color:#aaaaaa;">{ch}</p>
-      <p style="margin:2px 0 0;font-size:11px;color:#ffffff;line-height:1.3;
-        font-weight:600;">{title}</p>
-    </td>
-  </tr></table>
+<tr><td style="padding:10px 2px 0;">
+  <p style="margin:0 0 3px;font-size:10px;font-weight:700;color:{_RED};
+    text-transform:uppercase;letter-spacing:1px;">{ch}</p>
+  <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:{_T_HED};
+    line-height:1.4;">
+    <a href="{url}" target="_blank"
+      style="color:{_T_HED};text-decoration:none;">{title}</a>
+  </p>
+  <a href="{url}" target="_blank"
+    style="display:inline-block;background:#ff0000;color:#fff;font-size:11px;
+    font-weight:700;padding:6px 14px;border-radius:6px;text-decoration:none;">
+    &#x25B6;&nbsp; Watch on YouTube
+  </a>
 </td></tr>
 </table>"""
 
