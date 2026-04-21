@@ -4,9 +4,12 @@ Pulls the latest articles from configured feeds, skipping duplicates.
 Also extracts thumbnail image URLs from RSS media tags.
 """
 
+import calendar
+import html
 import json
 import os
 import re
+import time
 import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -14,7 +17,38 @@ from pathlib import Path
 
 import feedparser
 
+_MAX_AGE_DAYS = 30
+
 CONFIG_FILE = Path(__file__).parent / "config.json"
+
+
+_SEO_TIPS_URL = "https://chrisraulf.com/ai-seo-tips/"
+
+def fetch_latest_seo_tip() -> dict | None:
+    """Get the latest Chris Raulf AI SEO tip, always using the article's og:image (branded thumbnail)."""
+    try:
+        parsed = feedparser.parse("https://chrisraulf.com/feed/")
+        for entry in parsed.entries:
+            article = _entry_to_article(entry, "Chris Raulf AI SEO")
+            if not article["title"] or not article["url"]:
+                continue
+            # Always fetch og:image from article page — RSS thumbnail is a smaller generic image
+            og = _fetch_og_image(article["url"])
+            if og:
+                article["image"] = og
+            return article
+    except Exception:
+        pass
+    return None
+
+
+def _is_recent(entry) -> bool:
+    """Return True if the entry was published within _MAX_AGE_DAYS days."""
+    parsed = getattr(entry, "published_parsed", None) or getattr(entry, "updated_parsed", None)
+    if not parsed:
+        return True  # no date info — include it
+    age_days = (time.time() - calendar.timegm(parsed)) / 86400
+    return age_days <= _MAX_AGE_DAYS
 
 
 def _load_config() -> dict:
@@ -134,8 +168,9 @@ def _entry_to_article(entry, source_name: str) -> dict:
     elif hasattr(entry, "summary"):
         content = entry.summary or ""
 
-    content = re.sub(r"<[^>]+>", " ", content).strip()
-    content = re.sub(r"\s+", " ", content)[:2000]
+    content = re.sub(r"<[^>]+>", " ", content)
+    content = html.unescape(content)
+    content = re.sub(r"\s+", " ", content).strip()[:2000]
 
     return {
         "title":  entry.get("title", "").strip(),
@@ -147,14 +182,17 @@ def _entry_to_article(entry, source_name: str) -> dict:
 
 
 def fetch_articles() -> list[dict]:
-    config    = _load_config()
-    seen_path = config["seen_articles_file"]
-    seen_urls = _load_seen(seen_path)
-    max_articles = config.get("max_articles", 15)
+    config       = _load_config()
+    seen_path    = config["seen_articles_file"]
+    seen_urls    = _load_seen(seen_path)
+    max_articles = config.get("max_articles", 18)
+    feeds        = config["rss_feeds"]
+    # at most 2 articles per feed so every source gets represented
+    max_per_feed = max(2, max_articles // len(feeds))
 
     collected: list[dict] = []
 
-    for feed_cfg in config["rss_feeds"]:
+    for feed_cfg in feeds:
         if len(collected) >= max_articles:
             break
         try:
@@ -163,15 +201,21 @@ def fetch_articles() -> list[dict]:
             print(f"  [WARN] Could not fetch {feed_cfg['url']}: {exc}")
             continue
 
+        feed_count = 0
         for entry in parsed.entries:
+            if feed_count >= max_per_feed:
+                break
             url = entry.get("link", "")
             if url in seen_urls:
+                continue
+            if not _is_recent(entry):
                 continue
             article = _entry_to_article(entry, feed_cfg["name"])
             if not article["title"]:
                 continue
             collected.append(article)
             seen_urls.add(url)
+            feed_count += 1
             if len(collected) >= max_articles:
                 break
 
@@ -198,4 +242,4 @@ if __name__ == "__main__":
     print(f"Fetched {len(articles)} new article(s):")
     for a in articles:
         img = "✓ img" if a.get("image") else "  no img"
-        print(f"  {img}  [{a['source']}] {a['title'][:70]}")
+        print(f"  {img}  [{a['source']}] {a['title'][:70]}".encode("ascii", errors="replace").decode())

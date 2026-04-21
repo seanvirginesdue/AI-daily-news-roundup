@@ -12,6 +12,9 @@ from pathlib import Path
 CONFIG_FILE = Path(__file__).parent / "config.json"
 _LOGO_FILE  = Path(__file__).parent / "bsm_logo.png"
 
+# ── Animated GIF for hero (swap URL to change the vibe) ───
+_HERO_GIF_URL = "https://media.giphy.com/media/7ydUQC0CC2cNVtcrYH/giphy.gif"
+
 # ── Colour palette (extracted from reference) ─────────────
 _RED     = "#d63c2f"
 _WHITE   = "#ffffff"
@@ -46,7 +49,7 @@ def _logo(h: int = 36) -> str:
 
 def _img(url: str, alt: str = "", w: int = 200, h: int = 140, r: int = 10) -> str:
     if not url:
-        return f'<div style="width:{w}px;height:{h}px;border-radius:{r}px;background:#e4e8ee;"></div>'
+        return ""
     return (f'<img src="{_esc(url)}" alt="{_esc(alt[:40])}" width="{w}" '
             f'style="width:{w}px;height:{h}px;object-fit:cover;display:block;border:0;border-radius:{r}px;">')
 
@@ -121,7 +124,7 @@ def _parse(brief: str) -> dict:
 # ── Main HTML builder ──────────────────────────────────────
 
 def _build_html(brief_text: str, articles: list, display_date: str,
-                first_name: str, from_name: str) -> str:
+                first_name: str, from_name: str, seo_tip: dict | None = None) -> str:
 
     S      = _parse(brief_text)
     hot    = S["what's hot today"]
@@ -132,18 +135,43 @@ def _build_html(brief_text: str, articles: list, display_date: str,
     close  = S["2-minute read"]
     claude = S["claude insider"]
 
-    cnt   = len(articles)
-    imgs  = [a for a in articles if a.get("image")]
-    feat  = imgs[0] if imgs else (articles[0] if articles else {})
-    feat2 = imgs[1] if len(imgs) > 1 else feat
-    g3    = (articles + [{}] * 3)[:3]  # first 3 articles regardless of image
+    cnt      = len(articles)
+    imgs     = [a for a in articles if a.get("image")]
+    feat     = imgs[0] if imgs else (articles[0] if articles else {})
+    feat2    = imgs[1] if len(imgs) > 1 else feat
+    g3       = (articles + [{}] * 3)[:3]  # first 3 articles regardless of image
+    # seo_tip passed in from main.py (scraped directly from chrisraulf.com/ai-seo-tips/)
 
     def L(t): return _lnk(t, articles)
 
     # ── SHELL ──────────────────────────────────────────────
     H = f"""<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  @keyframes pulse {{
+    0%, 100% {{ opacity: 1; transform: scale(1); }}
+    50%       {{ opacity: 0.4; transform: scale(0.85); }}
+  }}
+  @keyframes slidein {{
+    from {{ opacity: 0; transform: translateY(-8px); }}
+    to   {{ opacity: 1; transform: translateY(0); }}
+  }}
+  .live-dot {{
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #d63c2f;
+    animation: pulse 1.4s ease-in-out infinite;
+    vertical-align: middle;
+    margin-right: 5px;
+  }}
+  .hero-in {{
+    animation: slidein 0.6s ease both;
+  }}
+</style>
+</head>
 <body style="margin:0;padding:0;background:{_PG_BG};font-family:Arial,Helvetica,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:{_PG_BG};">
 <tr><td align="center" style="padding:32px 12px 40px;">
@@ -157,54 +185,48 @@ def _build_html(brief_text: str, articles: list, display_date: str,
     H += f"""
   <table width="100%" cellpadding="0" cellspacing="0" style="background:{_WHITE};border-bottom:1px solid #eeeeee;">
   <tr><td style="padding:14px 26px;">
-    <table cellpadding="0" cellspacing="0"><tr>
-      <td style="vertical-align:middle;padding-right:14px;">{_logo(34)}</td>
-      <td style="vertical-align:middle;border-left:1px solid #dddddd;padding-left:14px;">
-        <span style="font-size:12px;color:{_RED};font-weight:700;margin-right:14px;">Home</span>
-        <span style="font-size:12px;color:{_T_MET};margin-right:14px;">AI News</span>
-        <span style="font-size:12px;color:{_T_MET};margin-right:14px;">Tools</span>
-        <span style="font-size:12px;color:{_T_MET};margin-right:14px;">Trends</span>
-        <span style="font-size:12px;color:{_T_MET};">Contact</span>
-      </td>
-    </tr></table>
+    {_logo(34)}
   </td></tr>
   </table>
 """
 
     # ── 2. HERO ────────────────────────────────────────────
-    blob_url = feat.get("image", "") if feat else ""
-    blob_href = feat.get("url", "#") if feat else "#"
-    if blob_url:
-        blob_html = (
-            f'<div style="display:inline-block;width:230px;height:230px;'
-            f'border-radius:62% 38% 46% 54% / 60% 44% 56% 40%;overflow:hidden;">'
-            f'<a href="{_esc(blob_href)}" target="_blank">'
-            f'<img src="{_esc(blob_url)}" width="230" '
-            f'style="width:230px;height:230px;object-fit:cover;display:block;" alt=""></a></div>'
-        )
-    else:
-        blob_html = (
-            f'<div style="display:inline-block;width:230px;height:230px;'
-            f'border-radius:62% 38% 46% 54% / 60% 44% 56% 40%;'
-            f'background:{_RED};text-align:center;vertical-align:middle;">'
-            f'<p style="margin:0;padding:80px 20px 0;font-size:14px;font-weight:700;'
-            f'color:#fff;line-height:1.5;">AI Daily<br>Intelligence</p></div>'
-        )
-
     H += f"""
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:{_WHITE};">
+  <table width="100%" cellpadding="0" cellspacing="0"
+    style="background:linear-gradient(135deg,#1a1a3e 0%,#2d1f3d 50%,#1a1a3e 100%);
+           background-color:#1a1a3e;">
   <tr>
-    <td style="padding:38px 28px;vertical-align:middle;width:54%;">
-      <p style="margin:0 0 16px;font-size:30px;font-weight:900;color:{_T_HED};line-height:1.2;">
+    <td style="padding:38px 28px 36px;vertical-align:middle;width:55%;" class="hero-in">
+      <p style="margin:0 0 12px;font-size:11px;font-weight:700;letter-spacing:2px;
+        text-transform:uppercase;color:{_RED};">
+        <span class="live-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;
+          background:{_RED};vertical-align:middle;margin-right:5px;">&#x25CF;</span>
+        LIVE TODAY &nbsp;·&nbsp; {_esc(display_date)}
+      </p>
+      <p style="margin:0 0 16px;font-size:32px;font-weight:900;color:#ffffff;line-height:1.2;
+        letter-spacing:-0.5px;">
         AI Daily<br>News Roundup
       </p>
-      <p style="margin:0 0 24px;font-size:13px;color:{_T_BOD};line-height:1.75;">
-        Stay ahead with the latest AI updates, tools, and breakthroughs — curated every morning for the BSM team.
+      <p style="margin:0 0 28px;font-size:13px;color:rgba(255,255,255,0.75);line-height:1.8;">
+        The latest AI updates, tools, and breakthroughs — curated every morning for the BSM team.
       </p>
-      {_btn("Explore Today's News")}
+      <table cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="background:{_RED};border-radius:8px;padding:10px 22px;">
+            <a href="{_esc(feat.get('url','#') if feat else '#')}" target="_blank"
+              style="color:#fff;font-size:13px;font-weight:700;text-decoration:none;
+              letter-spacing:0.3px;">Read Today's Top Story &#x2192;</a>
+          </td>
+        </tr>
+      </table>
     </td>
-    <td style="padding:28px 24px 28px 0;vertical-align:middle;text-align:right;width:46%;">
-      {blob_html}
+    <td style="padding:24px 20px 24px 0;vertical-align:middle;text-align:center;width:45%;">
+      <div style="display:inline-block;border-radius:16px;overflow:hidden;
+        border:3px solid rgba(214,60,47,0.4);line-height:0;">
+        <img src="{_HERO_GIF_URL}" width="220" height="220"
+          style="width:220px;height:220px;object-fit:cover;display:block;border:0;"
+          alt="AI in motion">
+      </div>
     </td>
   </tr>
   </table>
@@ -220,8 +242,7 @@ def _build_html(brief_text: str, articles: list, display_date: str,
     H += f"""
   <table width="100%" cellpadding="0" cellspacing="0" style="background:{_ST_BG};">
   <tr><td style="padding:34px 28px;">
-    <p style="margin:0 0 2px;font-size:20px;font-weight:700;color:{_RED};text-align:center;">Daily AI Highlights</p>
-    <p style="margin:0 0 24px;font-size:12px;color:{_T_MET};text-align:center;">{_esc(display_date)}</p>
+    <p style="margin:0 0 24px;font-size:20px;font-weight:700;color:{_RED};text-align:center;">Daily AI Highlights</p>
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
 """
     for icon_name, val, lbl, desc, *hi in stats:
@@ -241,6 +262,24 @@ def _build_html(brief_text: str, articles: list, display_date: str,
       </td>
 """
     H += "    </tr></table>\n  </td></tr>\n  </table>\n"
+
+    # ── 3b. TICKER STRIP ──────────────────────────────────
+    ticker_items = [
+        "&#x1F916; AI moves fast — so do you",
+        "&#x1F4A1; Built for SEO pros",
+        "&#x26A1; Powered by Claude AI",
+        "&#x1F4C8; Fresh every morning",
+        "&#x1F3AF; Signal over noise",
+    ]
+    ticker_html = "&nbsp;&nbsp;&nbsp;&#x2022;&nbsp;&nbsp;&nbsp;".join(ticker_items)
+    H += f"""
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:{_RED};overflow:hidden;">
+  <tr><td style="padding:9px 28px;white-space:nowrap;overflow:hidden;">
+    <p style="margin:0;font-size:11px;font-weight:700;color:#fff;letter-spacing:0.4px;
+      text-transform:uppercase;">{ticker_html}</p>
+  </td></tr>
+  </table>
+"""
 
     # ── 4. SERVICES / AI INSIGHTS ─────────────────────────
     svcs = [
@@ -266,7 +305,6 @@ def _build_html(brief_text: str, articles: list, display_date: str,
       </td>
 """
     H += f"""    </tr></table>
-    <p style="margin:26px 0 0;text-align:left;">{_btn("Explore All Insights")}</p>
   </td></tr>
   </table>
 """
@@ -312,11 +350,8 @@ def _build_html(brief_text: str, articles: list, display_date: str,
             </td>
             <td style="vertical-align:top;">
               <p style="margin:0 0 3px;font-size:14px;font-weight:700;color:{_T_HED};">{titles3[i]}</p>
-              <p style="margin:0 0 2px;font-size:11px;color:{_T_MET};">📍 Client-Facing · BSM Intelligence</p>
+              <p style="margin:0 0 2px;font-size:11px;color:{_T_MET};">Client-Facing · BSM Intelligence</p>
               <p style="margin:6px 0 0;font-size:13px;color:{_T_BOD};line-height:1.55;">{L(item)}</p>
-            </td>
-            <td style="vertical-align:middle;padding-left:14px;text-align:right;white-space:nowrap;">
-              {_btn("Use Now →", sm=True)}
             </td>
           </tr></table>
         </td>
@@ -358,7 +393,40 @@ def _build_html(brief_text: str, articles: list, display_date: str,
 """
     H += "    </tr></table>\n  </td></tr>\n  </table>\n"
 
-    # ── 8. PRIORITY READING (if available) ────────────────
+    # ── 8. LATEST SEO TIP (Chris Raulf) ───────────────────
+    if seo_tip:
+        tip_img  = seo_tip.get("image", "")
+        tip_url  = _esc(seo_tip.get("url", "#"))
+        tip_titl = _esc(seo_tip.get("title", "")[:100])
+        tip_body = _esc(seo_tip.get("content", "")[:200].replace("\n", " "))
+        img_html = (
+            f'<a href="{tip_url}" target="_blank">'
+            f'<img src="{_esc(tip_img)}" width="220" '
+            f'style="width:220px;height:148px;object-fit:cover;display:block;border:0;border-radius:10px;">'
+            f'</a>'
+        ) if tip_img else ""
+        H += f"""
+  <table width="100%" cellpadding="0" cellspacing="0"
+    style="background:{_WHITE};border-top:1px solid {_BDR};">
+  <tr><td style="padding:28px 28px;">
+    <p style="margin:0 0 4px;font-size:10px;font-weight:700;color:{_RED};
+      text-transform:uppercase;letter-spacing:1.5px;">Latest SEO Tip</p>
+    <p style="margin:0 0 16px;font-size:18px;font-weight:800;color:{_T_HED};">From Chris Raulf</p>
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      {'<td style="width:236px;vertical-align:top;padding-right:20px;">' + img_html + '</td>' if img_html else ''}
+      <td style="vertical-align:top;">
+        <p style="margin:0 0 8px;font-size:14px;font-weight:700;line-height:1.4;">
+          <a href="{tip_url}" target="_blank" style="color:{_T_HED};text-decoration:none;">{tip_titl}</a>
+        </p>
+        <p style="margin:0 0 14px;font-size:12px;color:{_T_BOD};line-height:1.6;">{tip_body}…</p>
+        {_btn("Read Tip →", tip_url, sm=True)}
+      </td>
+    </tr></table>
+  </td></tr>
+  </table>
+"""
+
+    # ── 10. PRIORITY READING (if available) ───────────────
     if prior:
         rows = "".join(
             f'<p style="margin:0 0 10px;font-size:13px;color:{_T_BOD};line-height:1.6;'
@@ -474,7 +542,8 @@ def _build_plain(brief_text: str, first_name: str, from_name: str) -> str:
 # ── Send ───────────────────────────────────────────────────
 
 def send_newsletter(subject: str, brief_text: str,
-                    articles: list, display_date: str) -> None:
+                    articles: list, display_date: str,
+                    seo_tip: dict | None = None) -> None:
     config    = json.loads(CONFIG_FILE.read_text())
     ec        = config["email"]
     from_name = ec.get("from_name", "Sean")
@@ -489,7 +558,7 @@ def send_newsletter(subject: str, brief_text: str,
         # multipart/alternative holds plain + html
         alt = MIMEMultipart("alternative")
         alt.attach(MIMEText(_build_plain(brief_text, fn, from_name), "plain"))
-        alt.attach(MIMEText(_build_html(brief_text, articles, display_date, fn, from_name), "html"))
+        alt.attach(MIMEText(_build_html(brief_text, articles, display_date, fn, from_name, seo_tip), "html"))
         related.attach(alt)
 
         # attach logo with Content-ID so <img src="cid:bsm_logo"> works in Gmail

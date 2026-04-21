@@ -13,19 +13,21 @@ Pipeline
 """
 
 import sys
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 from datetime import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from fetch_news import fetch_articles
+from fetch_news import fetch_articles, fetch_latest_seo_tip
 from analyze_news import generate_brief, generate_subject
 from send_email import send_newsletter
 
 
 def run() -> None:
     now = datetime.now()
-    display_date = now.strftime("%A, %B %-d, %Y")
+    display_date = now.strftime("%A, %B %d, %Y").replace(" 0", " ")
 
     print(f"\n{'='*60}")
     print(f"  AI Daily News Roundup  —  {now.strftime('%Y-%m-%d %H:%M')}")
@@ -51,27 +53,22 @@ def run() -> None:
     subject = generate_subject(brief_text, display_date)
     print(f"✉️  Subject: {subject}")
 
-    # ── STEP 4: Send ───────────────────────────────────────────
+    # ── STEP 4: Fetch latest SEO tip ───────────────────────────
+    print("🔍 Fetching latest Chris Raulf SEO tip...")
+    seo_tip = fetch_latest_seo_tip()
+    if seo_tip:
+        print(f"✓ SEO tip: {seo_tip['title'][:60]}")
+    else:
+        print("  (no SEO tip found)")
+
+    # ── STEP 5: Send ───────────────────────────────────────────
     print("\n📬 Sending email...")
-    send_newsletter(subject, brief_text, articles, display_date)
+    send_newsletter(subject, brief_text, articles, display_date, seo_tip)
 
     print(f"\n✅ Done!\n")
 
 
 if __name__ == "__main__":
-    # Windows strftime doesn't support %-d — patch it
-    import platform
-    if platform.system() == "Windows":
-        _orig_run = run
-        def run():
-            import datetime as _dt
-            _orig_strftime = _dt.datetime.strftime
-            def _patched(self, fmt):
-                fmt = fmt.replace("%-d", str(self.day))
-                return _orig_strftime(self, fmt)
-            _dt.datetime.strftime = _patched
-            _orig_run()
-            _dt.datetime.strftime = _orig_strftime
     try:
         run()
     except KeyboardInterrupt:

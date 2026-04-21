@@ -39,12 +39,16 @@
     {
       "name": "Dev Tools / MCP",
       "url": "https://news.google.com/rss/search?q=%22MCP+server%22+OR+%22AI+SaaS%22+builder+OR+%22n8n%22+automation+OR+%22AI+developer+tool%22&hl=en-US&gl=US&ceid=US:en"
+    },
+    {
+      "name": "Chris Raulf AI SEO",
+      "url": "https://chrisraulf.com/feed/"
     }
   ],
-  "max_articles": 15,
+  "max_articles": 22,
   "send_hour_utc": 0,
   "email": {
-    "from_name": "Sean",
+    "from_name": "AI Task Force",
     "from_address": "sean@boulderseomarketing.com",
     "reply_to": "sean@boulderseomarketing.com",
     "recipients": [
@@ -52,6 +56,7 @@
         "first_name": "Sean",
         "email": "sean@boulderseomarketing.com"
       }
+      
     ],
     "smtp_host": "smtp.gmail.com",
     "smtp_port": 587
