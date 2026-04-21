@@ -123,8 +123,43 @@ def _parse(brief: str) -> dict:
 
 # ── Main HTML builder ──────────────────────────────────────
 
+def _yt_card(video: dict) -> str:
+    """YouTube thumbnail with play button overlay — email-safe, links to video."""
+    thumb = _esc(video.get("thumbnail", ""))
+    url   = _esc(video.get("url", "#"))
+    title = _esc(video.get("title", "")[:70])
+    ch    = _esc(video.get("channel", "YouTube"))
+    if not thumb:
+        return ""
+    return f"""
+<table cellpadding="0" cellspacing="0" style="border-radius:14px;overflow:hidden;">
+<tr><td style="position:relative;line-height:0;">
+  <a href="{url}" target="_blank" style="display:block;position:relative;">
+    <img src="{thumb}" width="270" height="152"
+      style="width:270px;height:152px;object-fit:cover;display:block;border:0;border-radius:14px;">
+  </a>
+</td></tr>
+<tr><td style="background:#1a1a1a;border-radius:0 0 14px 14px;padding:10px 12px;">
+  <table width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td style="vertical-align:middle;padding-right:10px;">
+      <a href="{url}" target="_blank"
+        style="display:inline-block;background:#ff0000;border-radius:6px;
+        padding:5px 12px;text-decoration:none;font-size:11px;font-weight:700;
+        color:#fff;letter-spacing:0.3px;">&#x25B6; Watch Now</a>
+    </td>
+    <td style="vertical-align:middle;">
+      <p style="margin:0;font-size:10px;color:#aaaaaa;">{ch}</p>
+      <p style="margin:2px 0 0;font-size:11px;color:#ffffff;line-height:1.3;
+        font-weight:600;">{title}</p>
+    </td>
+  </tr></table>
+</td></tr>
+</table>"""
+
+
 def _build_html(brief_text: str, articles: list, display_date: str,
-                first_name: str, from_name: str, seo_tip: dict | None = None) -> str:
+                first_name: str, from_name: str, seo_tip: dict | None = None,
+                yt_video: dict | None = None) -> str:
 
     S      = _parse(brief_text)
     hot    = S["what's hot today"]
@@ -323,9 +358,8 @@ def _build_html(brief_text: str, articles: list, display_date: str,
       {_btn("Read Full Story", feat2.get("url", "#") if feat2 else "#")}
     </td>
     <td style="padding:28px 24px 28px 20px;vertical-align:middle;text-align:right;width:50%;">
-      <div style="border-radius:14px;overflow:hidden;display:inline-block;">
-        {_img(feat2.get("image", "") if feat2 else "", feat2.get("title", "") if feat2 else "", 270, 190, 14)}
-      </div>
+      {_yt_card(yt_video) if yt_video else
+       f'<div style="border-radius:14px;overflow:hidden;display:inline-block;">{_img(feat2.get("image","") if feat2 else "",feat2.get("title","") if feat2 else "",270,190,14)}</div>'}
     </td>
   </tr>
   </table>
@@ -543,7 +577,8 @@ def _build_plain(brief_text: str, first_name: str, from_name: str) -> str:
 
 def send_newsletter(subject: str, brief_text: str,
                     articles: list, display_date: str,
-                    seo_tip: dict | None = None) -> None:
+                    seo_tip: dict | None = None,
+                    yt_video: dict | None = None) -> None:
     config    = json.loads(CONFIG_FILE.read_text())
     ec        = config["email"]
     from_name = ec.get("from_name", "Sean")
@@ -558,7 +593,7 @@ def send_newsletter(subject: str, brief_text: str,
         # multipart/alternative holds plain + html
         alt = MIMEMultipart("alternative")
         alt.attach(MIMEText(_build_plain(brief_text, fn, from_name), "plain"))
-        alt.attach(MIMEText(_build_html(brief_text, articles, display_date, fn, from_name, seo_tip), "html"))
+        alt.attach(MIMEText(_build_html(brief_text, articles, display_date, fn, from_name, seo_tip, yt_video), "html"))
         related.attach(alt)
 
         # attach logo with Content-ID so <img src="cid:bsm_logo"> works in Gmail

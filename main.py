@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from fetch_news import fetch_articles, fetch_latest_seo_tip
+from fetch_news import fetch_articles, fetch_latest_seo_tip, fetch_latest_yt_video
 from analyze_news import generate_brief, generate_subject
 from send_email import send_newsletter
 
@@ -61,9 +61,17 @@ def run() -> None:
     else:
         print("  (no SEO tip found)")
 
+    # ── STEP 4b: Fetch latest YouTube video ────────────────────
+    print("▶ Fetching latest AI tools video...")
+    yt_video = fetch_latest_yt_video()
+    if yt_video:
+        print(f"✓ Video: {yt_video['title'][:60]}")
+    else:
+        print("  (no video found)")
+
     # ── STEP 5: Send ───────────────────────────────────────────
     print("\n📬 Sending email...")
-    send_newsletter(subject, brief_text, articles, display_date, seo_tip)
+    send_newsletter(subject, brief_text, articles, display_date, seo_tip, yt_video)
 
     print(f"\n✅ Done!\n")
 

@@ -22,6 +22,27 @@ _MAX_AGE_DAYS = 30
 CONFIG_FILE = Path(__file__).parent / "config.json"
 
 
+# Matt Wolfe — AI tools & news (810K subs). Swap channel ID to change source.
+_YT_CHANNEL_ID = "UChpleBmo18P08aKCIgti38g"
+
+def fetch_latest_yt_video(channel_id: str = _YT_CHANNEL_ID) -> dict | None:
+    """Return the latest YouTube video from the channel as {title, url, thumbnail, channel}."""
+    try:
+        feed_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
+        parsed = feedparser.parse(feed_url)
+        if not parsed.entries:
+            return None
+        entry  = parsed.entries[0]
+        vid_id = entry.get("yt_videoid") or entry.get("id", "").split(":")[-1]
+        title  = entry.get("title", "")
+        url    = entry.get("link", f"https://www.youtube.com/watch?v={vid_id}")
+        thumb  = f"https://img.youtube.com/vi/{vid_id}/maxresdefault.jpg"
+        channel = parsed.feed.get("title", "YouTube")
+        return {"title": title, "url": url, "thumbnail": thumb, "channel": channel}
+    except Exception:
+        return None
+
+
 _SEO_TIPS_URL = "https://chrisraulf.com/ai-seo-tips/"
 
 def fetch_latest_seo_tip() -> dict | None:
