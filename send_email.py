@@ -575,6 +575,50 @@ def _build_plain(brief_text: str, first_name: str, from_name: str) -> str:
 
 # ── Send ───────────────────────────────────────────────────
 
+def _send_resend(subject: str, from_str: str, to: str, reply_to: str,
+                 html: str, plain: str, logo_data: bytes | None) -> None:
+    import resend, base64
+    resend.api_key = os.environ["RESEND_API_KEY"]
+    params: dict = {
+        "from":     from_str,
+        "to":       [to],
+        "reply_to": reply_to,
+        "subject":  subject,
+        "html":     html,
+        "text":     plain,
+    }
+    if logo_data:
+        params["attachments"] = [{
+            "filename":   "bsm_logo.png",
+            "content":    base64.b64encode(logo_data).decode(),
+            "content_id": "bsm_logo",
+        }]
+    resend.Emails.send(params)
+
+
+def _send_smtp(subject: str, from_str: str, to: str, reply_to: str,
+               html: str, plain: str, logo_data: bytes | None,
+               smtp_host: str, smtp_port: int) -> None:
+    related = MIMEMultipart("related")
+    alt = MIMEMultipart("alternative")
+    alt.attach(MIMEText(plain, "plain"))
+    alt.attach(MIMEText(html,  "html"))
+    related.attach(alt)
+    if logo_data:
+        img = MIMEImage(logo_data, "png")
+        img.add_header("Content-ID", "<bsm_logo>")
+        img.add_header("Content-Disposition", "inline", filename="bsm_logo.png")
+        related.attach(img)
+    related["Subject"]  = subject
+    related["From"]     = from_str
+    related["To"]       = to
+    related["Reply-To"] = reply_to
+    with smtplib.SMTP(smtp_host, smtp_port) as s:
+        s.ehlo(); s.starttls()
+        s.login(os.environ["SMTP_USER"], os.environ["SMTP_PASSWORD"])
+        s.sendmail(from_str.split("<")[-1].rstrip(">"), to, related.as_string())
+
+
 def send_newsletter(subject: str, brief_text: str,
                     articles: list, display_date: str,
                     seo_tip: dict | None = None,
@@ -582,34 +626,20 @@ def send_newsletter(subject: str, brief_text: str,
     config    = json.loads(CONFIG_FILE.read_text())
     ec        = config["email"]
     from_name = ec.get("from_name", "Sean")
+    from_str  = f"{from_name} <{ec['from_address']}>"
+    reply_to  = ec.get("reply_to", ec["from_address"])
     logo_data = _LOGO_FILE.read_bytes() if _LOGO_FILE.exists() else None
+    use_resend = bool(os.environ.get("RESEND_API_KEY"))
 
     for recip in ec["recipients"]:
-        fn = recip.get("first_name", "there")
+        fn    = recip.get("first_name", "there")
+        to    = recip["email"]
+        html  = _build_html(brief_text, articles, display_date, fn, from_name, seo_tip, yt_video)
+        plain = _build_plain(brief_text, fn, from_name)
 
-        # multipart/related wraps html + inline logo image
-        related = MIMEMultipart("related")
-
-        # multipart/alternative holds plain + html
-        alt = MIMEMultipart("alternative")
-        alt.attach(MIMEText(_build_plain(brief_text, fn, from_name), "plain"))
-        alt.attach(MIMEText(_build_html(brief_text, articles, display_date, fn, from_name, seo_tip, yt_video), "html"))
-        related.attach(alt)
-
-        # attach logo with Content-ID so <img src="cid:bsm_logo"> works in Gmail
-        if logo_data:
-            img = MIMEImage(logo_data, "png")
-            img.add_header("Content-ID", "<bsm_logo>")
-            img.add_header("Content-Disposition", "inline", filename="bsm_logo.png")
-            related.attach(img)
-
-        related["Subject"]  = subject
-        related["From"]     = f"{from_name} <{ec['from_address']}>"
-        related["To"]       = recip["email"]
-        related["Reply-To"] = ec.get("reply_to", ec["from_address"])
-
-        with smtplib.SMTP(ec["smtp_host"], ec["smtp_port"]) as s:
-            s.ehlo(); s.starttls()
-            s.login(os.environ["SMTP_USER"], os.environ["SMTP_PASSWORD"])
-            s.sendmail(ec["from_address"], recip["email"], related.as_string())
-        print(f"  ✓ Sent to {recip['email']}")
+        if use_resend:
+            _send_resend(subject, from_str, to, reply_to, html, plain, logo_data)
+        else:
+            _send_smtp(subject, from_str, to, reply_to, html, plain, logo_data,
+                       ec["smtp_host"], ec["smtp_port"])
+        print(f"  ✓ Sent to {to}")
