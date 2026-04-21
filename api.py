@@ -192,7 +192,7 @@ def run_status():
 def trigger_run():
     global _process, _run_status, _last_run, _last_error, _log_lines
 
-    if _process is not None and _process.poll() is None:
+    if _run_status == "running":
         raise HTTPException(409, "A run is already in progress")
 
     _log_lines  = []
@@ -200,29 +200,93 @@ def trigger_run():
     _last_error = ""
     _last_run   = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    _process = subprocess.Popen(
-        [sys.executable, str(ROOT / "main.py")],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        bufsize=1,
-        cwd=str(ROOT),
-    )
+    github_token = _os.environ.get("GITHUB_TOKEN")
+    github_repo  = _os.environ.get("GITHUB_REPO", "")
 
-    def _collect():
-        global _run_status, _last_error
-        for line in _process.stdout:
-            _log_lines.append(line.rstrip())
-        _process.wait()
-        if _process.returncode == 0:
-            _run_status = "success"
-        else:
+    if github_token and github_repo:
+        # Dispatch to GitHub Actions — SMTP works there
+        import urllib.request as _ur, urllib.error as _ue
+        url  = f"https://api.github.com/repos/{github_repo}/actions/workflows/newsletter.yml/dispatches"
+        body = json.dumps({"ref": "main"}).encode()
+        req  = _ur.Request(url, data=body, method="POST")
+        req.add_header("Authorization", f"Bearer {github_token}")
+        req.add_header("Accept", "application/vnd.github+json")
+        req.add_header("Content-Type", "application/json")
+        try:
+            _ur.urlopen(req, timeout=10)
+        except _ue.HTTPError as e:
             _run_status = "error"
-            _last_error = _log_lines[-1] if _log_lines else "Unknown error"
+            _last_error = f"GitHub dispatch failed: {e.code} {e.reason}"
+            return {"status": "error"}
 
-    threading.Thread(target=_collect, daemon=True).start()
+        actions_url = f"https://github.com/{github_repo}/actions"
+        _log_lines.append("Dispatched to GitHub Actions.")
+        _log_lines.append(f"Track live progress at: {actions_url}")
+        _log_lines.append("This window will update when the run completes (~3 min).")
+
+        def _poll_gh():
+            global _run_status, _last_error
+            import time as _t, urllib.request as _ur2
+            _t.sleep(10)  # wait for the run to register
+            for _ in range(60):  # poll up to 5 min
+                try:
+                    runs_url = f"https://api.github.com/repos/{github_repo}/actions/runs?per_page=1&event=workflow_dispatch"
+                    r = _ur2.Request(runs_url)
+                    r.add_header("Authorization", f"Bearer {github_token}")
+                    r.add_header("Accept", "application/vnd.github+json")
+                    with _ur2.urlopen(r, timeout=10) as resp:
+                        data = json.loads(resp.read())
+                    runs = data.get("workflow_runs", [])
+                    if runs:
+                        conclusion = runs[0].get("conclusion")
+                        status     = runs[0].get("status")
+                        if conclusion == "success":
+                            _log_lines.append("GitHub Actions run completed successfully.")
+                            _run_status = "success"
+                            return
+                        elif conclusion in ("failure", "cancelled"):
+                            _log_lines.append(f"GitHub Actions run {conclusion}.")
+                            _run_status = "error"
+                            _last_error = f"GitHub Actions run {conclusion}"
+                            return
+                        elif status == "in_progress":
+                            _log_lines.append("Still running...")
+                except Exception:
+                    pass
+                _t.sleep(5)
+            _run_status = "success"  # assume done if we stop polling
+
+        threading.Thread(target=_poll_gh, daemon=True).start()
+
+    else:
+        # Local dev — run subprocess directly
+        if _process is not None and _process.poll() is None:
+            raise HTTPException(409, "A run is already in progress")
+
+        _process = subprocess.Popen(
+            [sys.executable, str(ROOT / "main.py")],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            bufsize=1,
+            cwd=str(ROOT),
+        )
+
+        def _collect():
+            global _run_status, _last_error
+            for line in _process.stdout:
+                _log_lines.append(line.rstrip())
+            _process.wait()
+            if _process.returncode == 0:
+                _run_status = "success"
+            else:
+                _run_status = "error"
+                _last_error = _log_lines[-1] if _log_lines else "Unknown error"
+
+        threading.Thread(target=_collect, daemon=True).start()
+
     return {"status": "started"}
 
 @app.get("/run/stream")
