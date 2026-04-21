@@ -1,3 +1,5 @@
+export const runtime = "edge";
+
 const API = process.env.FASTAPI_URL ?? "http://127.0.0.1:8000";
 
 export async function GET() {

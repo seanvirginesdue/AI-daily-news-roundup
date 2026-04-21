@@ -155,7 +155,7 @@ def _fetch_og_image(url: str) -> str:
     # Step 1: follow redirects to get the real article URL
     article_url = url
     try:
-        r = _req.get(url, headers=_BROWSER_HEADERS, timeout=7, allow_redirects=True)
+        r = _req.get(url, headers=_BROWSER_HEADERS, timeout=4, allow_redirects=True)
         # If we're no longer on google.com we have the real article URL
         if "google.com" not in r.url and r.status_code == 200:
             article_url = r.url
@@ -170,7 +170,7 @@ def _fetch_og_image(url: str) -> str:
         return ""   # couldn't resolve past Google — skip rather than return Google logo
     try:
         api = "https://api.microlink.io/?url=" + urllib.parse.quote(article_url, safe="")
-        r = _req.get(api, timeout=10)
+        r = _req.get(api, timeout=5)
         if r.status_code == 200:
             img_obj = r.json().get("data", {}).get("image") or {}
             src = img_obj.get("url", "") if isinstance(img_obj, dict) else ""
@@ -247,7 +247,7 @@ def fetch_articles() -> list[dict]:
     missing = [a for a in collected if not a["image"]]
     if missing:
         print(f"  [IMG] Resolving images for {len(missing)} article(s)...")
-        with ThreadPoolExecutor(max_workers=8) as pool:
+        with ThreadPoolExecutor(max_workers=12) as pool:
             futures = {pool.submit(_fetch_og_image, a["url"]): a for a in missing}
             for fut in as_completed(futures):
                 article = futures[fut]
