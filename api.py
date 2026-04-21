@@ -16,9 +16,22 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-ROOT        = Path(__file__).parent
-CONFIG_FILE = ROOT / "config.json"
-SEEN_FILE   = ROOT / "seen_articles.json"
+ROOT = Path(__file__).parent
+
+# DATA_DIR env var points to a persistent volume on Railway (set to /data).
+# Falls back to the repo root for local dev.
+import os as _os
+_DATA_DIR = Path(_os.environ["DATA_DIR"]) if "DATA_DIR" in _os.environ else ROOT
+_DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+CONFIG_FILE = _DATA_DIR / "config.json"
+SEEN_FILE   = _DATA_DIR / "seen_articles.json"
+
+# On first boot with a fresh volume, seed config.json from the repo copy.
+_REPO_CONFIG = ROOT / "config.json"
+if not CONFIG_FILE.exists() and _REPO_CONFIG.exists() and CONFIG_FILE != _REPO_CONFIG:
+    import shutil as _shutil
+    _shutil.copy(_REPO_CONFIG, CONFIG_FILE)
 
 app = FastAPI(title="AI Daily News API")
 app.add_middleware(
