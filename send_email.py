@@ -257,26 +257,6 @@ def _build_html(brief_text: str, articles: list, display_date: str,
       </td>"""
     H += "\n    </tr></table>\n  </td></tr>\n  </table>\n"
 
-    # ── 4. TICKER ──────────────────────────────────────────
-    ticker_items = [
-        "&#x1F916; AI moves fast — so do you",
-        "&#x1F4A1; Built for SEO pros",
-        "&#x26A1; Powered by AI",
-        "&#x1F4C8; Fresh every morning",
-        "&#x1F3AF; Signal over noise",
-    ]
-    H += f"""
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:{_RED};">
-  <tr><td style="padding:9px 28px;overflow:hidden;">
-    <p style="margin:0;font-size:10px;font-weight:700;color:{_WHITE};
-      letter-spacing:0.8px;text-transform:uppercase;font-family:{_FONT};
-      white-space:nowrap;">
-      {"&nbsp;&nbsp;&nbsp;&#x2022;&nbsp;&nbsp;&nbsp;".join(ticker_items)}
-    </p>
-  </td></tr>
-  </table>
-"""
-
     # ── 5. AI INSIGHTS ────────────────────────────────────
     insights = [
         ("&#x26A1;", "BSM Must Try",    must[0]  if must            else "Explore today's top AI tool recommendation."),
