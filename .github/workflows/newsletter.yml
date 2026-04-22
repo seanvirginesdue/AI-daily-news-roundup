@@ -20,6 +20,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Fetch latest config from Railway
+        run: |
+          curl -sf "${{ secrets.RAILWAY_URL }}/config-export" -o config.json || echo "Using repo config"
+
       - name: Run newsletter
         env:
           AI_BACKEND: groq

@@ -80,6 +80,12 @@ class Settings(BaseModel):
 def get_config():
     return _load()
 
+@app.get("/config-export")
+def export_config():
+    """Returns raw config.json for GitHub Actions to consume before each run."""
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse(CONFIG_FILE.read_text(), media_type="application/json")
+
 # ── Feeds ──────────────────────────────────────────────────
 @app.get("/feeds")
 def get_feeds():
