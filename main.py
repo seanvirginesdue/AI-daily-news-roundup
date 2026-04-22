@@ -21,7 +21,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from fetch_news import fetch_articles, fetch_latest_seo_tip, fetch_latest_yt_video
-from analyze_news import generate_brief, generate_subject
+from analyze_news import generate_brief, generate_subject, generate_prompt_of_the_day
 from send_email import send_newsletter
 
 
@@ -69,9 +69,14 @@ def run() -> None:
     else:
         print("  (no video found)")
 
+    # ── STEP 4c: Generate prompt of the day ───────────────────
+    print("✨ Generating prompt of the day...")
+    prompt_data = generate_prompt_of_the_day()
+    print(f"✓ Prompt: {prompt_data.get('use_case', '')}")
+
     # ── STEP 5: Send ───────────────────────────────────────────
     print("\n📬 Sending email...")
-    send_newsletter(subject, brief_text, articles, display_date, seo_tip, yt_video)
+    send_newsletter(subject, brief_text, articles, display_date, seo_tip, yt_video, prompt_data)
 
     print(f"\n✅ Done!\n")
 

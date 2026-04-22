@@ -127,7 +127,7 @@ def _yt_card(video: dict) -> str:
 
 def _build_html(brief_text: str, articles: list, display_date: str,
                 first_name: str, from_name: str, seo_tip: dict | None = None,
-                yt_video: dict | None = None) -> str:
+                yt_video: dict | None = None, prompt_data: dict | None = None) -> str:
 
     S     = _parse(brief_text)
     must  = S["bsm must try"]
@@ -256,6 +256,62 @@ def _build_html(brief_text: str, articles: list, display_date: str,
         </table>
       </td>"""
     H += "\n    </tr></table>\n  </td></tr>\n  </table>\n"
+
+    # ── 4. PROMPT OF THE DAY ──────────────────────────────
+    if prompt_data:
+        use_case = _esc(prompt_data.get("use_case", "Today's AI Prompt"))
+        prompt   = _esc(prompt_data.get("prompt", ""))
+        example  = _esc(prompt_data.get("example_output", ""))
+        H += f"""
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:{_WHITE};border-top:1px solid {_BDR};">
+  <tr><td style="padding:32px 28px 28px;">
+    {_label("Prompt of the Day")}
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;">
+    <tr>
+      <!-- Left: prompt copy box -->
+      <td width="50%" valign="top" style="padding-right:12px;">
+        <p style="margin:0 0 8px;font-size:10px;font-weight:700;color:{_T_MET};
+          letter-spacing:0.8px;text-transform:uppercase;font-family:{_FONT};">
+          {use_case}
+        </p>
+        <div style="background:{_ST_BG};border:1px solid {_BDR};border-left:3px solid {_RED};
+          border-radius:8px;padding:14px 16px;">
+          <p style="margin:0;font-size:12.5px;line-height:1.65;color:{_T_BOD};
+            font-family:{_FONT};font-style:italic;">
+            &ldquo;{prompt}&rdquo;
+          </p>
+        </div>
+        <p style="margin:10px 0 0;font-size:10px;color:{_T_MET};font-family:{_FONT};">
+          Copy &amp; paste into ChatGPT or Claude
+        </p>
+      </td>
+      <!-- Right: example output preview -->
+      <td width="50%" valign="top" style="padding-left:12px;">
+        <p style="margin:0 0 8px;font-size:10px;font-weight:700;color:{_T_MET};
+          letter-spacing:0.8px;text-transform:uppercase;font-family:{_FONT};">
+          Example Output
+        </p>
+        <div style="background:{_IC_BG};border:1px solid #FECACA;border-radius:8px;padding:14px 16px;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td width="24" valign="top">
+              <div style="width:20px;height:20px;background:{_RED};border-radius:50%;
+                text-align:center;line-height:20px;font-size:11px;color:{_WHITE};
+                font-weight:700;font-family:{_FONT};">AI</div>
+            </td>
+            <td valign="top" style="padding-left:8px;">
+              <p style="margin:0;font-size:12px;line-height:1.6;color:{_T_BOD};
+                font-family:{_FONT};">{example}</p>
+            </td>
+          </tr>
+          </table>
+        </div>
+      </td>
+    </tr>
+    </table>
+  </td></tr>
+  </table>
+"""
 
     # ── 5. AI INSIGHTS ────────────────────────────────────
     insights = [
@@ -626,7 +682,8 @@ def _send_smtp(subject: str, from_str: str, to: str, reply_to: str,
 def send_newsletter(subject: str, brief_text: str,
                     articles: list, display_date: str,
                     seo_tip: dict | None = None,
-                    yt_video: dict | None = None) -> None:
+                    yt_video: dict | None = None,
+                    prompt_data: dict | None = None) -> None:
     config    = json.loads(CONFIG_FILE.read_text())
     ec        = config["email"]
     from_name = ec.get("from_name", "Sean")
@@ -638,7 +695,7 @@ def send_newsletter(subject: str, brief_text: str,
     for recip in ec["recipients"]:
         fn    = recip.get("first_name", "there")
         to    = recip["email"]
-        html  = _build_html(brief_text, articles, display_date, fn, from_name, seo_tip, yt_video)
+        html  = _build_html(brief_text, articles, display_date, fn, from_name, seo_tip, yt_video, prompt_data)
         plain = _build_plain(brief_text, fn, from_name)
 
         if use_resend:

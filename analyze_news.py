@@ -112,3 +112,32 @@ def generate_subject(brief_text: str, display_date: str) -> str:
     system = "You write short, curiosity-driven email subject lines. Under 8 words. No emojis."
     user = f"Write one email subject line for this AI newsletter dated {display_date}:\n\n{brief_text[:500]}"
     return _call(system, user)
+
+
+def generate_prompt_of_the_day() -> dict:
+    """Generate a daily AI prompt + example output for SEO professionals."""
+    import json as _json
+    system = "You are an AI productivity expert for SEO professionals and digital marketers."
+    user = """Create a powerful AI Prompt of the Day for SEO professionals.
+
+Return valid JSON with exactly these fields:
+- "use_case": 3-5 word label for what this prompt does (e.g. "Content Gap Analysis")
+- "prompt": the full prompt to paste into ChatGPT or Claude (60-90 words, specific and actionable)
+- "example_output": a realistic 2-3 sentence snippet showing what the AI would actually respond (make it feel authentic, include specific numbers or insights)
+
+Return only the JSON object, no markdown, no extra text."""
+    try:
+        raw = _call(system, user)
+        # Strip markdown fences if present
+        raw = raw.strip()
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        return _json.loads(raw.strip())
+    except Exception:
+        return {
+            "use_case": "Content Brief Generator",
+            "prompt": "Act as an expert SEO content strategist. I will give you a target keyword. Create a comprehensive content brief including: search intent, recommended title, H2 subheadings (5-7), key points to cover under each heading, internal linking suggestions, and a meta description under 155 characters. Keyword: [INSERT KEYWORD]",
+            "example_output": "Search Intent: Informational. Title: 'The Complete Guide to [Keyword] in 2026'. Suggested H2s: What Is [Keyword], Why It Matters for SEO, Step-by-Step Implementation, Common Mistakes to Avoid, Tools & Resources, Case Studies, FAQs. Meta: Discover proven [keyword] strategies used by top SEO agencies in 2026. Includes step-by-step guide, tools, and real examples.",
+        }
