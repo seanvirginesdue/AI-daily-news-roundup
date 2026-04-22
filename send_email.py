@@ -16,16 +16,16 @@ _LOGO_FILE  = Path(__file__).parent / "bsm_logo.png"
 _HERO_GIF_URL = "https://media.giphy.com/media/7ydUQC0CC2cNVtcrYH/giphy.gif"
 
 # ── Design system ──────────────────────────────────────────
-_RED   = "#d63c2f"
+_ACC   = "#6366F1"  # indigo-500 — primary accent
 _WHITE = "#ffffff"
-_DARK  = "#0B1629"
-_PG_BG = "#E8EDF4"
-_ST_BG = "#F8FAFC"
-_IC_BG = "#FEF2F1"
-_BDR   = "#E2E8F0"
-_T_HED = "#0F172A"
-_T_BOD = "#475569"
-_T_MET = "#94A3B8"
+_DARK  = "#0F172A"  # slate-900 — hero / dark sections
+_PG_BG = "#F1F5F9"  # slate-100 — page background
+_ST_BG = "#F8FAFC"  # slate-50  — card backgrounds
+_IC_BG = "#EEF2FF"  # indigo-50 — accent card tint
+_BDR   = "#E2E8F0"  # slate-200 — borders
+_T_HED = "#0F172A"  # slate-900 — heading text
+_T_BOD = "#475569"  # slate-600 — body text
+_T_MET = "#94A3B8"  # slate-400 — meta / muted text
 _FONT  = "-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif"
 
 # ── Helpers ────────────────────────────────────────────────
@@ -39,14 +39,14 @@ def _lnk(text: str, arts: list) -> str:
         if 0 <= idx < len(arts):
             u = _esc(arts[idx].get("url", "#"))
             t = _esc(arts[idx].get("title", m.group(0)))
-            return f'<a href="{u}" style="color:{_RED};text-decoration:none;font-weight:600;" target="_blank">{t}</a>'
+            return f'<a href="{u}" style="color:{_ACC};text-decoration:none;font-weight:600;" target="_blank">{t}</a>'
         return m.group(0)
     return re.sub(r"\[(\d+)\]", r, text)
 
 def _logo(h: int = 36) -> str:
     if _LOGO_FILE.exists():
         return f'<img src="cid:bsm_logo" height="{h}" style="display:block;" alt="BSM">'
-    return f'<span style="color:{_RED};font-size:22px;font-weight:900;font-family:{_FONT};">BSM</span>'
+    return f'<span style="color:{_ACC};font-size:22px;font-weight:900;font-family:{_FONT};">BSM</span>'
 
 def _img(url: str, alt: str = "", w: int = 200, h: int = 113, r: int = 0) -> str:
     if not url:
@@ -58,12 +58,12 @@ def _btn(label: str, url: str = "#", sm: bool = False) -> str:
     p  = "8px 16px" if sm else "11px 24px"
     fs = "11px"     if sm else "13px"
     return (f'<a href="{_esc(url)}" target="_blank" '
-            f'style="display:inline-block;background:{_RED};color:#fff;font-size:{fs};'
+            f'style="display:inline-block;background:{_ACC};color:#fff;font-size:{fs};'
             f'font-family:{_FONT};font-weight:700;padding:{p};border-radius:8px;'
             f'text-decoration:none;letter-spacing:0.2px;">{_esc(label)}</a>')
 
 def _label(text: str) -> str:
-    return (f'<p style="margin:0 0 8px;font-size:10px;font-weight:700;color:{_RED};'
+    return (f'<p style="margin:0 0 8px;font-size:10px;font-weight:700;color:{_ACC};'
             f'text-transform:uppercase;letter-spacing:2px;font-family:{_FONT};">{text}</p>')
 
 # ── Section parser ─────────────────────────────────────────
@@ -106,7 +106,7 @@ def _yt_card(video: dict) -> str:
   </a>
 </td></tr>
 <tr><td style="padding:14px 16px 16px;background:#fff;">
-  <p style="margin:0 0 4px;font-size:10px;font-weight:700;color:{_RED};
+  <p style="margin:0 0 4px;font-size:10px;font-weight:700;color:{_ACC};
     text-transform:uppercase;letter-spacing:1.5px;font-family:{_FONT};">{ch}</p>
   <p style="margin:0 0 12px;font-size:13px;font-weight:700;color:{_T_HED};
     line-height:1.4;font-family:{_FONT};">
@@ -193,7 +193,7 @@ def _build_html(brief_text: str, articles: list, display_date: str,
     <td style="padding:40px 32px 40px;vertical-align:middle;width:54%;">
       <p style="margin:0 0 14px;">
         <span class="pulse" style="display:inline-block;width:7px;height:7px;
-          border-radius:50%;background:{_RED};vertical-align:middle;
+          border-radius:50%;background:{_ACC};vertical-align:middle;
           margin-right:6px;">&#x25CF;</span>
         <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);
           text-transform:uppercase;letter-spacing:2.5px;font-family:{_FONT};">
@@ -208,7 +208,7 @@ def _build_html(brief_text: str, articles: list, display_date: str,
         The latest AI updates, tools, and breakthroughs — curated every morning for the BSM team.
       </p>
       <a href="{_esc(feat.get('url','#') if feat else '#')}" target="_blank"
-        style="display:inline-block;background:{_RED};color:{_WHITE};
+        style="display:inline-block;background:{_ACC};color:{_WHITE};
         font-size:13px;font-weight:700;padding:12px 24px;border-radius:8px;
         text-decoration:none;font-family:{_FONT};letter-spacing:0.2px;">
         Read Today's Top Story &rarr;
@@ -274,7 +274,7 @@ def _build_html(brief_text: str, articles: list, display_date: str,
           letter-spacing:0.8px;text-transform:uppercase;font-family:{_FONT};">
           {use_case}
         </p>
-        <div style="background:{_ST_BG};border:1px solid {_BDR};border-left:3px solid {_RED};
+        <div style="background:{_ST_BG};border:1px solid {_BDR};border-left:3px solid {_ACC};
           border-radius:8px;padding:14px 16px;">
           <p style="margin:0;font-size:12.5px;line-height:1.65;color:{_T_BOD};
             font-family:{_FONT};font-style:italic;">
@@ -291,11 +291,11 @@ def _build_html(brief_text: str, articles: list, display_date: str,
           letter-spacing:0.8px;text-transform:uppercase;font-family:{_FONT};">
           Example Output
         </p>
-        <div style="background:{_IC_BG};border:1px solid #FECACA;border-radius:8px;padding:14px 16px;">
+        <div style="background:{_IC_BG};border:1px solid #C7D2FE;border-radius:8px;padding:14px 16px;">
           <table width="100%" cellpadding="0" cellspacing="0">
           <tr>
             <td width="24" valign="top">
-              <div style="width:20px;height:20px;background:{_RED};border-radius:50%;
+              <div style="width:20px;height:20px;background:{_ACC};border-radius:50%;
                 text-align:center;line-height:20px;font-size:11px;color:{_WHITE};
                 font-weight:700;font-family:{_FONT};">AI</div>
             </td>
@@ -332,7 +332,7 @@ def _build_html(brief_text: str, articles: list, display_date: str,
       <td style="width:33%;padding:0 6px;vertical-align:top;">
         <table width="100%" cellpadding="0" cellspacing="0"
           style="background:{_ST_BG};border-radius:12px;border:1px solid {_BDR};
-          border-top:3px solid {_RED};height:100%;">
+          border-top:3px solid {_ACC};height:100%;">
         <tr><td style="padding:18px 16px;">
           <p style="margin:0 0 10px;font-size:22px;">{emoji}</p>
           <p style="margin:0 0 8px;font-size:11px;font-weight:700;color:{_T_HED};
@@ -390,7 +390,7 @@ def _build_html(brief_text: str, articles: list, display_date: str,
           <td style="width:40px;vertical-align:top;padding-right:16px;padding-top:2px;">
             <table cellpadding="0" cellspacing="0">
             <tr><td align="center" valign="middle" width="36" height="36"
-              style="background:{_RED};border-radius:8px;width:36px;height:36px;
+              style="background:{_ACC};border-radius:8px;width:36px;height:36px;
               font-size:12px;font-weight:800;color:{_WHITE};text-align:center;
               line-height:36px;font-family:{_FONT};">{nums[i]}</td></tr>
             </table>
@@ -443,7 +443,7 @@ def _build_html(brief_text: str, articles: list, display_date: str,
           box-shadow:0 1px 6px rgba(0,0,0,0.05);">
           {"<tr><td style='line-height:0;'><a href='" + url + "' target='_blank'>" + ih + "</a></td></tr>" if ih else ""}
           <tr><td style="padding:12px 14px 16px;">
-            <p style="margin:0 0 6px;font-size:9px;font-weight:700;color:{_RED};
+            <p style="margin:0 0 6px;font-size:9px;font-weight:700;color:{_ACC};
               text-transform:uppercase;letter-spacing:1.5px;font-family:{_FONT};">{src}</p>
             <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:{_T_HED};
               line-height:1.4;font-family:{_FONT};">
@@ -476,7 +476,7 @@ def _build_html(brief_text: str, articles: list, display_date: str,
   <tr><td style="padding:28px 28px;">
     <table width="100%" cellpadding="0" cellspacing="0"
       style="background:{_ST_BG};border-radius:12px;border:1px solid {_BDR};
-      border-left:4px solid {_RED};overflow:hidden;">
+      border-left:4px solid {_ACC};overflow:hidden;">
     <tr><td style="padding:22px 24px;">
       {_label("SEO Spotlight")}
       <p style="margin:0 0 16px;font-size:16px;font-weight:800;color:{_T_HED};
@@ -511,7 +511,7 @@ def _build_html(brief_text: str, articles: list, display_date: str,
                 f'<td style="width:28px;vertical-align:top;padding-top:1px;">'
                 f'<span style="display:inline-block;width:22px;height:22px;'
                 f'border-radius:50%;background:{_IC_BG};text-align:center;'
-                f'line-height:22px;font-size:10px;font-weight:800;color:{_RED};'
+                f'line-height:22px;font-size:10px;font-weight:800;color:{_ACC};'
                 f'font-family:{_FONT};">{idx}</span></td>'
                 f'<td style="vertical-align:top;padding-left:10px;">'
                 f'<p style="margin:0;font-size:13px;color:{_T_BOD};line-height:1.65;'
@@ -542,7 +542,7 @@ def _build_html(brief_text: str, articles: list, display_date: str,
   <table width="100%" cellpadding="0" cellspacing="0" style="background:{_DARK};">
   <tr><td style="padding:32px 32px;">
     <table cellpadding="0" cellspacing="0">
-    <tr><td style="background:{_RED};border-radius:6px;padding:4px 12px;margin-bottom:14px;display:inline-block;">
+    <tr><td style="background:{_ACC};border-radius:6px;padding:4px 12px;margin-bottom:14px;display:inline-block;">
       <p style="margin:0;font-size:9px;font-weight:700;color:{_WHITE};
         text-transform:uppercase;letter-spacing:2px;font-family:{_FONT};">
         2&#8209;Minute Read
@@ -557,7 +557,7 @@ def _build_html(brief_text: str, articles: list, display_date: str,
 
     # ── 12. SIGN-OFF ───────────────────────────────────────
     H += f"""
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:{_RED};">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:{_ACC};">
   <tr><td style="padding:28px 32px;">
     <p style="margin:0 0 6px;font-size:14px;color:rgba(255,255,255,0.9);
       line-height:1.7;font-family:{_FONT};">
@@ -588,7 +588,7 @@ def _build_html(brief_text: str, articles: list, display_date: str,
           +1 (720) 594-6224</p>
         <p style="margin:0 0 4px;font-size:11px;color:{_T_BOD};font-family:{_FONT};">
           sean@boulderseomarketing.com</p>
-        <p style="margin:0;font-size:11px;color:{_RED};font-weight:600;
+        <p style="margin:0;font-size:11px;color:{_ACC};font-weight:600;
           font-family:{_FONT};">boulderseomarketing.com</p>
       </td>
       <td style="width:30%;vertical-align:top;">
