@@ -3,7 +3,7 @@ Email sender — premium AI newsletter.
 Table-based layout, inline CSS, Gmail-compatible.
 """
 
-import os, re, smtplib, json
+import os, re, smtplib, json, datetime, urllib.request as _ur
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -13,8 +13,31 @@ from pathlib import Path
 CONFIG_FILE = Path(__file__).parent.parent / "config.json"
 _LOGO_FILE  = Path(__file__).parent.parent / "assets" / "bsm_logo.png"
 
-# ── Animated GIF for hero ──────────────────────────────────
-_HERO_GIF_URL = "https://media.giphy.com/media/7ydUQC0CC2cNVtcrYH/giphy.gif"
+# ── Dynamic hero GIF ───────────────────────────────────────
+# Curated pool of AI/tech-themed Giphy IDs — rotates daily as fallback
+_HERO_POOL = [
+    "7ydUQC0CC2cNVtcrYH", "3oKIPEqDGUULpEU0aQ", "du3J3cXyzhj75IOgvA",
+    "077i6AULCXc0FKTj9s", "RDZo7znAdn2u7sAcWH", "3o7btNhMBytxAM6YBa",
+    "l0HlBO7eyXzSZkJri",  "xT9IgzoKnwFNmISR8I", "dWesBcTLavkZuG35MI",
+    "3oEdva9BUHPHz2yEAA", "26uf2YTgF5upXUTm0",  "xUA7bdpLxQhsSQdyog",
+    "f9XgHHnPnDjOF1hWpl", "hpXdHPfFI5wTABdDx9", "LmNwrBhejkK9EFP504",
+    "26DN48mfu3uWJ3J7y",  "l1J9EdzfOSgfyueLm",  "3o6Zt7g9uD0UGMVb3a",
+]
+
+def _daily_hero_image() -> str:
+    """Return a fresh AI-themed GIF URL. Tries Giphy API first, falls back to curated daily rotation."""
+    api_key = os.environ.get("GIPHY_API_KEY", "dc6zaTOxFJmzC")
+    try:
+        url = (f"https://api.giphy.com/v1/gifs/random"
+               f"?api_key={api_key}&tag=artificial+intelligence&rating=g")
+        req = _ur.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with _ur.urlopen(req, timeout=4) as r:
+            gif_id = json.loads(r.read())["data"]["id"]
+        return f"https://media.giphy.com/media/{gif_id}/giphy.gif"
+    except Exception:
+        day = datetime.datetime.now().timetuple().tm_yday
+        gif_id = _HERO_POOL[day % len(_HERO_POOL)]
+        return f"https://media.giphy.com/media/{gif_id}/giphy.gif"
 
 # ── Design system ──────────────────────────────────────────
 _ACC   = "#6366F1"  # indigo-500 — primary accent
@@ -218,8 +241,8 @@ def _build_html(brief_text: str, articles: list, display_date: str,
     <td style="padding:28px 24px 28px 0;vertical-align:middle;
       text-align:center;width:46%;">
       <div style="display:inline-block;border-radius:14px;overflow:hidden;
-        border:2px solid rgba(214,60,47,0.35);line-height:0;">
-        <img src="{_HERO_GIF_URL}" width="216" height="216"
+        border:2px solid rgba(99,102,241,0.4);line-height:0;">
+        <img src="{_daily_hero_image()}" width="216" height="216"
           style="width:216px;height:216px;object-fit:cover;display:block;border:0;"
           alt="AI in motion">
       </div>
