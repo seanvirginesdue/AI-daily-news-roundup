@@ -20,9 +20,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from fetch_news import fetch_articles, fetch_latest_seo_tip, fetch_latest_yt_video
-from analyze_news import generate_brief, generate_subject, generate_prompt_of_the_day
-from send_email import send_newsletter
+from pipeline.fetch_news import fetch_articles, fetch_latest_seo_tip, fetch_latest_yt_video
+from pipeline.analyze_news import generate_brief, generate_subject, generate_prompt_of_the_day
+from pipeline.send_email import send_newsletter
 
 
 def run() -> None:

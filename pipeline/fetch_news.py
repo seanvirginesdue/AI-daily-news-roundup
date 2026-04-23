@@ -19,7 +19,7 @@ import feedparser
 
 _MAX_AGE_DAYS = 30
 
-CONFIG_FILE = Path(__file__).parent / "config.json"
+CONFIG_FILE = Path(__file__).parent.parent / "config.json"
 
 
 # Matt Wolfe — AI tools & news (810K subs). Swap channel ID to change source.

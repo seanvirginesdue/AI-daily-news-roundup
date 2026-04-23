@@ -10,8 +10,8 @@ from email.mime.text import MIMEText
 from email.utils import parseaddr
 from pathlib import Path
 
-CONFIG_FILE = Path(__file__).parent / "config.json"
-_LOGO_FILE  = Path(__file__).parent / "bsm_logo.png"
+CONFIG_FILE = Path(__file__).parent.parent / "config.json"
+_LOGO_FILE  = Path(__file__).parent.parent / "assets" / "bsm_logo.png"
 
 # ── Animated GIF for hero ──────────────────────────────────
 _HERO_GIF_URL = "https://media.giphy.com/media/7ydUQC0CC2cNVtcrYH/giphy.gif"
