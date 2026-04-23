@@ -25,19 +25,10 @@ _HERO_POOL = [
 ]
 
 def _daily_hero_image() -> str:
-    """Return a fresh AI-themed GIF URL. Tries Giphy API first, falls back to curated daily rotation."""
-    api_key = os.environ.get("GIPHY_API_KEY", "dc6zaTOxFJmzC")
-    try:
-        url = (f"https://api.giphy.com/v1/gifs/random"
-               f"?api_key={api_key}&tag=artificial+intelligence&rating=g")
-        req = _ur.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-        with _ur.urlopen(req, timeout=4) as r:
-            gif_id = json.loads(r.read())["data"]["id"]
-        return f"https://media.giphy.com/media/{gif_id}/giphy.gif"
-    except Exception:
-        day = datetime.datetime.now().timetuple().tm_yday
-        gif_id = _HERO_POOL[day % len(_HERO_POOL)]
-        return f"https://media.giphy.com/media/{gif_id}/giphy.gif"
+    """Return an AI-themed GIF that changes daily from a curated pool."""
+    day = datetime.datetime.now().timetuple().tm_yday
+    gif_id = _HERO_POOL[day % len(_HERO_POOL)]
+    return f"https://media.giphy.com/media/{gif_id}/giphy.gif"
 
 # ── Design system ──────────────────────────────────────────
 _ACC   = "#6366F1"  # indigo-500 — primary accent

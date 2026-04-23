@@ -25,16 +25,18 @@ CONFIG_FILE = Path(__file__).parent.parent / "config.json"
 # AI-focused YouTube channels shown in the email's Watch Today section.
 # Swap any channel ID to change the source — uses YouTube's public RSS feed (no API key needed).
 _YT_AI_CHANNELS = [
-    "UChpleBmo18P08aKCIgti38g",  # Matt Wolfe       — AI tools & news
-    "UCVhQ2NnY5Rskt6UjCUkJ_DA",  # Fireship          — dev tools & AI
-    "UCbfYPyITQ-7l4upoX8nvctg",  # Two Minute Papers — AI research
+    "UCNJ1Ymd5yFuUPtn21xtRbbw",  # AI Explained      — AI news & research
+    "UCXZCJLdBC09xxGZ6gcdrc6A",  # OpenAI            — official releases & demos
+    "UCHlNU7kIZhRgSbhHvFoy72w",  # HuggingFace       — open-source AI & models
 ]
+
+_YT_HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
 
 def fetch_latest_yt_video(channel_id: str) -> dict | None:
     """Return the latest YouTube video from a channel as {title, url, thumbnail, channel}."""
     try:
         feed_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
-        parsed = feedparser.parse(feed_url)
+        parsed = feedparser.parse(feed_url, request_headers=_YT_HEADERS)
         if not parsed.entries:
             return None
         entry   = parsed.entries[0]
