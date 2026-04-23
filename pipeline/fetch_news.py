@@ -79,8 +79,12 @@ def _load_config() -> dict:
 
 def _load_seen(path: str) -> set:
     if os.path.exists(path):
-        with open(path) as f:
-            return set(json.load(f))
+        try:
+            with open(path) as f:
+                return set(json.load(f))
+        except (json.JSONDecodeError, ValueError):
+            print(f"  [WARN] {path} is malformed — resetting to empty")
+            _save_seen(path, set())
     return set()
 
 
