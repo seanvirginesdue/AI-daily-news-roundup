@@ -24,15 +24,10 @@ CONFIG_FILE = Path(__file__).parent.parent / "config.json"
 
 # AI-focused YouTube channels shown in the email's Watch Today section.
 # Swap any channel ID to change the source — uses YouTube's public RSS feed (no API key needed).
-# Larger pool so fetch_yt_videos keeps trying until 3 succeed (YouTube rate-limits vary).
 _YT_AI_CHANNELS = [
-    "UCSHZKyawb77ixDdsGog4iWA",  # Lex Fridman       — AI researcher interviews
-    "UCbfYPyITQ-7l4upoX8nvctg",  # Two Minute Papers — AI research breakdowns
-    "UCfzlCWGWYyIQ0aLC5w48gBQ",  # sentdex           — AI coding & ML tutorials
-    "UCAuUUnT6oDeKwE6v1NGQxug",  # TED               — AI & tech talks
-    "UCXZCJLdBC09xxGZ6gcdrc6A",  # OpenAI            — official releases & demos
-    "UCHlNU7kIZhRgSbhHvFoy72w",  # HuggingFace       — open-source AI & models
-    "UCVhQ2NnY5Rskt6UjCUkJ_DA",  # Fireship          — dev & AI shorts
+    "UCmeU2DYiVy80wMBGZzEWnbw",  # Paul J Lipsky     — AI tools & automation
+    "UCrB7UFnkosBjAhOg3a9NdWw",  # Grace Leung       — AI marketing & Claude
+    "UC0C-17n9iuUQPylguM1d-lQ",  # Nate B Jones      — AI productivity & business
 ]
 
 _YT_HEADERS = {
@@ -63,12 +58,10 @@ def fetch_latest_yt_video(channel_id: str) -> dict | None:
         print(f"  [YT] {channel_id}: {type(e).__name__}: {e}")
         return None
 
-def fetch_yt_videos(channel_ids: list = _YT_AI_CHANNELS, want: int = 3) -> list[dict]:
-    """Try channels in order until `want` videos are collected (skips failed ones)."""
+def fetch_yt_videos(channel_ids: list = _YT_AI_CHANNELS) -> list[dict]:
+    """Fetch the latest video from each channel. Returns up to 3 videos."""
     videos = []
     for cid in channel_ids:
-        if len(videos) >= want:
-            break
         video = fetch_latest_yt_video(cid)
         if video:
             videos.append(video)
