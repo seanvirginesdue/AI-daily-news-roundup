@@ -25,9 +25,9 @@ _HERO_POOL = [
 ]
 
 def _daily_hero_image() -> str:
-    """Return an AI-themed GIF that changes daily from a curated pool."""
-    day = datetime.datetime.now().timetuple().tm_yday
-    gif_id = _HERO_POOL[day % len(_HERO_POOL)]
+    """Return a random AI-themed GIF from the curated pool — fresh on every send."""
+    import random
+    gif_id = random.choice(_HERO_POOL)
     return f"https://media.giphy.com/media/{gif_id}/giphy.gif"
 
 # ── Design system ──────────────────────────────────────────

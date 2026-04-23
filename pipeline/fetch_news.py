@@ -35,36 +35,43 @@ _YT_HEADERS = {
     "Accept": "application/xml,text/xml,*/*;q=0.8",
 }
 
-def fetch_latest_yt_video(channel_id: str) -> dict | None:
-    """Return the latest YouTube video from a channel as {title, url, thumbnail, channel}.
-    Uses requests for the HTTP call (bypasses feedparser's blocked UA on some servers),
-    then feedparser to parse the XML content."""
+def fetch_latest_yt_video(channel_id: str, seen_urls: set) -> dict | None:
+    """Return the first unseen video from a channel as {title, url, thumbnail, channel}.
+    Iterates through the channel's recent videos and skips any already in seen_urls."""
     try:
         import requests as _rq
         feed_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
         resp = _rq.get(feed_url, headers=_YT_HEADERS, timeout=8)
         resp.raise_for_status()
         parsed  = feedparser.parse(resp.content)
-        if not parsed.entries:
-            return None
-        entry   = parsed.entries[0]
-        vid_id  = entry.get("yt_videoid") or entry.get("id", "").split(":")[-1]
-        title   = entry.get("title", "")
-        url     = entry.get("link", f"https://www.youtube.com/watch?v={vid_id}")
-        thumb   = f"https://img.youtube.com/vi/{vid_id}/maxresdefault.jpg"
         channel = parsed.feed.get("title", "YouTube")
-        return {"title": title, "url": url, "thumbnail": thumb, "channel": channel}
+        for entry in parsed.entries:
+            vid_id = entry.get("yt_videoid") or entry.get("id", "").split(":")[-1]
+            url    = entry.get("link", f"https://www.youtube.com/watch?v={vid_id}")
+            if url in seen_urls:
+                continue
+            title = entry.get("title", "")
+            thumb = f"https://img.youtube.com/vi/{vid_id}/maxresdefault.jpg"
+            return {"title": title, "url": url, "thumbnail": thumb, "channel": channel}
+        return None
     except Exception as e:
         print(f"  [YT] {channel_id}: {type(e).__name__}: {e}")
         return None
 
 def fetch_yt_videos(channel_ids: list = _YT_AI_CHANNELS) -> list[dict]:
-    """Fetch the latest video from each channel. Returns up to 3 videos."""
-    videos = []
+    """Fetch one unseen video per channel, tracking seen URLs in seen_videos.json."""
+    config        = _load_config()
+    seen_path     = config.get("seen_videos_file", "seen_videos.json")
+    seen_urls     = _load_seen(seen_path)
+    videos        = []
+    new_seen_urls = set()
     for cid in channel_ids:
-        video = fetch_latest_yt_video(cid)
+        video = fetch_latest_yt_video(cid, seen_urls)
         if video:
             videos.append(video)
+            new_seen_urls.add(video["url"])
+    if new_seen_urls:
+        _save_seen(seen_path, seen_urls | new_seen_urls)
     return videos
 
 

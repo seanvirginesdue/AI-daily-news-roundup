@@ -57,13 +57,18 @@
         "email": "sean@boulderseomarketing.com"
       },
       {
-        "first_name": "Daniel",
-        "email": "daniel@boulderseomarketing.com"
+        "first_name": "Harold",
+        "email": "harold@boulderseomarketing.com"
+      },
+      {
+        "first_name": "Christopher",
+        "email": "christopher@boulderseomarketing.com"
       }
       
     ],
     "smtp_host": "smtp.gmail.com",
     "smtp_port": 587
   },
-  "seen_articles_file": "seen_articles.json"
+  "seen_articles_file": "seen_articles.json",
+  "seen_videos_file": "seen_videos.json"
 }
