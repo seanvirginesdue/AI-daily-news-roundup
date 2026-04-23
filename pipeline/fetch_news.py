@@ -24,19 +24,32 @@ CONFIG_FILE = Path(__file__).parent.parent / "config.json"
 
 # AI-focused YouTube channels shown in the email's Watch Today section.
 # Swap any channel ID to change the source — uses YouTube's public RSS feed (no API key needed).
+# Larger pool so fetch_yt_videos keeps trying until 3 succeed (YouTube rate-limits vary).
 _YT_AI_CHANNELS = [
-    "UCNJ1Ymd5yFuUPtn21xtRbbw",  # AI Explained      — AI news & research
+    "UCSHZKyawb77ixDdsGog4iWA",  # Lex Fridman       — AI researcher interviews
+    "UCbfYPyITQ-7l4upoX8nvctg",  # Two Minute Papers — AI research breakdowns
+    "UCfzlCWGWYyIQ0aLC5w48gBQ",  # sentdex           — AI coding & ML tutorials
+    "UCAuUUnT6oDeKwE6v1NGQxug",  # TED               — AI & tech talks
     "UCXZCJLdBC09xxGZ6gcdrc6A",  # OpenAI            — official releases & demos
     "UCHlNU7kIZhRgSbhHvFoy72w",  # HuggingFace       — open-source AI & models
+    "UCVhQ2NnY5Rskt6UjCUkJ_DA",  # Fireship          — dev & AI shorts
 ]
 
-_YT_HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
+_YT_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "application/xml,text/xml,*/*;q=0.8",
+}
 
 def fetch_latest_yt_video(channel_id: str) -> dict | None:
-    """Return the latest YouTube video from a channel as {title, url, thumbnail, channel}."""
+    """Return the latest YouTube video from a channel as {title, url, thumbnail, channel}.
+    Uses requests for the HTTP call (bypasses feedparser's blocked UA on some servers),
+    then feedparser to parse the XML content."""
     try:
+        import requests as _rq
         feed_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
-        parsed = feedparser.parse(feed_url, request_headers=_YT_HEADERS)
+        resp = _rq.get(feed_url, headers=_YT_HEADERS, timeout=8)
+        resp.raise_for_status()
+        parsed  = feedparser.parse(resp.content)
         if not parsed.entries:
             return None
         entry   = parsed.entries[0]
@@ -46,13 +59,16 @@ def fetch_latest_yt_video(channel_id: str) -> dict | None:
         thumb   = f"https://img.youtube.com/vi/{vid_id}/maxresdefault.jpg"
         channel = parsed.feed.get("title", "YouTube")
         return {"title": title, "url": url, "thumbnail": thumb, "channel": channel}
-    except Exception:
+    except Exception as e:
+        print(f"  [YT] {channel_id}: {type(e).__name__}: {e}")
         return None
 
-def fetch_yt_videos(channel_ids: list = _YT_AI_CHANNELS) -> list[dict]:
-    """Fetch the latest video from each AI channel. Returns up to 3 videos."""
+def fetch_yt_videos(channel_ids: list = _YT_AI_CHANNELS, want: int = 3) -> list[dict]:
+    """Try channels in order until `want` videos are collected (skips failed ones)."""
     videos = []
-    for cid in channel_ids[:3]:
+    for cid in channel_ids:
+        if len(videos) >= want:
+            break
         video = fetch_latest_yt_video(cid)
         if video:
             videos.append(video)
