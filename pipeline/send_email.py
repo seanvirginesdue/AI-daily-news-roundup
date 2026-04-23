@@ -455,48 +455,52 @@ def _build_html(brief_text: str, articles: list, display_date: str,
     for _cat, _arts in _cat_buckets.items():
         if not _arts:
             continue
-        _cc  = _cat_colors[_cat]
-        _ico = _cat_icons[_cat]
-        _rows = ""
+        _cc    = _cat_colors[_cat]
+        _ico   = _cat_icons[_cat]
+        _count = len(_arts[:6])
+        _rows  = ""
         for _j, _a in enumerate(_arts[:6]):
-            _bdr   = f"border-bottom:1px solid {_BDR};" if _j < len(_arts[:6]) - 1 else ""
+            _bdr   = f"border-top:1px solid {_BDR};" if _j > 0 else ""
             _atitl = _esc(_a.get("title","")[:80])
-            _asrc  = _esc(_a.get("source","")[:25])
+            _asrc  = _esc(_a.get("source","")[:22])
             _aurl  = _esc(_a.get("url","#"))
             _rows += f"""
-      <tr><td style="padding:9px 0;{_bdr}">
+      <tr><td style="padding:13px 22px;{_bdr}">
         <table cellpadding="0" cellspacing="0" width="100%"><tr>
-          <td width="14" valign="top" style="padding-top:5px;">
-            <div style="width:6px;height:6px;border-radius:50%;background:{_cc};"></div>
-          </td>
-          <td valign="top">
+          <td valign="middle" style="padding-right:16px;">
             <a href="{_aurl}" target="_blank"
               style="font-size:13px;font-weight:600;color:{_T_HED};
-              text-decoration:none;line-height:1.4;font-family:{_FONT};">{_atitl}</a>
-            <span style="font-size:10px;color:{_T_MET};font-family:{_FONT};">
-              &nbsp;&mdash;&nbsp;{_asrc}</span>
+              text-decoration:none;line-height:1.45;font-family:{_FONT};">{_atitl}</a>
+          </td>
+          <td valign="middle" style="text-align:right;white-space:nowrap;">
+            <span style="font-size:10px;font-weight:500;color:{_T_MET};
+              font-family:{_FONT};">{_asrc}</span>
           </td>
         </tr></table>
       </td></tr>"""
         _cats_html += f"""
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
-    <tr><td>
-      <table cellpadding="0" cellspacing="0" style="margin-bottom:10px;"><tr>
-        <td style="background:{_cc};border-radius:6px;padding:4px 12px;">
-          <p style="margin:0;font-size:10px;font-weight:700;color:#fff;
-            text-transform:uppercase;letter-spacing:1.5px;font-family:{_FONT};">
-            {_ico}&nbsp;{_cat}
-          </p>
+    <table width="100%" cellpadding="0" cellspacing="0"
+      style="background:{_WHITE};border-radius:12px;
+      border:1px solid {_BDR};border-top:4px solid {_cc};
+      margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,0.05);">
+    <tr><td style="padding:16px 22px 14px;border-bottom:1px solid {_BDR};">
+      <table cellpadding="0" cellspacing="0" width="100%"><tr>
+        <td valign="middle">
+          <table cellpadding="0" cellspacing="0"><tr>
+            <td style="background:{_cc};border-radius:6px;padding:4px 10px;">
+              <p style="margin:0;font-size:10px;font-weight:800;color:#fff;
+                text-transform:uppercase;letter-spacing:1.5px;
+                font-family:{_FONT};">{_ico}&nbsp;{_cat}</p>
+            </td>
+          </tr></table>
+        </td>
+        <td valign="middle" style="text-align:right;">
+          <p style="margin:0;font-size:10px;color:{_T_MET};font-family:{_FONT};">
+            {_count}&nbsp;article{"s" if _count != 1 else ""}</p>
         </td>
       </tr></table>
-      <table width="100%" cellpadding="0" cellspacing="0"
-        style="background:{_WHITE};border-radius:10px;
-        border:1px solid {_BDR};border-left:3px solid {_cc};">
-      <tr><td style="padding:6px 16px 10px;">
-        <table width="100%" cellpadding="0" cellspacing="0">{_rows}</table>
-      </td></tr>
-      </table>
     </td></tr>
+    {_rows}
     </table>"""
 
     H += f"""
