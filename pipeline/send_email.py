@@ -252,33 +252,33 @@ def _build_html(brief_text: str, articles: list, display_date: str,
     {_label("Watch Today")}
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
 """
-        paddings = ["0 8px 0 0", "0 4px", "0 0 0 8px"]
+        paddings = ["0 7px 0 0", "0 3.5px", "0 0 0 7px"]
         for i, v in enumerate(vids[:3]):
             thumb = _esc(v.get("thumbnail", ""))
             url   = _esc(v.get("url", "#"))
-            title = _esc(v.get("title", "")[:60])
+            title = _esc(v.get("title", "")[:55])
             ch    = _esc(v.get("channel", "YouTube"))
             pad   = paddings[i] if i < len(paddings) else "0 4px"
             H += f"""
       <td width="33%" style="padding:{pad};vertical-align:top;">
         <table width="100%" cellpadding="0" cellspacing="0"
-          style="background:{_WHITE};border-radius:10px;border:1px solid {_BDR};
-          overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+          style="background:{_WHITE};border-radius:12px;border:1px solid {_BDR};
+          overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
         <tr><td style="line-height:0;">
           <a href="{url}" target="_blank">
             <img src="{thumb}" width="185" height="104"
               style="width:100%;height:104px;object-fit:cover;display:block;border:0;">
           </a>
         </td></tr>
-        <tr><td style="padding:10px 12px 12px;">
+        <tr><td style="padding:12px 12px 14px;height:80px;vertical-align:top;">
           <p style="margin:0 0 4px;font-size:9px;font-weight:700;color:{_ACC};
             text-transform:uppercase;letter-spacing:1px;font-family:{_FONT};">{ch}</p>
-          <p style="margin:0 0 8px;font-size:11px;font-weight:700;color:{_T_HED};
-            line-height:1.45;font-family:{_FONT};">{title}</p>
+          <p style="margin:0 0 10px;font-size:11px;font-weight:700;color:{_T_HED};
+            line-height:1.4;height:34px;overflow:hidden;font-family:{_FONT};">{title}</p>
           <a href="{url}" target="_blank"
-            style="display:inline-block;background:#FF0000;color:#fff;font-size:10px;
-            font-weight:700;padding:5px 10px;border-radius:5px;text-decoration:none;
-            font-family:{_FONT};">&#x25B6;&nbsp;Watch</a>
+            style="display:inline-block;background:{_ACC};color:{_WHITE};font-size:10px;
+            font-weight:700;padding:6px 14px;border-radius:20px;text-decoration:none;
+            font-family:{_FONT};letter-spacing:0.2px;">Watch &rarr;</a>
         </td></tr>
         </table>
       </td>"""
