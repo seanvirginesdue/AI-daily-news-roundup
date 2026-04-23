@@ -155,7 +155,6 @@ def _build_html(brief_text: str, articles: list, display_date: str,
     imgs  = [a for a in articles if a.get("image")]
     feat  = imgs[0] if imgs else (articles[0] if articles else {})
     feat2 = imgs[1] if len(imgs) > 1 else feat
-    g3    = (articles + [{}] * 3)[:3]
 
     def L(t): return _lnk(t, articles)
 
@@ -243,46 +242,51 @@ def _build_html(brief_text: str, articles: list, display_date: str,
 """
 
     # ── 3. WATCH TODAY — 3 YouTube videos ─────────────────
+    # Card math: 640px - 56px padding = 584px inner
+    # 3 × 184px cards + 2 × 16px spacers = 584px exactly
     vids = yt_videos or []
     if vids:
+        cards_html = ""
+        for i, v in enumerate(vids[:3]):
+            thumb = _esc(v.get("thumbnail", ""))
+            url   = _esc(v.get("url", "#"))
+            title = _esc(v.get("title", "")[:52])
+            ch    = _esc(v.get("channel", "YouTube")[:22])
+            spacer = f'<td width="16"></td>' if i > 0 else ""
+            cards_html += f"""{spacer}
+<td width="184" valign="top">
+  <table width="184" cellpadding="0" cellspacing="0"
+    style="background:{_WHITE};border-radius:10px;border:1px solid {_BDR};">
+  <tr><td height="104" style="line-height:0;height:104px;">
+    <a href="{url}" target="_blank">
+      <img src="{thumb}" width="182" height="104"
+        style="width:182px;height:104px;object-fit:cover;display:block;border:0;">
+    </a>
+  </td></tr>
+  <tr><td style="padding:10px 12px 14px;">
+    <p style="margin:0 0 3px;font-size:9px;font-weight:700;color:{_ACC};
+      text-transform:uppercase;letter-spacing:1px;font-family:{_FONT};
+      white-space:nowrap;overflow:hidden;">{ch}</p>
+    <p style="margin:0 0 10px;font-size:11px;font-weight:700;color:{_T_HED};
+      line-height:1.4;height:31px;overflow:hidden;font-family:{_FONT};">{title}</p>
+    <a href="{url}" target="_blank"
+      style="display:inline-block;background:{_ACC};color:{_WHITE};font-size:10px;
+      font-weight:700;padding:5px 14px;border-radius:20px;text-decoration:none;
+      font-family:{_FONT};letter-spacing:0.2px;">Watch &rarr;</a>
+  </td></tr>
+  </table>
+</td>"""
         H += f"""
   <table width="100%" cellpadding="0" cellspacing="0"
     style="background:{_ST_BG};border-top:1px solid {_BDR};">
   <tr><td style="padding:28px 28px 24px;">
     {_label("Watch Today")}
-    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+    <table cellpadding="0" cellspacing="0" style="margin-top:14px;"><tr>
+      {cards_html}
+    </tr></table>
+  </td></tr>
+  </table>
 """
-        paddings = ["0 7px 0 0", "0 3.5px", "0 0 0 7px"]
-        for i, v in enumerate(vids[:3]):
-            thumb = _esc(v.get("thumbnail", ""))
-            url   = _esc(v.get("url", "#"))
-            title = _esc(v.get("title", "")[:55])
-            ch    = _esc(v.get("channel", "YouTube"))
-            pad   = paddings[i] if i < len(paddings) else "0 4px"
-            H += f"""
-      <td width="33%" style="padding:{pad};vertical-align:top;">
-        <table width="100%" cellpadding="0" cellspacing="0"
-          style="background:{_WHITE};border-radius:12px;border:1px solid {_BDR};
-          overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-        <tr><td style="line-height:0;">
-          <a href="{url}" target="_blank">
-            <img src="{thumb}" width="185" height="104"
-              style="width:100%;height:104px;object-fit:cover;display:block;border:0;">
-          </a>
-        </td></tr>
-        <tr><td style="padding:12px 12px 14px;height:80px;vertical-align:top;">
-          <p style="margin:0 0 4px;font-size:9px;font-weight:700;color:{_ACC};
-            text-transform:uppercase;letter-spacing:1px;font-family:{_FONT};">{ch}</p>
-          <p style="margin:0 0 10px;font-size:11px;font-weight:700;color:{_T_HED};
-            line-height:1.4;height:34px;overflow:hidden;font-family:{_FONT};">{title}</p>
-          <a href="{url}" target="_blank"
-            style="display:inline-block;background:{_ACC};color:{_WHITE};font-size:10px;
-            font-weight:700;padding:6px 14px;border-radius:20px;text-decoration:none;
-            font-family:{_FONT};letter-spacing:0.2px;">Watch &rarr;</a>
-        </td></tr>
-        </table>
-      </td>"""
-        H += "\n    </tr></table>\n  </td></tr>\n  </table>\n"
 
     # ── 4. PROMPT OF THE DAY ──────────────────────────────
     if prompt_data:
@@ -434,54 +438,78 @@ def _build_html(brief_text: str, articles: list, display_date: str,
       </tr>"""
     H += "\n    </table>\n  </td></tr>\n  </table>\n"
 
-    # ── 8. LATEST NEWS GRID ───────────────────────────────
+    # ── 8. CATEGORIZED NEWS (Marketing / SEO / Dev) ──────
+    _cat_buckets: dict[str, list] = {"Marketing": [], "SEO": [], "Dev": []}
+    _cat_colors  = {"Marketing": _ACC,      "SEO": "#0EA5E9", "Dev": "#8B5CF6"}
+    _cat_icons   = {"Marketing": "&#x1F4E3;", "SEO": "&#x1F50D;", "Dev": "&#x1F4BB;"}
+    for _a in articles:
+        _key = (_a.get("source","") + " " + _a.get("title","")).lower()
+        if any(k in _key for k in ["seo", "se ranking", "perplexity", "ranking"]):
+            _cat_buckets["SEO"].append(_a)
+        elif any(k in _key for k in ["dev tools", "mcp", "anthropic", "claude", "developer"]):
+            _cat_buckets["Dev"].append(_a)
+        else:
+            _cat_buckets["Marketing"].append(_a)
+
+    _cats_html = ""
+    for _cat, _arts in _cat_buckets.items():
+        if not _arts:
+            continue
+        _cc  = _cat_colors[_cat]
+        _ico = _cat_icons[_cat]
+        _rows = ""
+        for _j, _a in enumerate(_arts[:6]):
+            _bdr   = f"border-bottom:1px solid {_BDR};" if _j < len(_arts[:6]) - 1 else ""
+            _atitl = _esc(_a.get("title","")[:80])
+            _asrc  = _esc(_a.get("source","")[:25])
+            _aurl  = _esc(_a.get("url","#"))
+            _rows += f"""
+      <tr><td style="padding:9px 0;{_bdr}">
+        <table cellpadding="0" cellspacing="0" width="100%"><tr>
+          <td width="14" valign="top" style="padding-top:5px;">
+            <div style="width:6px;height:6px;border-radius:50%;background:{_cc};"></div>
+          </td>
+          <td valign="top">
+            <a href="{_aurl}" target="_blank"
+              style="font-size:13px;font-weight:600;color:{_T_HED};
+              text-decoration:none;line-height:1.4;font-family:{_FONT};">{_atitl}</a>
+            <span style="font-size:10px;color:{_T_MET};font-family:{_FONT};">
+              &nbsp;&mdash;&nbsp;{_asrc}</span>
+          </td>
+        </tr></table>
+      </td></tr>"""
+        _cats_html += f"""
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+    <tr><td>
+      <table cellpadding="0" cellspacing="0" style="margin-bottom:10px;"><tr>
+        <td style="background:{_cc};border-radius:6px;padding:4px 12px;">
+          <p style="margin:0;font-size:10px;font-weight:700;color:#fff;
+            text-transform:uppercase;letter-spacing:1.5px;font-family:{_FONT};">
+            {_ico}&nbsp;{_cat}
+          </p>
+        </td>
+      </tr></table>
+      <table width="100%" cellpadding="0" cellspacing="0"
+        style="background:{_WHITE};border-radius:10px;
+        border:1px solid {_BDR};border-left:3px solid {_cc};">
+      <tr><td style="padding:6px 16px 10px;">
+        <table width="100%" cellpadding="0" cellspacing="0">{_rows}</table>
+      </td></tr>
+      </table>
+    </td></tr>
+    </table>"""
+
     H += f"""
   <table width="100%" cellpadding="0" cellspacing="0"
     style="background:{_ST_BG};border-top:1px solid {_BDR};">
   <tr><td style="padding:32px 28px 28px;">
     {_label("Latest News")}
-    <p style="margin:0 0 20px;font-size:20px;font-weight:800;color:{_T_HED};
+    <p style="margin:0 0 24px;font-size:20px;font-weight:800;color:{_T_HED};
       font-family:{_FONT};letter-spacing:-0.3px;">Breaking AI Updates</p>
-    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+    {_cats_html}
+  </td></tr>
+  </table>
 """
-    col_w = 181
-    img_h = 102  # 16:9
-    for i, a in enumerate(g3):
-        pad = "padding-left:9px;" if i > 0 else ""
-        if a:
-            ih   = _img(a.get("image",""), a.get("title",""), col_w, img_h, 0)
-            titl = _esc(a.get("title","")[:65]) + ("…" if len(a.get("title","")) > 65 else "")
-            src  = _esc(a.get("source","AI News")[:22])
-            url  = _esc(a.get("url","#"))
-            snip = _esc((a.get("content","")[:85]).replace("\n"," ")) + "…"
-        else:
-            ih   = ""
-            titl = "AI Update"
-            src  = "AI News"
-            url  = "#"
-            snip = "Latest developments from the AI landscape."
-
-        H += f"""
-      <td style="width:33%;vertical-align:top;{pad}">
-        <table width="100%" cellpadding="0" cellspacing="0"
-          style="background:{_WHITE};border-radius:12px;
-          border:1px solid {_BDR};overflow:hidden;
-          box-shadow:0 1px 6px rgba(0,0,0,0.05);">
-          {"<tr><td style='line-height:0;'><a href='" + url + "' target='_blank'>" + ih + "</a></td></tr>" if ih else ""}
-          <tr><td style="padding:12px 14px 16px;">
-            <p style="margin:0 0 6px;font-size:9px;font-weight:700;color:{_ACC};
-              text-transform:uppercase;letter-spacing:1.5px;font-family:{_FONT};">{src}</p>
-            <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:{_T_HED};
-              line-height:1.4;font-family:{_FONT};">
-              <a href="{url}" target="_blank"
-                style="color:{_T_HED};text-decoration:none;">{titl}</a>
-            </p>
-            <p style="margin:0;font-size:11px;color:{_T_MET};line-height:1.55;
-              font-family:{_FONT};">{snip}</p>
-          </td></tr>
-        </table>
-      </td>"""
-    H += "\n    </tr></table>\n  </td></tr>\n  </table>\n"
 
     # ── 9. SEO SPOTLIGHT ──────────────────────────────────
     if seo_tip:
