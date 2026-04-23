@@ -590,24 +590,6 @@ def _build_html(brief_text: str, articles: list, display_date: str,
   </table>
 """
 
-    # ── 11. 2-MINUTE READ ─────────────────────────────────
-    if close:
-        H += f"""
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:{_DARK};">
-  <tr><td style="padding:32px 32px;">
-    <table cellpadding="0" cellspacing="0">
-    <tr><td style="background:{_ACC};border-radius:6px;padding:4px 12px;margin-bottom:14px;display:inline-block;">
-      <p style="margin:0;font-size:9px;font-weight:700;color:{_WHITE};
-        text-transform:uppercase;letter-spacing:2px;font-family:{_FONT};">
-        2&#8209;Minute Read
-      </p>
-    </td></tr>
-    </table>
-    <p style="margin:14px 0 0;font-size:16px;color:rgba(255,255,255,0.85);
-      line-height:1.8;font-style:italic;font-family:{_FONT};">{L(close[0])}</p>
-  </td></tr>
-  </table>
-"""
 
     # ── 12. SIGN-OFF ───────────────────────────────────────
     H += f"""
