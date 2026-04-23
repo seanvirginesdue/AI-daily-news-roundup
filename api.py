@@ -22,7 +22,11 @@ ROOT = Path(__file__).parent
 # Falls back to the repo root for local dev.
 import os as _os
 _DATA_DIR = Path(_os.environ["DATA_DIR"]) if "DATA_DIR" in _os.environ else ROOT
-_DATA_DIR.mkdir(parents=True, exist_ok=True)
+try:
+    _DATA_DIR.mkdir(parents=True, exist_ok=True)
+except Exception as _e:
+    print(f"WARNING: Could not create data dir {_DATA_DIR}: {_e}. Falling back to repo root.")
+    _DATA_DIR = ROOT
 
 CONFIG_FILE = _DATA_DIR / "config.json"
 SEEN_FILE   = _DATA_DIR / "seen_articles.json"
@@ -220,9 +224,9 @@ def trigger_run():
         req.add_header("Content-Type", "application/json")
         try:
             _ur.urlopen(req, timeout=10)
-        except _ue.HTTPError as e:
+        except Exception as e:
             _run_status = "error"
-            _last_error = f"GitHub dispatch failed: {e.code} {e.reason}"
+            _last_error = f"GitHub dispatch failed: {type(e).__name__}: {str(e)[:120]}"
             return {"status": "error"}
 
         actions_url = f"https://github.com/{github_repo}/actions"
@@ -260,7 +264,8 @@ def trigger_run():
                 except Exception:
                     pass
                 _t.sleep(5)
-            _run_status = "success"  # assume done if we stop polling
+            _log_lines.append("Polling window ended — check GitHub Actions for final status.")
+            _run_status = "success"
 
         threading.Thread(target=_poll_gh, daemon=True).start()
 

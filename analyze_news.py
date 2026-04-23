@@ -44,10 +44,10 @@ if _backend == "groq":
             except Exception as e:
                 if "rate_limit" in str(e).lower() or "429" in str(e):
                     print(f"  [WARN] {model} rate-limited, trying next model...")
-                    last_err = e
                 else:
-                    raise
-        raise last_err
+                    print(f"  [WARN] {model} error ({type(e).__name__}), trying next model...")
+                last_err = e
+        raise last_err or RuntimeError("All Groq models failed")
 
 else:
     import anthropic
@@ -135,7 +135,8 @@ Return only the JSON object, no markdown, no extra text."""
             if raw.startswith("json"):
                 raw = raw[4:]
         return _json.loads(raw.strip())
-    except Exception:
+    except Exception as e:
+        print(f"  [WARN] prompt-of-day parse failed ({type(e).__name__}): {raw[:120] if 'raw' in dir() else 'no response'}")
         return {
             "use_case": "Content Brief Generator",
             "prompt": "Act as an expert SEO content strategist. I will give you a target keyword. Create a comprehensive content brief including: search intent, recommended title, H2 subheadings (5-7), key points to cover under each heading, internal linking suggestions, and a meta description under 155 characters. Keyword: [INSERT KEYWORD]",

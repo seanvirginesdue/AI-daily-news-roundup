@@ -7,6 +7,7 @@ import os, re, smtplib, json
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.utils import parseaddr
 from pathlib import Path
 
 CONFIG_FILE = Path(__file__).parent / "config.json"
@@ -130,11 +131,11 @@ def _build_html(brief_text: str, articles: list, display_date: str,
                 yt_video: dict | None = None, prompt_data: dict | None = None) -> str:
 
     S     = _parse(brief_text)
-    must  = S["bsm must try"]
-    sales = S["bsm sales angle"]
-    watch = S["industry watch"]
-    prior = S["priority reading"]
-    close = S["2-minute read"]
+    must  = S.get("bsm must try", [])
+    sales = S.get("bsm sales angle", [])
+    watch = S.get("industry watch", [])
+    prior = S.get("priority reading", [])
+    close = S.get("2-minute read", [])
 
     cnt   = len(articles)
     imgs  = [a for a in articles if a.get("image")]
@@ -231,7 +232,7 @@ def _build_html(brief_text: str, articles: list, display_date: str,
     stats = [
         (str(cnt), "Articles",      "Sourced today"),
         ("9",      "Sections",      "Fully briefed"),
-        ("Groq",   "AI Engine",     "Powers the brief"),
+        (os.environ.get("AI_BACKEND","Claude").capitalize(), "AI Engine", "Powers the brief"),
         ("BSM",    "Intelligence",  "Daily briefing"),
     ]
     H += f"""
@@ -594,7 +595,7 @@ def _build_html(brief_text: str, articles: list, display_date: str,
       <td style="width:30%;vertical-align:top;">
         <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:{_T_HED};
           font-family:{_FONT};">Quick Links</p>
-        {"".join(f'<p style="margin:0 0 4px;"><a href="#" style="font-size:11px;color:{_T_BOD};text-decoration:none;font-family:{_FONT};">{l}</a></p>' for l in ["Homepage","About Us","AI Tools","Blog","Contact"])}
+        {"".join(f'<p style="margin:0 0 4px;"><a href="{u}" target="_blank" style="font-size:11px;color:{_T_BOD};text-decoration:none;font-family:{_FONT};">{l}</a></p>' for l, u in [("Homepage","https://boulderseomarketing.com"),("About Us","https://boulderseomarketing.com/about"),("AI Tools","https://microseo.ai"),("Blog","https://boulderseomarketing.com/blog"),("Contact","https://boulderseomarketing.com/contact")])}
       </td>
     </tr></table>
   </td></tr>
@@ -676,7 +677,8 @@ def _send_smtp(subject: str, from_str: str, to: str, reply_to: str,
     with smtplib.SMTP(smtp_host, smtp_port) as s:
         s.ehlo(); s.starttls()
         s.login(os.environ["SMTP_USER"], os.environ["SMTP_PASSWORD"])
-        s.sendmail(from_str.split("<")[-1].rstrip(">"), to, related.as_string())
+        _, sender_addr = parseaddr(from_str)
+        s.sendmail(sender_addr, to, related.as_string())
 
 
 def send_newsletter(subject: str, brief_text: str,
@@ -685,7 +687,11 @@ def send_newsletter(subject: str, brief_text: str,
                     yt_video: dict | None = None,
                     prompt_data: dict | None = None) -> None:
     config    = json.loads(CONFIG_FILE.read_text())
-    ec        = config["email"]
+    ec        = config.get("email", {})
+    if not ec.get("from_address"):
+        raise ValueError("config.json missing email.from_address")
+    if not ec.get("recipients"):
+        raise ValueError("config.json missing email.recipients")
     from_name = ec.get("from_name", "Sean")
     from_str  = f"{from_name} <{ec['from_address']}>"
     reply_to  = ec.get("reply_to", ec["from_address"])

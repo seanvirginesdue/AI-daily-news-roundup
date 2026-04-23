@@ -162,8 +162,8 @@ def _fetch_og_image(url: str) -> str:
             img = _parse_og(r.content[:131072].decode("utf-8", errors="ignore"))
             if img:
                 return img
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"  [IMG] {type(e).__name__} fetching {url[:70]}")
 
     # Step 2: Microlink with the resolved (non-Google) URL
     if "google.com" in article_url:

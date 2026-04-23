@@ -76,7 +76,11 @@ def run() -> None:
 
     # ── STEP 5: Send ───────────────────────────────────────────
     print("\n📬 Sending email...")
-    send_newsletter(subject, brief_text, articles, display_date, seo_tip, yt_video, prompt_data)
+    try:
+        send_newsletter(subject, brief_text, articles, display_date, seo_tip, yt_video, prompt_data)
+    except Exception as exc:
+        print(f"❌ Email send failed: {exc}")
+        raise
 
     print(f"\n✅ Done!\n")
 
