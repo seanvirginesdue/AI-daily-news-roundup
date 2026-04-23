@@ -21,8 +21,10 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Fetch latest config from Railway
+        env:
+          RAILWAY_URL: ${{ secrets.RAILWAY_URL }}
         run: |
-          curl -sf "${{ secrets.RAILWAY_URL }}/config-export" -o config.json || echo "Using repo config"
+          curl -sf "${RAILWAY_URL}/config-export" -o config.json || echo "Using repo config"
 
       - name: Run newsletter
         env:

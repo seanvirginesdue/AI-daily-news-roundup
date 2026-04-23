@@ -107,7 +107,7 @@ export default function RunPage() {
             ref={logRef}
             className="bg-gray-900 rounded-xl p-4 h-80 overflow-y-auto font-mono text-xs text-green-400 space-y-0.5">
             {logs.map((line, i) => (
-              <p key={i} className="whitespace-pre-wrap break-words">{line}</p>
+              <p key={i} className="whitespace-pre-wrap wrap-break-word">{line}</p>
             ))}
             {status === "running" && (
               <p className="text-yellow-400 animate-pulse">●</p>
