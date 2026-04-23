@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from pipeline.fetch_news import fetch_articles, fetch_latest_seo_tip, fetch_latest_yt_video
+from pipeline.fetch_news import fetch_articles, fetch_latest_seo_tip, fetch_yt_videos
 from pipeline.analyze_news import generate_brief, generate_subject, generate_prompt_of_the_day
 from pipeline.send_email import send_newsletter
 
@@ -61,13 +61,11 @@ def run() -> None:
     else:
         print("  (no SEO tip found)")
 
-    # ── STEP 4b: Fetch latest YouTube video ────────────────────
-    print("▶ Fetching latest AI tools video...")
-    yt_video = fetch_latest_yt_video()
-    if yt_video:
-        print(f"✓ Video: {yt_video['title'][:60]}")
-    else:
-        print("  (no video found)")
+    # ── STEP 4b: Fetch latest AI YouTube videos (3 channels) ───
+    print("▶ Fetching latest AI tool videos...")
+    yt_videos = fetch_yt_videos()
+    for v in yt_videos:
+        print(f"  ✓ [{v['channel']}] {v['title'][:55]}")
 
     # ── STEP 4c: Generate prompt of the day ───────────────────
     print("✨ Generating prompt of the day...")
@@ -77,7 +75,7 @@ def run() -> None:
     # ── STEP 5: Send ───────────────────────────────────────────
     print("\n📬 Sending email...")
     try:
-        send_newsletter(subject, brief_text, articles, display_date, seo_tip, yt_video, prompt_data)
+        send_newsletter(subject, brief_text, articles, display_date, seo_tip, yt_videos, prompt_data)
     except Exception as exc:
         print(f"❌ Email send failed: {exc}")
         raise

@@ -151,7 +151,7 @@ def _yt_card(video: dict) -> str:
 
 def _build_html(brief_text: str, articles: list, display_date: str,
                 first_name: str, from_name: str, seo_tip: dict | None = None,
-                yt_video: dict | None = None, prompt_data: dict | None = None) -> str:
+                yt_videos: list | None = None, prompt_data: dict | None = None) -> str:
 
     S     = _parse(brief_text)
     must  = S.get("bsm must try", [])
@@ -251,35 +251,47 @@ def _build_html(brief_text: str, articles: list, display_date: str,
   </table>
 """
 
-    # ── 3. SNAPSHOT STATS ─────────────────────────────────
-    stats = [
-        (str(cnt), "Articles",      "Sourced today"),
-        ("9",      "Sections",      "Fully briefed"),
-        (os.environ.get("AI_BACKEND","Claude").capitalize(), "AI Engine", "Powers the brief"),
-        ("BSM",    "Intelligence",  "Daily briefing"),
-    ]
-    H += f"""
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:{_ST_BG};">
+    # ── 3. WATCH TODAY — 3 YouTube videos ─────────────────
+    vids = yt_videos or []
+    if vids:
+        H += f"""
+  <table width="100%" cellpadding="0" cellspacing="0"
+    style="background:{_ST_BG};border-top:1px solid {_BDR};">
   <tr><td style="padding:28px 28px 24px;">
-    {_label("Daily Snapshot")}
+    {_label("Watch Today")}
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
 """
-    for val, lbl, sub in stats:
-        H += f"""
-      <td style="width:25%;padding:0 5px;vertical-align:top;">
+        paddings = ["0 8px 0 0", "0 4px", "0 0 0 8px"]
+        for i, v in enumerate(vids[:3]):
+            thumb = _esc(v.get("thumbnail", ""))
+            url   = _esc(v.get("url", "#"))
+            title = _esc(v.get("title", "")[:60])
+            ch    = _esc(v.get("channel", "YouTube"))
+            pad   = paddings[i] if i < len(paddings) else "0 4px"
+            H += f"""
+      <td width="33%" style="padding:{pad};vertical-align:top;">
         <table width="100%" cellpadding="0" cellspacing="0"
           style="background:{_WHITE};border-radius:10px;border:1px solid {_BDR};
-          box-shadow:0 1px 4px rgba(0,0,0,0.05);">
-        <tr><td style="padding:14px 12px;text-align:center;">
-          <p style="margin:0 0 2px;font-size:22px;font-weight:800;color:{_T_HED};
-            font-family:{_FONT};">{_esc(val)}</p>
-          <p style="margin:0 0 2px;font-size:11px;font-weight:700;color:{_T_HED};
-            font-family:{_FONT};">{_esc(lbl)}</p>
-          <p style="margin:0;font-size:10px;color:{_T_MET};font-family:{_FONT};">{_esc(sub)}</p>
+          overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+        <tr><td style="line-height:0;">
+          <a href="{url}" target="_blank">
+            <img src="{thumb}" width="185" height="104"
+              style="width:100%;height:104px;object-fit:cover;display:block;border:0;">
+          </a>
+        </td></tr>
+        <tr><td style="padding:10px 12px 12px;">
+          <p style="margin:0 0 4px;font-size:9px;font-weight:700;color:{_ACC};
+            text-transform:uppercase;letter-spacing:1px;font-family:{_FONT};">{ch}</p>
+          <p style="margin:0 0 8px;font-size:11px;font-weight:700;color:{_T_HED};
+            line-height:1.45;font-family:{_FONT};">{title}</p>
+          <a href="{url}" target="_blank"
+            style="display:inline-block;background:#FF0000;color:#fff;font-size:10px;
+            font-weight:700;padding:5px 10px;border-radius:5px;text-decoration:none;
+            font-family:{_FONT};">&#x25B6;&nbsp;Watch</a>
         </td></tr>
         </table>
       </td>"""
-    H += "\n    </tr></table>\n  </td></tr>\n  </table>\n"
+        H += "\n    </tr></table>\n  </td></tr>\n  </table>\n"
 
     # ── 4. PROMPT OF THE DAY ──────────────────────────────
     if prompt_data:
@@ -387,8 +399,7 @@ def _build_html(brief_text: str, articles: list, display_date: str,
     </td>
     <td style="padding:28px 24px 28px 20px;vertical-align:middle;
       text-align:right;width:50%;">
-      {_yt_card(yt_video) if yt_video else
-       (f'<div style="border-radius:12px;overflow:hidden;display:inline-block;line-height:0;border:1px solid {_BDR};">{_img(feat2.get("image","") if feat2 else "",feat2.get("title","") if feat2 else "",270,152,0)}</div>' if (feat2 and feat2.get("image")) else "")}
+      {f'<div style="border-radius:12px;overflow:hidden;display:inline-block;line-height:0;border:1px solid {_BDR};">{_img(feat2.get("image","") if feat2 else "",feat2.get("title","") if feat2 else "",270,152,0)}</div>' if (feat2 and feat2.get("image")) else ""}
     </td>
   </tr>
   </table>
@@ -707,7 +718,7 @@ def _send_smtp(subject: str, from_str: str, to: str, reply_to: str,
 def send_newsletter(subject: str, brief_text: str,
                     articles: list, display_date: str,
                     seo_tip: dict | None = None,
-                    yt_video: dict | None = None,
+                    yt_videos: list | None = None,
                     prompt_data: dict | None = None) -> None:
     config    = json.loads(CONFIG_FILE.read_text())
     ec        = config.get("email", {})
@@ -724,7 +735,7 @@ def send_newsletter(subject: str, brief_text: str,
     for recip in ec["recipients"]:
         fn    = recip.get("first_name", "there")
         to    = recip["email"]
-        html  = _build_html(brief_text, articles, display_date, fn, from_name, seo_tip, yt_video, prompt_data)
+        html  = _build_html(brief_text, articles, display_date, fn, from_name, seo_tip, yt_videos, prompt_data)
         plain = _build_plain(brief_text, fn, from_name)
 
         if use_resend:
