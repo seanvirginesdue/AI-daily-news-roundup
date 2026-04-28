@@ -34,6 +34,7 @@ _RED     = "#EF4444"
 _ORANGE  = "#F97316"
 _NAVY    = "#1E40AF"
 _FONT    = "-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif"
+_SERIF   = "Lora,Georgia,'Times New Roman',serif"
 
 _N2W = {
     0:"zero",1:"one",2:"two",3:"three",4:"four",5:"five",6:"six",7:"seven",
@@ -95,6 +96,9 @@ def _build_html(brief_data: dict, articles: list, display_date: str,
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400;1,600&display=swap');
+</style>
 </head>
 <body style="margin:0;padding:0;background:{_PG_BG};font-family:{_FONT};">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:{_PG_BG};">
@@ -134,8 +138,8 @@ def _build_html(brief_data: dict, articles: list, display_date: str,
         text-transform:uppercase;letter-spacing:2.5px;
         font-family:{_FONT};">Today&rsquo;s Top Story</span>
     </p>
-    <p style="margin:0 0 18px;font-size:28px;font-weight:800;color:{_WHITE};
-      line-height:1.2;letter-spacing:-0.5px;font-family:{_FONT};">{headline}</p>
+    <p style="margin:0 0 18px;font-size:30px;font-weight:700;color:{_WHITE};
+      line-height:1.2;letter-spacing:-0.3px;font-family:{_SERIF};">{headline}</p>
     <p style="margin:0 0 28px;font-size:14px;color:rgba(255,255,255,0.65);
       line-height:1.75;font-family:{_FONT};">{subtext}</p>
     <a href="{_esc(top_url)}" target="_blank"
@@ -154,7 +158,7 @@ def _build_html(brief_data: dict, articles: list, display_date: str,
       <td>
         <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.52);
           line-height:1.65;font-style:italic;
-          font-family:{_FONT};">{field_note}</p>
+          font-family:{_SERIF};">{field_note}</p>
       </td>
     </tr></table>
   </td></tr>
@@ -186,7 +190,7 @@ def _build_html(brief_data: dict, articles: list, display_date: str,
         padding:3px 9px;border-radius:50px;font-family:{_FONT};">{mlbl}</span>
     </p>
     <p style="margin:0 0 9px;font-size:13px;font-weight:600;font-style:italic;
-      color:{_H_TEXT};line-height:1.45;font-family:{_FONT};">{mtitle}</p>
+      color:{_H_TEXT};line-height:1.45;font-family:{_SERIF};">{mtitle}</p>
     <p style="margin:0 0 13px;font-size:12px;color:{_B_TEXT};line-height:1.6;
       font-family:{_FONT};">{mdesc}</p>
     <p style="margin:0;font-size:10px;font-weight:700;color:{mc};
@@ -203,8 +207,8 @@ def _build_html(brief_data: dict, articles: list, display_date: str,
     <span style="font-size:10px;font-weight:700;color:{_M_TEXT};
       text-transform:uppercase;letter-spacing:2px;
       font-family:{_FONT};">Today &middot; Three Moves</span>
-    <p style="margin:6px 0 20px;font-size:13px;font-style:italic;color:{_B_TEXT};
-      font-family:{_FONT};">What BSM should do before noon.</p>
+    <p style="margin:6px 0 20px;font-size:14px;font-style:italic;color:{_B_TEXT};
+      font-family:{_SERIF};">What BSM should do before noon.</p>
     <table cellpadding="0" cellspacing="0" style="width:100%;"><tr>
       {move_cards}
     </tr></table>
