@@ -89,8 +89,15 @@ def _build_html(brief_data: dict, articles: list, display_date: str,
     move_colors = {"pitch": _GREEN, "build": _ACC, "kill": _RED}
     move_labels = {"pitch": "PITCH", "build": "BUILD", "kill": "KILL"}
 
-    top_url = articles[0].get("url","#") if articles else "#"
-    issue   = _issue_num()
+    top_url    = articles[0].get("url","#") if articles else "#"
+    issue      = _issue_num()
+    # Short date: "Monday, Apr 28" from full display_date
+    try:
+        from datetime import datetime as _dt
+        _d = _dt.strptime(display_date, "%A, %B %d, %Y")
+        short_date = _d.strftime("%A, %b ") + str(_d.day)
+    except Exception:
+        short_date = display_date
 
     H = f"""<!DOCTYPE html>
 <html lang="en">
@@ -115,12 +122,17 @@ def _build_html(brief_data: dict, articles: list, display_date: str,
   <table width="100%" cellpadding="0" cellspacing="0"
     style="background:{_WHITE};border-bottom:1px solid {_BDR};">
   <tr>
-    <td style="padding:18px 28px;vertical-align:middle;">{_logo(30)}</td>
+    <td style="padding:18px 28px;vertical-align:middle;">
+      <span style="font-size:18px;font-weight:900;color:{_H_TEXT};
+        font-family:{_FONT};letter-spacing:-0.3px;">BSM</span><span
+        style="font-size:18px;font-style:italic;font-weight:400;color:{_ACC};
+        font-family:{_SERIF};">&nbsp;Copilot</span>
+    </td>
     <td style="padding:18px 28px;text-align:right;vertical-align:middle;">
-      <span style="font-size:12px;font-weight:700;color:{_H_TEXT};
-        font-family:{_FONT};">{_esc(issue)}</span>
-      <span style="font-size:12px;color:{_M_TEXT};font-family:{_FONT};
-        margin-left:12px;">{_esc(display_date)}</span>
+      <p style="margin:0 0 2px;font-size:10px;font-weight:600;color:{_M_TEXT};
+        font-family:{_FONT};letter-spacing:0.5px;">{_esc(issue)}</p>
+      <p style="margin:0;font-size:12px;font-style:italic;color:{_B_TEXT};
+        font-family:{_SERIF};">{_esc(short_date)}</p>
     </td>
   </tr>
   </table>
