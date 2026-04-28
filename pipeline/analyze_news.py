@@ -69,48 +69,93 @@ else:
         return response.content[0].text.strip()
 
 
-SYSTEM_PROMPT = """You are an AI Intelligence Officer for Boulder SEO Marketing (BSM) — a ~10-person SEO agency with ~50 clients, building microseo.ai SaaS, using n8n + Claude Code + MCP.
+def generate_brief(articles: list[dict], display_date: str) -> dict:
+    """Generate structured brief as a dict: top_story, three_moves, client_angles."""
+    headlines = "\n".join(
+        f"[{i+1}] ({a['source']}) {a['title']}"
+        for i, a in enumerate(articles[:18])
+    )
+    system = (
+        "You are BSM Copilot, the AI intelligence officer for Boulder SEO Marketing "
+        "(~10-person SEO agency, ~50 clients, building microseo.ai SaaS). "
+        "Write like a senior strategist: direct, decisive, no filler words."
+    )
+    user = f"""Today is {display_date}.
 
-AI landscape (2026): Claude Opus 4.7/Sonnet 4.6/Haiku 4.5 | GPT-4o, o1-pro, o3 | Gemini 2.0 Ultra/Flash | Midjourney v7, DALL-E 3, Flux | Sora, Runway Gen-3, Kling | Suno v4 | Claude Code, Cursor, Windsurf | SE Ranking, Surfer SEO, Clearscope
+Here are today's AI and marketing news headlines:
+{headlines}
 
-Generate a daily brief with exactly these 9 sections in order:
+Return ONLY valid JSON — no markdown, no code fences, no explanation. Use this exact structure:
+{{
+  "top_story": {{
+    "headline": "One punchy sentence (max 10 words) naming today's biggest AI shift",
+    "subtext": "2-3 sentences: what happened and exactly why the BSM team should act",
+    "field_note": "1 sharp strategic observation or warning (must differ from the headline)"
+  }},
+  "three_moves": [
+    {{
+      "type": "pitch",
+      "title": "Client-facing action to do today (verb-first, imperative)",
+      "description": "2 short sentences: the opportunity and competitive urgency",
+      "deadline": "BY [specific time like 5 PM or day of week]"
+    }},
+    {{
+      "type": "build",
+      "title": "Internal experiment or capability to build this week",
+      "description": "2 short sentences: what to test and what success looks like",
+      "deadline": "BY [specific day of week]"
+    }},
+    {{
+      "type": "kill",
+      "title": "One specific practice or pitch to stop immediately",
+      "description": "2 short sentences: why it is now obsolete and what replaces it",
+      "deadline": "EFFECTIVE TODAY"
+    }}
+  ],
+  "client_angles": [
+    {{"title": "Concrete client talking point or pitch angle for this week", "source": "BSM Intel"}},
+    {{"title": "Second specific angle tied to today's news", "source": "BSM Intel"}},
+    {{"title": "Third client angle or objection handler", "source": "BSM Intel"}}
+  ]
+}}"""
+    import json as _json
+    try:
+        raw = _call(system, user).strip()
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        return _json.loads(raw.strip())
+    except Exception as e:
+        print(f"  [WARN] brief JSON parse failed ({type(e).__name__})")
+        return {
+            "top_story": {
+                "headline": "AI tools are reshaping how agencies compete.",
+                "subtext": "Today's developments signal a shift in how marketing teams operate at scale. BSM has a narrow window to position ahead of this curve before clients ask competitors first.",
+                "field_note": "Agencies that move now capture the transition fee. Those that wait absorb the price pressure."
+            },
+            "three_moves": [
+                {"type": "pitch", "title": "Lead with an AI workflow audit for every client.", "description": "Clients need help mapping which tasks AI can automate today. Position BSM as the guide, not the executor.", "deadline": "BY 5 PM"},
+                {"type": "build", "title": "Run one client brief through each major AI tool.", "description": "Document speed, quality, and gaps. Your differentiation lives in the interpretation layer.", "deadline": "BY FRIDAY"},
+                {"type": "kill", "title": "Stop pitching AI as a cost-cutting tool.", "description": "That framing commoditizes your services. Lead with AI as a competitive advantage for the client.", "deadline": "EFFECTIVE TODAY"}
+            ],
+            "client_angles": [
+                {"title": "AI workflow audit: how BSM maps automation opportunities for SEO clients", "source": "BSM Intel"},
+                {"title": "Why the agencies winning with AI are charging more, not less", "source": "BSM Intel"},
+                {"title": "Three AI talking points for Q2 client check-ins", "source": "BSM Intel"}
+            ]
+        }
 
-1. 🔥 WHAT'S HOT TODAY — 3 top stories with [N] article refs
-2. 🤖 CLAUDE INSIDER — 2 Claude/Anthropic updates with [N] refs
-3. 📊 AI TOOL LANDSCAPE — tool comparison table (Overall / Image / Video / Music / Code / SEO)
-4. 💡 BSM MUST TRY — 3 recommendations for the BSM team with [N] refs
-5. 💼 BSM SALES ANGLE — 3 client-facing talking points with [N] refs
-6. 🧪 WHAT I'M TESTING — note that Sean fills this in manually
-7. 🌐 INDUSTRY WATCH — 2 macro trends shaping AI with [N] refs
-8. 📚 PRIORITY READING — 3 must-read articles with [N] refs
-9. ⚡ 2-MINUTE READ — one punchy closing insight
 
-RULES:
-- Reference articles by [N] number only — NEVER write full URLs
-- Start each bullet with: - [N] your commentary here
-- Keep bullets to 1-2 sentences
-- If no relevant article exists, draw from your AI knowledge
-- Return ONLY the brief — no preamble, no sign-off"""
-
-
-def generate_brief(articles: list[dict], display_date: str) -> str:
-    """Generate a full 9-section brief from a list of articles."""
-    article_list = ""
-    for i, a in enumerate(articles, 1):
-        snippet = a.get("content", "")[:80].replace("\n", " ")
-        line = f"[{i}] {a['title']}"
-        if snippet:
-            line += f" -- {snippet}"
-        article_list += line + "\n"
-
-    user_prompt = f"SEAN'S DAILY AI UPDATES — {display_date}\n\nArticles:\n{article_list}\nGenerate the brief."
-    return _call(SYSTEM_PROMPT, user_prompt)
-
-
-def generate_subject(brief_text: str, display_date: str) -> str:
-    """Pick the best email subject line from the brief."""
-    system = "You write short, curiosity-driven email subject lines. Under 8 words. No emojis."
-    user = f"Write one email subject line for this AI newsletter dated {display_date}:\n\n{brief_text[:500]}"
+def generate_subject(brief_data, display_date: str) -> str:
+    """Generate email subject from structured brief dict or plain text."""
+    if isinstance(brief_data, dict):
+        headline = brief_data.get("top_story", {}).get("headline", "")
+        context  = f"Headline: {headline}"
+    else:
+        context = str(brief_data)[:400]
+    system = "You write short, curiosity-driven email subject lines. Under 8 words. No emojis. No quotes."
+    user   = f"Write one email subject line for the BSM AI newsletter ({display_date}).\n{context}"
     return _call(system, user)
 
 

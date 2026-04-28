@@ -20,8 +20,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from pipeline.fetch_news import fetch_articles, fetch_latest_seo_tip, fetch_yt_videos
-from pipeline.analyze_news import generate_brief, generate_subject, generate_prompt_of_the_day
+from pipeline.fetch_news import fetch_articles, fetch_yt_videos
+from pipeline.analyze_news import generate_brief, generate_subject
 from pipeline.send_email import send_newsletter
 
 
@@ -45,37 +45,24 @@ def run() -> None:
     for i, a in enumerate(articles, 1):
         print(f"  [{i:2}] [{a['source']}] {a['title'][:65]}")
 
-    # ── STEP 2: Generate 9-section brief ───────────────────────
+    # ── STEP 2: Generate brief ─────────────────────────────────
     print(f"\n🤖 Generating brief with AI ({len(articles)} articles)...")
-    brief_text = generate_brief(articles, display_date)
+    brief_data = generate_brief(articles, display_date)
 
     # ── STEP 3: Subject line ───────────────────────────────────
-    subject = generate_subject(brief_text, display_date)
+    subject = generate_subject(brief_data, display_date)
     print(f"✉️  Subject: {subject}")
 
-    # ── STEP 4: Fetch latest SEO tip ───────────────────────────
-    print("🔍 Fetching latest Chris Raulf SEO tip...")
-    seo_tip = fetch_latest_seo_tip()
-    if seo_tip:
-        print(f"✓ SEO tip: {seo_tip['title'][:60]}")
-    else:
-        print("  (no SEO tip found)")
-
-    # ── STEP 4b: Fetch latest AI YouTube videos (3 channels) ───
+    # ── STEP 4: Fetch latest AI YouTube videos ─────────────────
     print("▶ Fetching latest AI tool videos...")
     yt_videos = fetch_yt_videos()
     for v in yt_videos:
         print(f"  ✓ [{v['channel']}] {v['title'][:55]}")
 
-    # ── STEP 4c: Generate prompt of the day ───────────────────
-    print("✨ Generating prompt of the day...")
-    prompt_data = generate_prompt_of_the_day()
-    print(f"✓ Prompt: {prompt_data.get('use_case', '')}")
-
     # ── STEP 5: Send ───────────────────────────────────────────
     print("\n📬 Sending email...")
     try:
-        send_newsletter(subject, brief_text, articles, display_date, seo_tip, yt_videos, prompt_data)
+        send_newsletter(subject, brief_data, articles, display_date, yt_videos)
     except Exception as exc:
         print(f"❌ Email send failed: {exc}")
         raise

@@ -3,7 +3,8 @@ Email sender — premium AI newsletter.
 Table-based layout, inline CSS, Gmail-compatible.
 """
 
-import os, re, smtplib, json, datetime, urllib.request as _ur
+import os, smtplib, json
+from datetime import date as _date
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -13,646 +14,353 @@ from pathlib import Path
 CONFIG_FILE = Path(__file__).parent.parent / "config.json"
 _LOGO_FILE  = Path(__file__).parent.parent / "assets" / "bsm_logo.png"
 
-# ── Dynamic hero GIF ───────────────────────────────────────
-# Curated pool of AI/tech-themed Giphy IDs — rotates daily as fallback
-_HERO_POOL = [
-    "7ydUQC0CC2cNVtcrYH", "3oKIPEqDGUULpEU0aQ", "du3J3cXyzhj75IOgvA",
-    "077i6AULCXc0FKTj9s", "RDZo7znAdn2u7sAcWH", "3o7btNhMBytxAM6YBa",
-    "l0HlBO7eyXzSZkJri",  "xT9IgzoKnwFNmISR8I", "dWesBcTLavkZuG35MI",
-    "3oEdva9BUHPHz2yEAA", "26uf2YTgF5upXUTm0",  "xUA7bdpLxQhsSQdyog",
-    "f9XgHHnPnDjOF1hWpl", "hpXdHPfFI5wTABdDx9", "LmNwrBhejkK9EFP504",
-    "26DN48mfu3uWJ3J7y",  "l1J9EdzfOSgfyueLm",  "3o6Zt7g9uD0UGMVb3a",
-]
+_LAUNCH = _date(2026, 3, 17)
 
-def _daily_hero_image() -> str:
-    """Return a random AI-themed GIF from the curated pool — fresh on every send."""
-    import random
-    gif_id = random.choice(_HERO_POOL)
-    return f"https://media.giphy.com/media/{gif_id}/giphy.gif"
+def _issue_num() -> str:
+    delta = (_date.today() - _LAUNCH).days + 1
+    return f"#{delta:03d}"
 
-# ── Design system ──────────────────────────────────────────
-_ACC   = "#6366F1"  # indigo-500 — primary accent
-_WHITE = "#ffffff"
-_DARK  = "#0F172A"  # slate-900 — hero / dark sections
-_PG_BG = "#F1F5F9"  # slate-100 — page background
-_ST_BG = "#F8FAFC"  # slate-50  — card backgrounds
-_IC_BG = "#EEF2FF"  # indigo-50 — accent card tint
-_BDR   = "#E2E8F0"  # slate-200 — borders
-_T_HED = "#0F172A"  # slate-900 — heading text
-_T_BOD = "#475569"  # slate-600 — body text
-_T_MET = "#94A3B8"  # slate-400 — meta / muted text
-_FONT  = "-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif"
+# Design system
+_WHITE   = "#FFFFFF"
+_PG_BG   = "#F4F4F5"
+_HERO_BG = "#0D1117"
+_BDR     = "#E4E4E7"
+_H_TEXT  = "#09090B"
+_B_TEXT  = "#52525B"
+_M_TEXT  = "#A1A1AA"
+_ACC     = "#6366F1"
+_GREEN   = "#10B981"
+_RED     = "#EF4444"
+_ORANGE  = "#F97316"
+_NAVY    = "#1E40AF"
+_FONT    = "-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif"
 
-# ── Helpers ────────────────────────────────────────────────
+_N2W = {
+    0:"zero",1:"one",2:"two",3:"three",4:"four",5:"five",6:"six",7:"seven",
+    8:"eight",9:"nine",10:"ten",11:"eleven",12:"twelve",13:"thirteen",
+    14:"fourteen",15:"fifteen",16:"sixteen",17:"seventeen",18:"eighteen",
+    19:"nineteen",20:"twenty",21:"twenty-one",22:"twenty-two",
+}
 
 def _esc(t: str) -> str:
-    return t.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    return str(t).replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
 
-def _lnk(text: str, arts: list) -> str:
-    def r(m):
-        idx = int(m.group(1)) - 1
-        if 0 <= idx < len(arts):
-            u = _esc(arts[idx].get("url", "#"))
-            t = _esc(arts[idx].get("title", m.group(0)))
-            return f'<a href="{u}" style="color:{_ACC};text-decoration:none;font-weight:600;" target="_blank">{t}</a>'
-        return m.group(0)
-    return re.sub(r"\[(\d+)\]", r, text)
-
-def _logo(h: int = 36) -> str:
+def _logo(h: int = 32) -> str:
     if _LOGO_FILE.exists():
         return f'<img src="cid:bsm_logo" height="{h}" style="display:block;" alt="BSM">'
-    return f'<span style="color:{_ACC};font-size:22px;font-weight:900;font-family:{_FONT};">BSM</span>'
-
-def _img(url: str, alt: str = "", w: int = 200, h: int = 113, r: int = 0) -> str:
-    if not url:
-        return ""
-    return (f'<img src="{_esc(url)}" alt="{_esc(alt[:40])}" width="{w}" '
-            f'style="width:{w}px;height:{h}px;object-fit:cover;display:block;border:0;">')
-
-def _btn(label: str, url: str = "#", sm: bool = False) -> str:
-    p  = "8px 16px" if sm else "11px 24px"
-    fs = "11px"     if sm else "13px"
-    return (f'<a href="{_esc(url)}" target="_blank" '
-            f'style="display:inline-block;background:{_ACC};color:#fff;font-size:{fs};'
-            f'font-family:{_FONT};font-weight:700;padding:{p};border-radius:8px;'
-            f'text-decoration:none;letter-spacing:0.2px;">{_esc(label)}</a>')
-
-def _label(text: str) -> str:
-    return (f'<p style="margin:0 0 8px;font-size:10px;font-weight:700;color:{_ACC};'
-            f'text-transform:uppercase;letter-spacing:2px;font-family:{_FONT};">{text}</p>')
-
-# ── Section parser ─────────────────────────────────────────
-_SKEYS = [
-    "what's hot today", "claude insider", "ai tool landscape",
-    "bsm must try", "bsm sales angle", "what i'm testing",
-    "industry watch", "priority reading", "2-minute read",
-]
-
-def _parse(brief: str) -> dict:
-    out, cur = {k: [] for k in _SKEYS}, None
-    for line in brief.split("\n"):
-        s = line.strip()
-        if not s: continue
-        mk = next((k for k in _SKEYS if k in s.lower()), None)
-        if mk: cur = mk; continue
-        if cur:
-            item = re.sub(r"^[-•]\s*", "", s).strip()
-            if item: out[cur].append(item)
-    return out
+    return (f'<span style="font-size:18px;font-weight:900;color:{_H_TEXT};'
+            f'font-family:{_FONT};">BSM</span>'
+            f'<span style="font-size:18px;font-style:italic;font-weight:600;'
+            f'color:{_ACC};font-family:{_FONT};"> Copilot</span>')
 
 
-# ── YouTube card ───────────────────────────────────────────
+def _build_html(brief_data: dict, articles: list, display_date: str,
+                first_name: str, from_name: str,
+                yt_videos: list | None = None) -> str:
 
-def _yt_card(video: dict) -> str:
-    thumb = _esc(video.get("thumbnail", ""))
-    url   = _esc(video.get("url", "#"))
-    title = _esc(video.get("title", "")[:65])
-    ch    = _esc(video.get("channel", "YouTube"))
-    if not thumb:
-        return ""
-    return f"""
-<table cellpadding="0" cellspacing="0"
-  style="width:270px;border-radius:12px;overflow:hidden;
-  border:1px solid {_BDR};box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-<tr><td style="line-height:0;">
-  <a href="{url}" target="_blank">
-    <img src="{thumb}" width="270" height="152"
-      style="width:270px;height:152px;object-fit:cover;display:block;border:0;">
-  </a>
-</td></tr>
-<tr><td style="padding:14px 16px 16px;background:#fff;">
-  <p style="margin:0 0 4px;font-size:10px;font-weight:700;color:{_ACC};
-    text-transform:uppercase;letter-spacing:1.5px;font-family:{_FONT};">{ch}</p>
-  <p style="margin:0 0 12px;font-size:13px;font-weight:700;color:{_T_HED};
-    line-height:1.4;font-family:{_FONT};">
-    <a href="{url}" target="_blank"
-      style="color:{_T_HED};text-decoration:none;">{title}</a>
-  </p>
-  <a href="{url}" target="_blank"
-    style="display:inline-block;background:#FF0000;color:#fff;font-size:11px;
-    font-weight:700;padding:6px 14px;border-radius:6px;text-decoration:none;
-    font-family:{_FONT};letter-spacing:0.2px;">
-    &#x25B6;&nbsp; Watch on YouTube
-  </a>
-</td></tr>
-</table>"""
+    ts  = brief_data.get("top_story", {})
+    tms = brief_data.get("three_moves", [])
+    cas = brief_data.get("client_angles", [])
 
+    headline   = _esc(ts.get("headline", "Today's top AI story"))
+    subtext    = _esc(ts.get("subtext", ""))
+    field_note = _esc(ts.get("field_note", ""))
 
-# ── Main HTML builder ──────────────────────────────────────
+    # Categorise articles
+    buckets: dict[str, list] = {"INDUSTRY": [], "SEO": [], "DEV": []}
+    for a in articles:
+        key = (a.get("source","") + " " + a.get("title","")).lower()
+        if any(k in key for k in ["seo","se ranking","perplexity","ranking","search engine"]):
+            buckets["SEO"].append(a)
+        elif any(k in key for k in ["dev tools","mcp","anthropic","claude","developer","code","github"]):
+            buckets["DEV"].append(a)
+        else:
+            buckets["INDUSTRY"].append(a)
 
-def _build_html(brief_text: str, articles: list, display_date: str,
-                first_name: str, from_name: str, seo_tip: dict | None = None,
-                yt_videos: list | None = None, prompt_data: dict | None = None) -> str:
+    total_arts = len(articles)
+    total_word = _N2W.get(total_arts, str(total_arts))
 
-    S     = _parse(brief_text)
-    must  = S.get("bsm must try", [])
-    sales = S.get("bsm sales angle", [])
-    watch = S.get("industry watch", [])
-    prior = S.get("priority reading", [])
-    close = S.get("2-minute read", [])
+    vids      = yt_videos or []
+    vid_count = len(vids[:3])
+    vid_word  = _N2W.get(vid_count, str(vid_count))
 
-    cnt   = len(articles)
-    imgs  = [a for a in articles if a.get("image")]
-    feat  = imgs[0] if imgs else (articles[0] if articles else {})
-    feat2 = imgs[1] if len(imgs) > 1 else feat
+    move_colors = {"pitch": _GREEN, "build": _ACC, "kill": _RED}
+    move_labels = {"pitch": "PITCH", "build": "BUILD", "kill": "KILL"}
 
-    def L(t): return _lnk(t, articles)
+    top_url = articles[0].get("url","#") if articles else "#"
+    issue   = _issue_num()
 
-    # ── SHELL ──────────────────────────────────────────────
     H = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-  @keyframes pulse {{
-    0%,100% {{ opacity:1; }} 50% {{ opacity:0.35; }}
-  }}
-  .pulse {{ animation: pulse 1.6s ease-in-out infinite; }}
-</style>
 </head>
 <body style="margin:0;padding:0;background:{_PG_BG};font-family:{_FONT};">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:{_PG_BG};">
-<tr><td align="center" style="padding:28px 12px 40px;">
-
+<tr><td align="center" style="padding:24px 12px 40px;">
 <table width="640" cellpadding="0" cellspacing="0"
-  style="max-width:640px;width:100%;background:{_WHITE};
-  border-radius:16px;overflow:hidden;
-  box-shadow:0 4px 32px rgba(0,0,0,0.10);
-  border:1px solid {_BDR};">
+  style="max-width:640px;width:100%;background:{_WHITE};border-radius:12px;
+  overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08);">
 <tr><td>
 """
 
-    # ── 1. HEADER ──────────────────────────────────────────
+    # 1. HEADER
     H += f"""
   <table width="100%" cellpadding="0" cellspacing="0"
     style="background:{_WHITE};border-bottom:1px solid {_BDR};">
   <tr>
-    <td style="padding:16px 28px;">
-      {_logo(32)}
-    </td>
-    <td style="padding:16px 28px;text-align:right;vertical-align:middle;">
-      <p style="margin:0;font-size:11px;font-weight:600;color:{_T_MET};
-        font-family:{_FONT};letter-spacing:0.3px;">{_esc(display_date)}</p>
+    <td style="padding:18px 28px;vertical-align:middle;">{_logo(30)}</td>
+    <td style="padding:18px 28px;text-align:right;vertical-align:middle;">
+      <span style="font-size:12px;font-weight:700;color:{_H_TEXT};
+        font-family:{_FONT};">{_esc(issue)}</span>
+      <span style="font-size:12px;color:{_M_TEXT};font-family:{_FONT};
+        margin-left:12px;">{_esc(display_date)}</span>
     </td>
   </tr>
   </table>
 """
 
-    # ── 2. HERO ────────────────────────────────────────────
+    # 2. HERO (dark)
     H += f"""
   <table width="100%" cellpadding="0" cellspacing="0"
-    style="background:{_DARK};">
-  <tr>
-    <td style="padding:40px 32px 40px;vertical-align:middle;width:54%;">
-      <p style="margin:0 0 14px;">
-        <span class="pulse" style="display:inline-block;width:7px;height:7px;
-          border-radius:50%;background:{_ACC};vertical-align:middle;
-          margin-right:6px;">&#x25CF;</span>
-        <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);
-          text-transform:uppercase;letter-spacing:2.5px;font-family:{_FONT};">
-          Live Today</span>
-      </p>
-      <p style="margin:0 0 14px;font-size:34px;font-weight:800;color:{_WHITE};
-        line-height:1.15;letter-spacing:-0.8px;font-family:{_FONT};">
-        AI Daily<br>News Roundup
-      </p>
-      <p style="margin:0 0 28px;font-size:14px;color:rgba(255,255,255,0.6);
-        line-height:1.75;font-family:{_FONT};">
-        The latest AI updates, tools, and breakthroughs — curated every morning for the BSM team.
-      </p>
-      <a href="{_esc(feat.get('url','#') if feat else '#')}" target="_blank"
-        style="display:inline-block;background:{_ACC};color:{_WHITE};
-        font-size:13px;font-weight:700;padding:12px 24px;border-radius:8px;
-        text-decoration:none;font-family:{_FONT};letter-spacing:0.2px;">
-        Read Today's Top Story &rarr;
-      </a>
-    </td>
-    <td style="padding:28px 24px 28px 0;vertical-align:middle;
-      text-align:center;width:46%;">
-      <div style="display:inline-block;border-radius:14px;overflow:hidden;
-        border:2px solid rgba(99,102,241,0.4);line-height:0;">
-        <img src="{_daily_hero_image()}" width="216" height="216"
-          style="width:216px;height:216px;object-fit:cover;display:block;border:0;"
-          alt="AI in motion">
-      </div>
-    </td>
-  </tr>
-  </table>
-"""
-
-    # ── 3. WATCH TODAY — 3 YouTube videos ─────────────────
-    # Card math: 640px - 56px padding = 584px inner
-    # 3 × 184px cards + 2 × 16px spacers = 584px exactly
-    vids = yt_videos or []
-    if vids:
-        cards_html = ""
-        for i, v in enumerate(vids[:3]):
-            thumb = _esc(v.get("thumbnail", ""))
-            url   = _esc(v.get("url", "#"))
-            title = _esc(v.get("title", "")[:52])
-            ch    = _esc(v.get("channel", "YouTube")[:22])
-            spacer = f'<td width="16"></td>' if i > 0 else ""
-            cards_html += f"""{spacer}
-<td width="184" valign="top">
-  <table width="184" cellpadding="0" cellspacing="0"
-    style="background:{_WHITE};border-radius:10px;border:1px solid {_BDR};">
-  <tr><td height="104" style="line-height:0;height:104px;">
-    <a href="{url}" target="_blank">
-      <img src="{thumb}" width="182" height="104"
-        style="width:182px;height:104px;object-fit:cover;display:block;border:0;">
+    style="background:{_HERO_BG};">
+  <tr><td style="padding:48px 36px 40px;">
+    <p style="margin:0 0 18px;">
+      <span style="display:inline-block;width:6px;height:6px;border-radius:50%;
+        background:{_ACC};vertical-align:middle;margin-right:7px;
+        margin-bottom:2px;"></span>
+      <span style="font-size:10px;font-weight:700;color:{_ACC};
+        text-transform:uppercase;letter-spacing:2.5px;
+        font-family:{_FONT};">Today&rsquo;s Top Story</span>
+    </p>
+    <p style="margin:0 0 18px;font-size:28px;font-weight:800;color:{_WHITE};
+      line-height:1.2;letter-spacing:-0.5px;font-family:{_FONT};">{headline}</p>
+    <p style="margin:0 0 28px;font-size:14px;color:rgba(255,255,255,0.65);
+      line-height:1.75;font-family:{_FONT};">{subtext}</p>
+    <a href="{_esc(top_url)}" target="_blank"
+      style="display:inline-block;border:1.5px solid rgba(255,255,255,0.35);
+      color:{_WHITE};font-size:13px;font-weight:600;padding:10px 22px;
+      border-radius:50px;text-decoration:none;font-family:{_FONT};">
+      Read the full story &rarr;
     </a>
-  </td></tr>
-  <tr><td style="padding:10px 12px 14px;">
-    <p style="margin:0 0 3px;font-size:9px;font-weight:700;color:{_ACC};
-      text-transform:uppercase;letter-spacing:1px;font-family:{_FONT};
-      white-space:nowrap;overflow:hidden;">{ch}</p>
-    <p style="margin:0 0 10px;font-size:11px;font-weight:700;color:{_T_HED};
-      line-height:1.4;height:31px;overflow:hidden;font-family:{_FONT};">{title}</p>
-    <a href="{url}" target="_blank"
-      style="display:inline-block;background:{_ACC};color:{_WHITE};font-size:10px;
-      font-weight:700;padding:5px 14px;border-radius:20px;text-decoration:none;
-      font-family:{_FONT};letter-spacing:0.2px;">Watch &rarr;</a>
-  </td></tr>
-  </table>
-</td>"""
-        H += f"""
-  <table width="100%" cellpadding="0" cellspacing="0"
-    style="background:{_ST_BG};border-top:1px solid {_BDR};">
-  <tr><td style="padding:28px 28px 24px;">
-    {_label("Watch Today")}
-    <table cellpadding="0" cellspacing="0" style="margin-top:14px;"><tr>
-      {cards_html}
+    <div style="border-top:1px solid rgba(255,255,255,0.1);margin:32px 0 22px;"></div>
+    <table cellpadding="0" cellspacing="0"><tr>
+      <td style="padding-right:14px;vertical-align:top;white-space:nowrap;">
+        <span style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.38);
+          text-transform:uppercase;letter-spacing:2px;
+          font-family:{_FONT};">Field Note</span>
+      </td>
+      <td>
+        <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.52);
+          line-height:1.65;font-style:italic;
+          font-family:{_FONT};">{field_note}</p>
+      </td>
     </tr></table>
   </td></tr>
   </table>
 """
 
-    # ── 4. PROMPT OF THE DAY ──────────────────────────────
-    if prompt_data:
-        use_case = _esc(prompt_data.get("use_case", "Today's AI Prompt"))
-        prompt   = _esc(prompt_data.get("prompt", ""))
-        example  = _esc(prompt_data.get("example_output", ""))
-        H += f"""
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:{_WHITE};border-top:1px solid {_BDR};">
+    # 3. THREE MOVES
+    # Inner width: 640 - 56px padding = 584px
+    # 3 cards x 184px + 2 gutters x 16px = 584px
+    move_cards = ""
+    for i, move in enumerate(tms[:3]):
+        mtype  = move.get("type","pitch").lower()
+        mtitle = _esc(move.get("title",""))
+        mdesc  = _esc(move.get("description",""))
+        mdeadl = _esc(move.get("deadline",""))
+        mc     = move_colors.get(mtype, _ACC)
+        mlbl   = move_labels.get(mtype, mtype.upper())
+        spacer = '<td width="16"></td>' if i > 0 else ""
+        move_cards += f"""{spacer}
+<td width="184" valign="top">
+  <table width="184" cellpadding="0" cellspacing="0"
+    style="background:{_WHITE};border-radius:8px;border:1px solid {_BDR};">
+  <tr><td height="3"
+    style="background:{mc};height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
+  <tr><td style="padding:16px 15px 15px;">
+    <p style="margin:0 0 11px;">
+      <span style="display:inline-block;background:{mc};color:#fff;font-size:9px;
+        font-weight:800;text-transform:uppercase;letter-spacing:1.5px;
+        padding:3px 9px;border-radius:50px;font-family:{_FONT};">{mlbl}</span>
+    </p>
+    <p style="margin:0 0 9px;font-size:13px;font-weight:600;font-style:italic;
+      color:{_H_TEXT};line-height:1.45;font-family:{_FONT};">{mtitle}</p>
+    <p style="margin:0 0 13px;font-size:12px;color:{_B_TEXT};line-height:1.6;
+      font-family:{_FONT};">{mdesc}</p>
+    <p style="margin:0;font-size:10px;font-weight:700;color:{mc};
+      text-transform:uppercase;letter-spacing:0.8px;
+      font-family:{_FONT};">{mdeadl}</p>
+  </td></tr>
+  </table>
+</td>"""
+
+    H += f"""
+  <table width="100%" cellpadding="0" cellspacing="0"
+    style="background:{_PG_BG};border-top:1px solid {_BDR};">
   <tr><td style="padding:32px 28px 28px;">
-    {_label("Prompt of the Day")}
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;">
-    <tr>
-      <!-- Left: prompt copy box -->
-      <td width="50%" valign="top" style="padding-right:12px;">
-        <p style="margin:0 0 8px;font-size:10px;font-weight:700;color:{_T_MET};
-          letter-spacing:0.8px;text-transform:uppercase;font-family:{_FONT};">
-          {use_case}
-        </p>
-        <div style="background:{_ST_BG};border:1px solid {_BDR};border-left:3px solid {_ACC};
-          border-radius:8px;padding:14px 16px;">
-          <p style="margin:0;font-size:12.5px;line-height:1.65;color:{_T_BOD};
-            font-family:{_FONT};font-style:italic;">
-            &ldquo;{prompt}&rdquo;
-          </p>
-        </div>
-        <p style="margin:10px 0 0;font-size:10px;color:{_T_MET};font-family:{_FONT};">
-          Copy &amp; paste into ChatGPT or Claude
-        </p>
-      </td>
-      <!-- Right: example output preview -->
-      <td width="50%" valign="top" style="padding-left:12px;">
-        <p style="margin:0 0 8px;font-size:10px;font-weight:700;color:{_T_MET};
-          letter-spacing:0.8px;text-transform:uppercase;font-family:{_FONT};">
-          Example Output
-        </p>
-        <div style="background:{_IC_BG};border:1px solid #C7D2FE;border-radius:8px;padding:14px 16px;">
-          <table width="100%" cellpadding="0" cellspacing="0">
-          <tr>
-            <td width="24" valign="top">
-              <div style="width:20px;height:20px;background:{_ACC};border-radius:50%;
-                text-align:center;line-height:20px;font-size:11px;color:{_WHITE};
-                font-weight:700;font-family:{_FONT};">AI</div>
-            </td>
-            <td valign="top" style="padding-left:8px;">
-              <p style="margin:0;font-size:12px;line-height:1.6;color:{_T_BOD};
-                font-family:{_FONT};">{example}</p>
-            </td>
-          </tr>
-          </table>
-        </div>
-      </td>
-    </tr>
-    </table>
+    <span style="font-size:10px;font-weight:700;color:{_M_TEXT};
+      text-transform:uppercase;letter-spacing:2px;
+      font-family:{_FONT};">Today &middot; Three Moves</span>
+    <p style="margin:6px 0 20px;font-size:13px;font-style:italic;color:{_B_TEXT};
+      font-family:{_FONT};">What BSM should do before noon.</p>
+    <table cellpadding="0" cellspacing="0" style="width:100%;"><tr>
+      {move_cards}
+    </tr></table>
   </td></tr>
   </table>
 """
 
-    # ── 5. AI INSIGHTS ────────────────────────────────────
-    insights = [
-        ("&#x26A1;", "BSM Must Try",    must[0]  if must            else "Explore today's top AI tool recommendation."),
-        ("&#x1F4C8;","SEO / AI Impact", must[1]  if len(must) > 1  else "Understand how AI is reshaping organic search."),
-        ("&#x1F3AF;","Action Step",     must[2]  if len(must) > 2  else "Apply these insights to your workflow today."),
-    ]
-    H += f"""
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:{_WHITE};">
-  <tr><td style="padding:32px 28px 28px;">
-    {_label("Today's Insights")}
-    <p style="margin:0 0 24px;font-size:20px;font-weight:800;color:{_T_HED};
-      font-family:{_FONT};letter-spacing:-0.3px;">Actionable AI Intelligence</p>
-    <table width="100%" cellpadding="0" cellspacing="0"><tr>
-"""
-    for emoji, title, body in insights:
-        H += f"""
-      <td style="width:33%;padding:0 6px;vertical-align:top;">
-        <table width="100%" cellpadding="0" cellspacing="0"
-          style="background:{_ST_BG};border-radius:12px;border:1px solid {_BDR};
-          border-top:3px solid {_ACC};height:100%;">
-        <tr><td style="padding:18px 16px;">
-          <p style="margin:0 0 10px;font-size:22px;">{emoji}</p>
-          <p style="margin:0 0 8px;font-size:11px;font-weight:700;color:{_T_HED};
-            text-transform:uppercase;letter-spacing:0.8px;font-family:{_FONT};">{_esc(title)}</p>
-          <p style="margin:0;font-size:12px;color:{_T_BOD};line-height:1.65;
-            font-family:{_FONT};">{L(body)}</p>
-        </td></tr>
-        </table>
-      </td>"""
-    H += "\n    </tr></table>\n  </td></tr>\n  </table>\n"
+    # 4. WE'RE WATCHING
+    if vids:
+        yt_cards = ""
+        for i, v in enumerate(vids[:3]):
+            thumb  = _esc(v.get("thumbnail",""))
+            url    = _esc(v.get("url","#"))
+            title  = _esc(v.get("title","")[:65])
+            ch     = _esc(v.get("channel","")[:28].upper())
+            spacer = '<td width="16"></td>' if i > 0 else ""
+            yt_cards += f"""{spacer}
+<td width="184" valign="top">
+  <a href="{url}" target="_blank" style="display:block;text-decoration:none;line-height:0;">
+    <img src="{thumb}" width="184" height="104"
+      style="width:184px;height:104px;object-fit:cover;display:block;border:0;
+      border-radius:6px;">
+  </a>
+  <p style="margin:8px 0 4px;font-size:9px;font-weight:700;color:{_M_TEXT};
+    text-transform:uppercase;letter-spacing:1.2px;
+    font-family:{_FONT};">{ch}</p>
+  <p style="margin:0;font-size:12px;font-weight:600;color:{_H_TEXT};
+    line-height:1.4;font-family:{_FONT};">
+    <a href="{url}" target="_blank"
+      style="color:{_H_TEXT};text-decoration:none;">{title}</a>
+  </p>
+</td>"""
 
-    # ── 6. INDUSTRY SPOTLIGHT ─────────────────────────────
-    watch_txt = watch[0] if watch else "The AI landscape continues to evolve rapidly."
-    H += f"""
+        H += f"""
   <table width="100%" cellpadding="0" cellspacing="0"
-    style="background:{_ST_BG};border-top:1px solid {_BDR};
-    border-bottom:1px solid {_BDR};">
-  <tr>
-    <td style="padding:32px 0 32px 28px;vertical-align:middle;width:50%;">
-      {_label("Industry Spotlight")}
-      <p style="margin:0 0 12px;font-size:20px;font-weight:800;color:{_T_HED};
-        line-height:1.3;font-family:{_FONT};letter-spacing:-0.3px;">
-        We Are Watching<br>AI Closely &#x1F310;
-      </p>
-      <p style="margin:0 0 20px;font-size:13px;color:{_T_BOD};line-height:1.75;
-        font-family:{_FONT};">{L(watch_txt)}</p>
-      {_btn("Read Full Story →", feat2.get("url", "#") if feat2 else "#")}
-    </td>
-    <td style="padding:28px 24px 28px 20px;vertical-align:middle;
-      text-align:right;width:50%;">
-      {f'<div style="border-radius:12px;overflow:hidden;display:inline-block;line-height:0;border:1px solid {_BDR};">{_img(feat2.get("image","") if feat2 else "",feat2.get("title","") if feat2 else "",270,152,0)}</div>' if (feat2 and feat2.get("image")) else ""}
-    </td>
-  </tr>
+    style="background:{_WHITE};border-top:1px solid {_BDR};">
+  <tr><td style="padding:28px 28px 28px;">
+    <table width="100%" cellpadding="0" cellspacing="0"
+      style="margin-bottom:20px;"><tr>
+      <td valign="middle">
+        <span style="font-size:10px;font-weight:700;color:{_H_TEXT};
+          text-transform:uppercase;letter-spacing:2px;
+          font-family:{_FONT};">We&rsquo;re Watching</span>
+      </td>
+      <td valign="middle" style="text-align:right;">
+        <span style="font-size:12px;font-style:italic;color:{_M_TEXT};
+          font-family:{_FONT};">{vid_word}&nbsp;video{"s" if vid_count != 1 else ""}</span>
+      </td>
+    </tr></table>
+    <table cellpadding="0" cellspacing="0" style="width:100%;"><tr>
+      {yt_cards}
+    </tr></table>
+  </td></tr>
   </table>
 """
 
-    # ── 7. CLIENT OPPORTUNITIES ───────────────────────────
-    titles3 = ["Client Opportunity", "BSM Sales Angle", "Action Talking Point"]
-    nums    = ["01", "02", "03"]
-    H += f"""
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:{_WHITE};">
-  <tr><td style="padding:32px 28px 28px;">
-    {_label("For Your Clients")}
-    <p style="margin:0 0 24px;font-size:20px;font-weight:800;color:{_T_HED};
-      font-family:{_FONT};letter-spacing:-0.3px;">Today's Client Opportunities</p>
-    <table width="100%" cellpadding="0" cellspacing="0">
-"""
-    for i, item in enumerate(sales[:3]):
-        bdr = f"border-bottom:1px solid {_BDR};" if i < 2 else ""
-        H += f"""
-      <tr>
-      <td style="padding:16px 0;{bdr}">
-        <table width="100%" cellpadding="0" cellspacing="0"><tr>
-          <td style="width:40px;vertical-align:top;padding-right:16px;padding-top:2px;">
-            <table cellpadding="0" cellspacing="0">
-            <tr><td align="center" valign="middle" width="36" height="36"
-              style="background:{_ACC};border-radius:8px;width:36px;height:36px;
-              font-size:12px;font-weight:800;color:{_WHITE};text-align:center;
-              line-height:36px;font-family:{_FONT};">{nums[i]}</td></tr>
-            </table>
-          </td>
-          <td style="vertical-align:top;">
-            <p style="margin:0 0 2px;font-size:14px;font-weight:700;color:{_T_HED};
-              font-family:{_FONT};">{titles3[i]}</p>
-            <p style="margin:0 0 6px;font-size:10px;color:{_T_MET};
-              font-family:{_FONT};letter-spacing:0.3px;">Client-Facing · BSM Intelligence</p>
-            <p style="margin:0;font-size:13px;color:{_T_BOD};line-height:1.65;
-              font-family:{_FONT};">{L(item)}</p>
-          </td>
-        </tr></table>
-      </td>
-      </tr>"""
-    H += "\n    </table>\n  </td></tr>\n  </table>\n"
+    # 5. WE'RE READING
+    cat_config = [
+        ("INDUSTRY",      _GREEN,  buckets["INDUSTRY"]),
+        ("SEO",           _ACC,    buckets["SEO"]),
+        ("DEV",           _NAVY,   buckets["DEV"]),
+        ("CLIENT ANGLES", _ORANGE, cas),
+    ]
 
-    # ── 8. CATEGORIZED NEWS (Marketing / SEO / Dev) ──────
-    _cat_buckets: dict[str, list] = {"Marketing": [], "SEO": [], "Dev": []}
-    _cat_colors  = {"Marketing": _ACC,      "SEO": "#0EA5E9", "Dev": "#8B5CF6"}
-    _cat_icons   = {"Marketing": "&#x1F4E3;", "SEO": "&#x1F50D;", "Dev": "&#x1F4BB;"}
-    for _a in articles:
-        _key = (_a.get("source","") + " " + _a.get("title","")).lower()
-        if any(k in _key for k in ["seo", "se ranking", "perplexity", "ranking"]):
-            _cat_buckets["SEO"].append(_a)
-        elif any(k in _key for k in ["dev tools", "mcp", "anthropic", "claude", "developer"]):
-            _cat_buckets["Dev"].append(_a)
-        else:
-            _cat_buckets["Marketing"].append(_a)
-
-    _cats_html = ""
-    for _cat, _arts in _cat_buckets.items():
-        if not _arts:
+    reading_cards = ""
+    for cat_label, cat_color, cat_items in cat_config:
+        if not cat_items:
             continue
-        _cc    = _cat_colors[_cat]
-        _ico   = _cat_icons[_cat]
-        _count = len(_arts[:6])
-        _rows  = ""
-        for _j, _a in enumerate(_arts[:6]):
-            _bdr   = f"border-top:1px solid {_BDR};" if _j > 0 else ""
-            _atitl = _esc(_a.get("title","")[:80])
-            _asrc  = _esc(_a.get("source","")[:22])
-            _aurl  = _esc(_a.get("url","#"))
-            _rows += f"""
-      <tr><td style="padding:13px 22px;{_bdr}">
-        <table cellpadding="0" cellspacing="0" width="100%"><tr>
-          <td valign="middle" style="padding-right:16px;">
-            <a href="{_aurl}" target="_blank"
-              style="font-size:13px;font-weight:600;color:{_T_HED};
-              text-decoration:none;line-height:1.45;font-family:{_FONT};">{_atitl}</a>
-          </td>
-          <td valign="middle" style="text-align:right;white-space:nowrap;">
-            <span style="font-size:10px;font-weight:500;color:{_T_MET};
-              font-family:{_FONT};">{_asrc}</span>
-          </td>
-        </tr></table>
-      </td></tr>"""
-        _cats_html += f"""
-    <table width="100%" cellpadding="0" cellspacing="0"
-      style="background:{_WHITE};border-radius:12px;
-      border:1px solid {_BDR};border-top:4px solid {_cc};
-      margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,0.05);">
-    <tr><td style="padding:16px 22px 14px;border-bottom:1px solid {_BDR};">
-      <table cellpadding="0" cellspacing="0" width="100%"><tr>
-        <td valign="middle">
-          <table cellpadding="0" cellspacing="0"><tr>
-            <td style="background:{_cc};border-radius:6px;padding:4px 10px;">
-              <p style="margin:0;font-size:10px;font-weight:800;color:#fff;
-                text-transform:uppercase;letter-spacing:1.5px;
-                font-family:{_FONT};">{_ico}&nbsp;{_cat}</p>
+        limit = cat_items[:6]
+        count = len(limit)
+        count_word = _N2W.get(count, str(count))
+
+        rows = ""
+        for j, item in enumerate(limit):
+            bdr    = f"border-top:1px solid {_BDR};" if j > 0 else ""
+            atitle = _esc(item.get("title","")[:85])
+            asrc   = _esc(item.get("source","BSM Intel")[:28])
+            aurl   = item.get("url","#") if cat_label != "CLIENT ANGLES" else "#"
+            rows += f"""
+        <tr><td style="padding:12px 20px;{bdr}">
+          <table width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td valign="middle" style="padding-right:16px;">
+              <a href="{_esc(aurl)}" target="_blank"
+                style="font-size:13px;font-weight:500;color:{_H_TEXT};
+                text-decoration:none;line-height:1.45;
+                font-family:{_FONT};">{atitle}</a>
+            </td>
+            <td valign="middle" style="text-align:right;white-space:nowrap;">
+              <span style="font-size:10px;color:{_M_TEXT};
+                font-family:{_FONT};">{asrc}</span>
             </td>
           </tr></table>
+        </td></tr>"""
+
+        reading_cards += f"""
+    <table width="100%" cellpadding="0" cellspacing="0"
+      style="background:{_WHITE};border-radius:8px;border:1px solid {_BDR};
+      margin-bottom:12px;">
+    <tr><td height="3"
+      style="background:{cat_color};height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
+    <tr><td style="padding:14px 20px 12px;border-bottom:1px solid {_BDR};">
+      <table width="100%" cellpadding="0" cellspacing="0"><tr>
+        <td valign="middle">
+          <span style="display:inline-block;background:{cat_color};color:#fff;
+            font-size:9px;font-weight:800;text-transform:uppercase;
+            letter-spacing:1.5px;padding:3px 9px;border-radius:50px;
+            font-family:{_FONT};">{cat_label}</span>
         </td>
         <td valign="middle" style="text-align:right;">
-          <p style="margin:0;font-size:10px;color:{_T_MET};font-family:{_FONT};">
-            {_count}&nbsp;article{"s" if _count != 1 else ""}</p>
+          <span style="font-size:11px;font-style:italic;color:{_M_TEXT};
+            font-family:{_FONT};">{count_word}&nbsp;article{"s" if count != 1 else ""}</span>
         </td>
       </tr></table>
     </td></tr>
-    {_rows}
+    {rows}
     </table>"""
 
     H += f"""
   <table width="100%" cellpadding="0" cellspacing="0"
-    style="background:{_ST_BG};border-top:1px solid {_BDR};">
-  <tr><td style="padding:32px 28px 28px;">
-    {_label("Latest News")}
-    <p style="margin:0 0 24px;font-size:20px;font-weight:800;color:{_T_HED};
-      font-family:{_FONT};letter-spacing:-0.3px;">Breaking AI Updates</p>
-    {_cats_html}
-  </td></tr>
-  </table>
-"""
-
-    # ── 9. SEO SPOTLIGHT ──────────────────────────────────
-    if seo_tip:
-        tip_img  = seo_tip.get("image","")
-        tip_url  = _esc(seo_tip.get("url","#"))
-        tip_titl = _esc(seo_tip.get("title","")[:100])
-        tip_body = _esc(seo_tip.get("content","")[:200].replace("\n"," "))
-        img_td   = (
-            f'<td style="width:220px;vertical-align:top;padding-right:20px;line-height:0;">'
-            f'<a href="{tip_url}" target="_blank">'
-            f'<img src="{_esc(tip_img)}" width="210" '
-            f'style="width:210px;height:140px;object-fit:cover;display:block;border:0;'
-            f'border-radius:10px;"></a></td>'
-        ) if tip_img else ""
-        H += f"""
-  <table width="100%" cellpadding="0" cellspacing="0"
-    style="background:{_WHITE};border-top:1px solid {_BDR};">
-  <tr><td style="padding:28px 28px;">
+    style="background:{_PG_BG};border-top:1px solid {_BDR};">
+  <tr><td style="padding:28px 28px 24px;">
     <table width="100%" cellpadding="0" cellspacing="0"
-      style="background:{_ST_BG};border-radius:12px;border:1px solid {_BDR};
-      border-left:4px solid {_ACC};overflow:hidden;">
-    <tr><td style="padding:22px 24px;">
-      {_label("SEO Spotlight")}
-      <p style="margin:0 0 16px;font-size:16px;font-weight:800;color:{_T_HED};
-        font-family:{_FONT};">Latest from Chris Raulf</p>
-      <table width="100%" cellpadding="0" cellspacing="0"><tr>
-        {img_td}
-        <td style="vertical-align:top;">
-          <p style="margin:0 0 8px;font-size:14px;font-weight:700;line-height:1.4;
-            font-family:{_FONT};">
-            <a href="{tip_url}" target="_blank"
-              style="color:{_T_HED};text-decoration:none;">{tip_titl}</a>
-          </p>
-          <p style="margin:0 0 14px;font-size:12px;color:{_T_BOD};line-height:1.65;
-            font-family:{_FONT};">{tip_body}…</p>
-          {_btn("Read Tip →", tip_url, sm=True)}
-        </td>
-      </tr></table>
-    </td></tr>
-    </table>
-  </td></tr>
-  </table>
-"""
-
-    # ── 10. PRIORITY READING ──────────────────────────────
-    if prior:
-        rows = ""
-        for idx, p in enumerate(prior, 1):
-            bdr = f"border-bottom:1px solid {_BDR};" if idx < len(prior) else ""
-            rows += (
-                f'<tr><td style="padding:14px 0;{bdr}">'
-                f'<table cellpadding="0" cellspacing="0" width="100%"><tr>'
-                f'<td style="width:28px;vertical-align:top;padding-top:1px;">'
-                f'<span style="display:inline-block;width:22px;height:22px;'
-                f'border-radius:50%;background:{_IC_BG};text-align:center;'
-                f'line-height:22px;font-size:10px;font-weight:800;color:{_ACC};'
-                f'font-family:{_FONT};">{idx}</span></td>'
-                f'<td style="vertical-align:top;padding-left:10px;">'
-                f'<p style="margin:0;font-size:13px;color:{_T_BOD};line-height:1.65;'
-                f'font-family:{_FONT};">{L(p)}</p></td>'
-                f'</tr></table></td></tr>'
-            )
-        H += f"""
-  <table width="100%" cellpadding="0" cellspacing="0"
-    style="background:{_ST_BG};border-top:1px solid {_BDR};">
-  <tr><td style="padding:28px 28px;">
-    {_label("Priority Reading")}
-    <p style="margin:0 0 20px;font-size:18px;font-weight:800;color:{_T_HED};
-      font-family:{_FONT};letter-spacing:-0.3px;">Must-Read This Week</p>
-    <table width="100%" cellpadding="0" cellspacing="0"
-      style="background:{_WHITE};border-radius:12px;border:1px solid {_BDR};
-      box-shadow:0 1px 4px rgba(0,0,0,0.04);">
-    <tr><td style="padding:0 20px;">
-      <table width="100%" cellpadding="0" cellspacing="0">{rows}</table>
-    </td></tr>
-    </table>
-  </td></tr>
-  </table>
-"""
-
-
-    # ── 12. SIGN-OFF ───────────────────────────────────────
-    H += f"""
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:{_ACC};">
-  <tr><td style="padding:28px 32px;">
-    <p style="margin:0 0 6px;font-size:14px;color:rgba(255,255,255,0.9);
-      line-height:1.7;font-family:{_FONT};">
-      If you're building in SEO, AI, or automation — this is your edge.
-    </p>
-    <p style="margin:0;font-size:16px;font-weight:700;color:{_WHITE};
-      font-family:{_FONT};">&#8212; {_esc(from_name)}</p>
-  </td></tr>
-  </table>
-"""
-
-    # ── 13. FOOTER ─────────────────────────────────────────
-    H += f"""
-  <table width="100%" cellpadding="0" cellspacing="0"
-    style="background:{_WHITE};border-top:1px solid {_BDR};">
-  <tr><td style="padding:28px 28px 20px;">
-    <table width="100%" cellpadding="0" cellspacing="0"><tr>
-      <td style="width:40%;vertical-align:top;padding-right:20px;">
-        <div style="margin-bottom:12px;">{_logo(28)}</div>
-        <p style="margin:0;font-size:12px;color:{_T_BOD};line-height:1.7;
-          font-family:{_FONT};">AI-powered daily intelligence for SEO professionals.
-          Curated by Boulder SEO Marketing.</p>
+      style="margin-bottom:20px;"><tr>
+      <td valign="middle">
+        <span style="font-size:10px;font-weight:700;color:{_H_TEXT};
+          text-transform:uppercase;letter-spacing:2px;
+          font-family:{_FONT};">We&rsquo;re Reading</span>
       </td>
-      <td style="width:30%;vertical-align:top;padding-right:16px;">
-        <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:{_T_HED};
-          font-family:{_FONT};">Contact</p>
-        <p style="margin:0 0 4px;font-size:11px;color:{_T_BOD};font-family:{_FONT};">
-          +1 (720) 594-6224</p>
-        <p style="margin:0 0 4px;font-size:11px;color:{_T_BOD};font-family:{_FONT};">
-          sean@boulderseomarketing.com</p>
-        <p style="margin:0;font-size:11px;color:{_ACC};font-weight:600;
-          font-family:{_FONT};">boulderseomarketing.com</p>
-      </td>
-      <td style="width:30%;vertical-align:top;">
-        <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:{_T_HED};
-          font-family:{_FONT};">Quick Links</p>
-        {"".join(f'<p style="margin:0 0 4px;"><a href="{u}" target="_blank" style="font-size:11px;color:{_T_BOD};text-decoration:none;font-family:{_FONT};">{l}</a></p>' for l, u in [("Homepage","https://boulderseomarketing.com"),("About Us","https://boulderseomarketing.com/about"),("AI Tools","https://microseo.ai"),("Blog","https://boulderseomarketing.com/blog"),("Contact","https://boulderseomarketing.com/contact")])}
+      <td valign="middle" style="text-align:right;">
+        <span style="font-size:12px;font-style:italic;color:{_M_TEXT};
+          font-family:{_FONT};">{total_word}&nbsp;article{"s" if total_arts != 1 else ""}</span>
       </td>
     </tr></table>
+    {reading_cards}
   </td></tr>
   </table>
+"""
 
+    # 6. FOOTER
+    H += f"""
   <table width="100%" cellpadding="0" cellspacing="0"
-    style="background:{_ST_BG};border-top:1px solid {_BDR};
-    border-radius:0 0 16px 16px;overflow:hidden;">
-  <tr><td style="padding:12px 28px;text-align:center;">
-    <p style="margin:0;font-size:11px;color:{_T_MET};font-family:{_FONT};">
-      &copy; 2026 Boulder SEO Marketing &nbsp;&middot;&nbsp; AI Intelligence Officer
+    style="background:{_WHITE};border-top:1px solid {_BDR};">
+  <tr><td style="padding:24px 28px;text-align:center;">
+    <div style="margin-bottom:10px;">{_logo(24)}</div>
+    <p style="margin:0 0 4px;font-size:11px;color:{_M_TEXT};
+      font-family:{_FONT};">
+      AI-powered daily intelligence for the BSM team
+      &nbsp;&middot;&nbsp; Boulder SEO Marketing
+    </p>
+    <p style="margin:0;font-size:11px;color:{_M_TEXT};font-family:{_FONT};">
+      &copy; 2026 Boulder SEO Marketing
       &nbsp;&middot;&nbsp; {_esc(display_date)}
     </p>
   </td></tr>
   </table>
-"""
 
-    H += """
 </td></tr>
 </table>
 
@@ -664,16 +372,14 @@ def _build_html(brief_text: str, articles: list, display_date: str,
     return H
 
 
-# ── Plain text fallback ────────────────────────────────────
-
-def _build_plain(brief_text: str, first_name: str, from_name: str) -> str:
-    return (f"Hey {first_name},\n\nHere's your AI intelligence briefing:\n\n"
-            f"---\n\n{brief_text}\n\n---\n\n"
+def _build_plain(brief_data: dict, first_name: str, from_name: str) -> str:
+    ts = brief_data.get("top_story", {}) if isinstance(brief_data, dict) else {}
+    headline = ts.get("headline","") if ts else str(brief_data)[:200]
+    return (f"Hey {first_name},\n\nToday's top story: {headline}\n\n"
+            f"---\n\n"
             f"If you're building in SEO, AI, or automation — this is your edge.\n\n"
-            f"– {from_name}\nBoulder SEO Marketing")
+            f"- {from_name}\nBoulder SEO Marketing")
 
-
-# ── Send ───────────────────────────────────────────────────
 
 def _send_resend(subject: str, from_str: str, to: str, reply_to: str,
                  html: str, plain: str, logo_data: bytes | None) -> None:
@@ -720,29 +426,26 @@ def _send_smtp(subject: str, from_str: str, to: str, reply_to: str,
         s.sendmail(sender_addr, to, related.as_string())
 
 
-def send_newsletter(subject: str, brief_text: str,
+def send_newsletter(subject: str, brief_data: dict,
                     articles: list, display_date: str,
-                    seo_tip: dict | None = None,
-                    yt_videos: list | None = None,
-                    prompt_data: dict | None = None) -> None:
+                    yt_videos: list | None = None) -> None:
     config    = json.loads(CONFIG_FILE.read_text())
     ec        = config.get("email", {})
     if not ec.get("from_address"):
         raise ValueError("config.json missing email.from_address")
     if not ec.get("recipients"):
         raise ValueError("config.json missing email.recipients")
-    from_name = ec.get("from_name", "Sean")
-    from_str  = f"{from_name} <{ec['from_address']}>"
-    reply_to  = ec.get("reply_to", ec["from_address"])
-    logo_data = _LOGO_FILE.read_bytes() if _LOGO_FILE.exists() else None
+    from_name  = ec.get("from_name", "Sean")
+    from_str   = f"{from_name} <{ec['from_address']}>"
+    reply_to   = ec.get("reply_to", ec["from_address"])
+    logo_data  = _LOGO_FILE.read_bytes() if _LOGO_FILE.exists() else None
     use_resend = bool(os.environ.get("RESEND_API_KEY"))
 
     for recip in ec["recipients"]:
         fn    = recip.get("first_name", "there")
         to    = recip["email"]
-        html  = _build_html(brief_text, articles, display_date, fn, from_name, seo_tip, yt_videos, prompt_data)
-        plain = _build_plain(brief_text, fn, from_name)
-
+        html  = _build_html(brief_data, articles, display_date, fn, from_name, yt_videos)
+        plain = _build_plain(brief_data, fn, from_name)
         if use_resend:
             _send_resend(subject, from_str, to, reply_to, html, plain, logo_data)
         else:
