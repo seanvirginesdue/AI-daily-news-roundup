@@ -24,7 +24,7 @@ def _issue_num() -> str:
 _WHITE   = "#FFFFFF"
 _CANVAS  = "#C9C9CE"   # outer page background — makes the card pop
 _PG_BG   = "#F4F4F5"  # inner section alternating background
-_HERO_BG = "#0D1117"
+_HERO_BG = "#0F172A"
 _BDR     = "#E4E4E7"
 _H_TEXT  = "#09090B"
 _B_TEXT  = "#52525B"
