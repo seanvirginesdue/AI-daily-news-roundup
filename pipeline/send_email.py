@@ -273,7 +273,7 @@ def _build_html(brief_data: dict, articles: list, display_date: str,
     for cat_label, cat_color, cat_items in cat_config:
         if not cat_items:
             continue
-        limit = cat_items[:6]
+        limit = cat_items[:3]
         count = len(limit)
         count_word = _N2W.get(count, str(count))
 
