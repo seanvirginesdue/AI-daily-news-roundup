@@ -206,9 +206,6 @@ def _build_html(brief_data: dict, articles: list, display_date: str,
       color:{_H_TEXT};line-height:1.45;font-family:{_SERIF};">{mtitle}</p>
     <p style="margin:0 0 13px;font-size:12px;color:{_B_TEXT};line-height:1.6;
       font-family:{_FONT};">{mdesc}</p>
-    <p style="margin:0;font-size:10px;font-weight:700;color:{mc};
-      text-transform:uppercase;letter-spacing:0.8px;
-      font-family:{_FONT};">{mdeadl}</p>
   </td></tr>
   </table>
 </td>"""
