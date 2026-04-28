@@ -22,7 +22,8 @@ def _issue_num() -> str:
 
 # Design system
 _WHITE   = "#FFFFFF"
-_PG_BG   = "#F4F4F5"
+_CANVAS  = "#C9C9CE"   # outer page background — makes the card pop
+_PG_BG   = "#F4F4F5"  # inner section alternating background
 _HERO_BG = "#0D1117"
 _BDR     = "#E4E4E7"
 _H_TEXT  = "#09090B"
@@ -100,12 +101,12 @@ def _build_html(brief_data: dict, articles: list, display_date: str,
 @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400;1,600&display=swap');
 </style>
 </head>
-<body style="margin:0;padding:0;background:{_PG_BG};font-family:{_FONT};">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:{_PG_BG};">
-<tr><td align="center" style="padding:24px 12px 40px;">
+<body style="margin:0;padding:0;background:{_CANVAS};font-family:{_FONT};">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:{_CANVAS};">
+<tr><td align="center" style="padding:32px 16px 48px;">
 <table width="640" cellpadding="0" cellspacing="0"
-  style="max-width:640px;width:100%;background:{_WHITE};border-radius:12px;
-  overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08);">
+  style="max-width:640px;width:100%;background:{_WHITE};border-radius:16px;
+  overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.18),0 2px 8px rgba(0,0,0,0.10);">
 <tr><td>
 """
 
