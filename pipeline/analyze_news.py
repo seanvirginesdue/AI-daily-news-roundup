@@ -93,7 +93,10 @@ _BSM_SYSTEM = (
     "— BSM clients pay $2,000–$5,000/month because they trust the team is ahead of the curve. "
     "The credibility risk is real: if a client hears about a Google update from someone else first, "
     "trust erodes immediately. Every bsm_note must reflect this urgency — "
-    "not 'this is worth watching' but what BSM is doing about it today."
+    "not 'this is worth watching' but what BSM is doing about it today.\n"
+    "— For the chris_take field: write in the voice of Chris Raulf, BSM's founder. "
+    "First person, direct, no hedging. Reflects what Chris is personally watching this week. "
+    "Example: 'Watching how Perplexity handles local citation attribution — this changes our GBP strategy.'"
 )
 
 _RELEVANCE_FILTER = """
@@ -108,19 +111,54 @@ RELEVANCE FILTER — include ONLY items from these 6 categories:
 EXCLUDE without exception: corporate AI adoption stories, "AI is changing business" think pieces, image/video/music generators, manufacturing AI, fundraising announcements, general tech news, anything that doesn't change what BSM does for clients by Friday.
 """
 
+_HARD_EXCLUDE = {
+    "funding round", "acquisition", "ipo", "layoffs", "earnings",
+    "corporate strategy", "manufacturing", "automotive",
+    "healthcare system", "government policy", "climate", "social justice",
+}
+
+
+def _passes_hard_filter(title: str) -> bool:
+    tl = title.lower()
+    return not any(term in tl for term in _HARD_EXCLUDE)
+
+
+def _load_context_brief() -> str:
+    """Load Harold's monthly BSM context brief from bsm_context.json."""
+    from pathlib import Path as _P
+    import json as _j
+    f = _P(__file__).parent.parent / "bsm_context.json"
+    if not f.exists():
+        return ""
+    try:
+        ctx = _j.loads(f.read_text(encoding="utf-8"))
+        parts = []
+        if ctx.get("this_month_focus"):
+            parts.append(f"This month's focus: {ctx['this_month_focus']}")
+        if ctx.get("strategic_priorities"):
+            parts.append("Priorities: " + " | ".join(ctx["strategic_priorities"][:3]))
+        if ctx.get("active_client_types"):
+            parts.append("Active client types: " + ", ".join(ctx["active_client_types"]))
+        return "\n".join(parts)
+    except Exception:
+        return ""
+
 
 def generate_brief(articles: list[dict], display_date: str) -> dict:
-    """Generate structured brief as a dict: top_story, three_moves, client_angles, top_reads."""
+    """Generate structured brief as a dict: top_story, three_moves, client_angles, top_reads, on_radar, chris_take."""
+    filtered = [a for a in articles if _passes_hard_filter(a.get("title", ""))] or articles
     headlines = "\n".join(
         f"[{i+1}] ({a['source']}) {a['title']}"
-        for i, a in enumerate(articles[:18])
+        for i, a in enumerate(filtered[:18])
     )
+    _ctx = _load_context_brief()
+    _ctx_block = f"\n\nBSM CONTEXT THIS MONTH (use to sharpen Three Moves and chris_take):\n{_ctx}" if _ctx else ""
     system = _BSM_SYSTEM
     user = f"""Today is {display_date}.
 
 Here are today's AI and marketing news headlines:
 {headlines}
-{_RELEVANCE_FILTER}
+{_RELEVANCE_FILTER}{_ctx_block}
 Return ONLY valid JSON — no markdown, no code fences, no explanation. Use this exact structure:
 {{
   "top_story": {{
@@ -160,10 +198,14 @@ Return ONLY valid JSON — no markdown, no code fences, no explanation. Use this
       "source": "Source name from the (source) prefix",
       "bsm_note": "One sentence: what BSM is doing differently because of this. Not 'this may affect' — a specific operational change, client conversation, or deliverable adjustment. Example: 'We are updating our GBP audit checklist to include the new review response policy.' Never write: 'This could impact how clients approach SEO.'"
     }}
-  ]
+  ],
+  "on_radar": [],
+  "chris_take": ""
 }}
 
-For top_reads: select the 2-3 articles that passed the relevance filter above. If only 1 passes, return only 1. Never pad with irrelevant articles to hit a count."""
+For top_reads: select the 2-3 articles that passed the relevance filter. If only 1 passes, return only 1. Never pad.
+For on_radar: list 1-2 articles worth a brief mention — relevant but not urgent enough for a full card. Format each as: "[Topic]: [what is happening] — watching how [BSM-specific implication]." Use empty array [] if nothing qualifies.
+For chris_take: one line, 15 words max, in Chris Raulf's first-person voice. What Chris is personally watching this week. Example: "Watching how Perplexity handles local citation attribution — this changes our GBP strategy." Use empty string "" if today's news doesn't warrant a personal note."""
     import json as _json
     try:
         raw = _call(system, user).strip()
@@ -192,22 +234,27 @@ For top_reads: select the 2-3 articles that passed the relevance filter above. I
             ],
             "top_reads": [
                 {"article_index": 1, "title": "Check today's AI search headlines", "source": "BSM Intel", "bsm_note": "Review manually — LLM fallback active today."}
-            ]
+            ],
+            "on_radar": [],
+            "chris_take": ""
         }
 
 
 def generate_digest_brief(articles: list[dict], display_date: str) -> dict:
     """Generate a tight, BSM-relevant brief for the Team Digest (Tier 2)."""
+    filtered = [a for a in articles if _passes_hard_filter(a.get("title", ""))] or articles
     headlines = "\n".join(
         f"[{i+1}] ({a['source']}) {a['title']}"
-        for i, a in enumerate(articles[:18])
+        for i, a in enumerate(filtered[:18])
     )
+    _ctx = _load_context_brief()
+    _ctx_block = f"\n\nBSM CONTEXT THIS MONTH:\n{_ctx}" if _ctx else ""
     system = _BSM_SYSTEM
     user = f"""Today is {display_date}.
 
 Here are today's AI and marketing news headlines:
 {headlines}
-{_RELEVANCE_FILTER}
+{_RELEVANCE_FILTER}{_ctx_block}
 Return ONLY valid JSON — no markdown, no code fences, no explanation. Use this exact structure:
 {{
   "top_story": {{
@@ -240,10 +287,14 @@ Return ONLY valid JSON — no markdown, no code fences, no explanation. Use this
       "source": "Source name from the (source) prefix",
       "bsm_note": "One sentence: what BSM is doing differently because of this. Not 'this may affect' — a specific operational change, client conversation, or deliverable adjustment. Example: 'We are updating our GBP audit checklist to include the new review response policy.' Never write: 'This could impact how clients approach SEO.'"
     }}
-  ]
+  ],
+  "on_radar": [],
+  "chris_take": ""
 }}
 
-For top_reads: select the 2-3 articles that passed the relevance filter above. If only 1 passes, return only 1. Never pad with irrelevant articles to hit a count."""
+For top_reads: select the 2-3 articles that passed the relevance filter. If only 1 passes, return only 1. Never pad.
+For on_radar: 1 item max for the team digest. Format: "[Topic]: [what is happening] — watching how [BSM implication]." Use [] if nothing qualifies.
+For chris_take: one line, 15 words max, in Chris Raulf's first-person voice. Use "" if nothing warrants a personal note."""
     import json as _json
     try:
         raw = _call(system, user).strip()
@@ -270,7 +321,9 @@ For top_reads: select the 2-3 articles that passed the relevance filter above. I
             ],
             "top_reads": [
                 {"article_index": 1, "title": "Check today's AI search headlines", "source": "BSM Intel", "bsm_note": "Review manually — LLM fallback active today."}
-            ]
+            ],
+            "on_radar": [],
+            "chris_take": ""
         }
 
 

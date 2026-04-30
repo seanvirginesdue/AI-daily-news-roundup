@@ -32,6 +32,9 @@ _CONFIG_FILE = _Path(__file__).parent / "config.json"
 
 def run() -> None:
     now = datetime.now()
+    if now.weekday() >= 5:  # 5=Saturday, 6=Sunday
+        print(f"\n✓ Weekend ({now.strftime('%A')}) — no send. See you Monday.\n")
+        return
     display_date = now.strftime("%A, %B %d, %Y").replace(" 0", " ")
 
     print(f"\n{'='*60}")

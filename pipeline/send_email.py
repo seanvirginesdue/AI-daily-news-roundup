@@ -297,7 +297,47 @@ def _build_html(brief_data: dict, articles: list, display_date: str,
   </table>
 """
 
-    # 5. FOOTER
+    # 5. ON OUR RADAR (conditional)
+    _on_radar = brief_data.get("on_radar", [])
+    if _on_radar:
+        _radar_items = []
+        for _i, _item in enumerate(_on_radar[:2]):
+            _m = "10px" if _i == 0 else "6px"
+            _radar_items.append(
+                f'<p style="margin:{_m} 0 0;font-size:13px;font-style:italic;'
+                f'color:{_B_TEXT};line-height:1.6;font-family:{_FONT};">'
+                f'&bull;&nbsp;{_esc(str(_item))}</p>'
+            )
+        _radar_html = "".join(_radar_items)
+        H += f"""
+  <table width="100%" cellpadding="0" cellspacing="0"
+    style="background:{_WHITE};border-top:1px solid {_BDR};">
+  <tr><td style="padding:24px 28px 20px;">
+    <p style="margin:0 0 8px;"><span style="font-size:10px;font-weight:700;
+      color:{_M_TEXT};text-transform:uppercase;letter-spacing:2px;
+      font-family:{_FONT};">On Our Radar</span></p>
+    {_radar_html}
+  </td></tr>
+  </table>
+"""
+
+    # 6. CHRIS'S TAKE
+    _chris_take = brief_data.get("chris_take", "")
+    if _chris_take:
+        H += f"""
+  <table width="100%" cellpadding="0" cellspacing="0"
+    style="background:{_PG_BG};border-top:1px solid {_BDR};">
+  <tr><td style="padding:22px 28px 24px;">
+    <p style="margin:0 0 8px;"><span style="font-size:10px;font-weight:700;
+      color:{_M_TEXT};text-transform:uppercase;letter-spacing:2px;
+      font-family:{_FONT};">Chris&rsquo;s Take</span></p>
+    <p style="margin:0;font-size:15px;font-style:italic;color:{_H_TEXT};
+      line-height:1.6;font-family:{_SERIF};">&ldquo;{_esc(_chris_take)}&rdquo;</p>
+  </td></tr>
+  </table>
+"""
+
+    # 7. FOOTER
     H += f"""
   <table width="100%" cellpadding="0" cellspacing="0"
     style="background:{_WHITE};border-top:1px solid {_BDR};">
@@ -561,7 +601,47 @@ def _build_html_tier2(brief_data: dict, articles: list, display_date: str,
   </table>
 """
 
-    # 5. FOOTER
+    # 5. ON OUR RADAR (conditional)
+    _on_radar = brief_data.get("on_radar", [])
+    if _on_radar:
+        _radar_items = []
+        for _i, _item in enumerate(_on_radar[:2]):
+            _m = "10px" if _i == 0 else "6px"
+            _radar_items.append(
+                f'<p style="margin:{_m} 0 0;font-size:13px;font-style:italic;'
+                f'color:{_B_TEXT};line-height:1.6;font-family:{_FONT};">'
+                f'&bull;&nbsp;{_esc(str(_item))}</p>'
+            )
+        _radar_html = "".join(_radar_items)
+        H += f"""
+  <table width="100%" cellpadding="0" cellspacing="0"
+    style="background:{_WHITE};border-top:1px solid {_BDR};">
+  <tr><td style="padding:24px 28px 20px;">
+    <p style="margin:0 0 8px;"><span style="font-size:10px;font-weight:700;
+      color:{_M_TEXT};text-transform:uppercase;letter-spacing:2px;
+      font-family:{_FONT};">On Our Radar</span></p>
+    {_radar_html}
+  </td></tr>
+  </table>
+"""
+
+    # 6. CHRIS'S TAKE
+    _chris_take = brief_data.get("chris_take", "")
+    if _chris_take:
+        H += f"""
+  <table width="100%" cellpadding="0" cellspacing="0"
+    style="background:{_PG_BG};border-top:1px solid {_BDR};">
+  <tr><td style="padding:22px 28px 24px;">
+    <p style="margin:0 0 8px;"><span style="font-size:10px;font-weight:700;
+      color:{_M_TEXT};text-transform:uppercase;letter-spacing:2px;
+      font-family:{_FONT};">Chris&rsquo;s Take</span></p>
+    <p style="margin:0;font-size:15px;font-style:italic;color:{_H_TEXT};
+      line-height:1.6;font-family:{_SERIF};">&ldquo;{_esc(_chris_take)}&rdquo;</p>
+  </td></tr>
+  </table>
+"""
+
+    # 7. FOOTER
     H += f"""
   <table width="100%" cellpadding="0" cellspacing="0"
     style="background:{_WHITE};border-top:1px solid {_BDR};">
