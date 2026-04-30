@@ -87,19 +87,40 @@ def run() -> None:
         digest_subject = generate_subject(digest_brief, display_date)
         print(f"✉️  Digest subject: {digest_subject}")
 
-    # ── STEP 5: Send ───────────────────────────────────────────
-    print("\n📬 Sending email...")
+    # ── STEP 5: Send Tier 1 immediately ───────────────────────
+    print("\n📬 Sending Tier 1 (Research Layer)...")
     try:
         send_newsletter(
             subject, brief_data, articles, display_date,
             tier1_recipients=tier1,
-            tier2_recipients=tier2,
-            tier2_brief=digest_brief,
-            tier2_subject=digest_subject,
+            tier2_recipients=[],   # Tier 2 is held for Harold to review
         )
     except Exception as exc:
         print(f"❌ Email send failed: {exc}")
         raise
+
+    # ── STEP 6: Save Tier 2 digest for Harold review ──────────
+    if tier2 and digest_brief:
+        _PENDING_FILE = _Path(__file__).parent / "digest_pending.json"
+        pending = {
+            "subject":      digest_subject or subject,
+            "brief_data":   digest_brief,
+            "articles":     articles,
+            "display_date": display_date,
+        }
+        _PENDING_FILE.write_text(
+            _json.dumps(pending, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        print(f"\n📋 Tier 2 digest ready for review.")
+        print(f"   Open digest_preview.html in a browser to check it.")
+        print(f"   When ready, run:  python approve_digest.py\n")
+
+        # Write a preview HTML for Harold to open
+        from pipeline.send_email import _build_html_tier2 as _bh2
+        _PREVIEW_FILE = _Path(__file__).parent / "digest_preview.html"
+        preview_html = _bh2(digest_brief, articles, display_date, "Harold", "AI Task Force")
+        _PREVIEW_FILE.write_text(preview_html, encoding="utf-8")
+        print(f"   Preview saved → {_PREVIEW_FILE.name}")
 
     print(f"\n✅ Done!\n")
 

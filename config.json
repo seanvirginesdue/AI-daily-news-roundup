@@ -38,7 +38,7 @@
     }
   ],
   "max_articles": 14,
-  "send_hour_utc": 0,
+  "send_hour_utc": 14,
   "email": {
     "from_name": "AI Task Force",
     "from_address": "sean@boulderseomarketing.com",
@@ -48,6 +48,31 @@
         "first_name": "Sean",
         "email": "sean@boulderseomarketing.com",
         "tier": 1
+      },
+      {
+        "first_name": "Harold",
+        "email": "harold@boulderseomarketing.com",
+        "tier": 1
+      },
+      {
+        "first_name": "Greg",
+        "email": "greg@boulderseomarketing.com",
+        "tier": 2
+      },
+      {
+        "first_name": "Barb",
+        "email": "barb@boulderseomarketing.com",
+        "tier": 2
+      },
+      {
+        "first_name": "Kathleen",
+        "email": "kathleen@boulderseomarketing.com",
+        "tier": 2
+      },
+      {
+        "first_name": "Jam",
+        "email": "jam@boulderseomarketing.com",
+        "tier": 2
       }
     ],
     "smtp_host": "smtp.gmail.com",
