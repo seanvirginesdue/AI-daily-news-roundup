@@ -74,18 +74,19 @@ def _build_html(brief_data: dict, articles: list, display_date: str,
         idx = read.get("article_index", 0) - 1
         url = articles[idx].get("url", "#") if 0 <= idx < len(articles) else "#"
         return {**read, "url": url}
-    top_reads = [_resolve_read(r) for r in top_reads[:2]]
-    # Fallback: use first 2 articles if LLM returned nothing
+    top_reads = [_resolve_read(r) for r in top_reads[:3]]
+    # Fallback: use first 3 articles if LLM returned nothing
     if not top_reads and articles:
-        top_reads = [{"title": a["title"], "source": a["source"], "url": a["url"], "bsm_note": ""} for a in articles[:2]]
+        top_reads = [{"title": a["title"], "source": a["source"], "url": a["url"], "bsm_note": ""} for a in articles[:3]]
 
-    total_arts = len(top_reads)
+    top_url = top_reads[0].get("url", articles[0].get("url","#") if articles else "#") if top_reads else (articles[0].get("url","#") if articles else "#")
+    # Skip top_reads[0] in We're Reading — it's already the linked headline above
+    reads_display = top_reads[1:]
+    total_arts = len(reads_display)
     total_word = _N2W.get(total_arts, str(total_arts))
 
     move_colors = {"pitch": _GREEN, "build": _ACC, "kill": _RED}
     move_labels = {"pitch": "PITCH", "build": "BUILD", "kill": "KILL"}
-
-    top_url = top_reads[0].get("url", articles[0].get("url","#") if articles else "#") if top_reads else (articles[0].get("url","#") if articles else "#")
     issue      = _issue_num()
     try:
         from datetime import datetime as _dt
@@ -218,9 +219,9 @@ def _build_html(brief_data: dict, articles: list, display_date: str,
   </table>
 """
 
-    # 4. WE'RE READING (LLM-curated top_reads only — max 3)
+    # 4. WE'RE READING — top_reads[1:] only; top_reads[0] is already the top story link
     reading_rows = ""
-    for j, item in enumerate(top_reads):
+    for j, item in enumerate(reads_display):
         bdr    = f"border-top:1px solid {_BDR};" if j > 0 else ""
         atitle = _esc(item.get("title","")[:85])
         asrc   = _esc(item.get("source","BSM Intel")[:28])
@@ -334,17 +335,17 @@ def _build_html_tier2(brief_data: dict, articles: list, display_date: str,
         idx = read.get("article_index", 0) - 1
         url = articles[idx].get("url", "#") if 0 <= idx < len(articles) else "#"
         return {**read, "url": url}
-    top_reads = [_resolve_read(r) for r in top_reads[:2]]
+    top_reads = [_resolve_read(r) for r in top_reads[:3]]
     if not top_reads and articles:
-        top_reads = [{"title": a["title"], "source": a["source"], "url": a["url"], "bsm_note": ""} for a in articles[:2]]
+        top_reads = [{"title": a["title"], "source": a["source"], "url": a["url"], "bsm_note": ""} for a in articles[:3]]
 
-    total_arts = len(top_reads)
+    top_url = top_reads[0].get("url", articles[0].get("url","#") if articles else "#") if top_reads else (articles[0].get("url","#") if articles else "#")
+    reads_display = top_reads[1:]
+    total_arts = len(reads_display)
     total_word = _N2W.get(total_arts, str(total_arts))
 
     move_colors = {"pitch": _GREEN, "build": _ACC, "kill": _RED}
     move_labels = {"pitch": "PITCH", "build": "BUILD", "kill": "KILL"}
-
-    top_url    = articles[0].get("url","#") if articles else "#"
     issue      = _issue_num()
     try:
         from datetime import datetime as _dt
@@ -474,9 +475,9 @@ def _build_html_tier2(brief_data: dict, articles: list, display_date: str,
   </table>
 """
 
-    # 4. WE'RE READING (LLM-curated top_reads only — max 3)
+    # 4. WE'RE READING — top_reads[1:] only; top_reads[0] is already the top story link
     reading_rows = ""
-    for j, item in enumerate(top_reads):
+    for j, item in enumerate(reads_display):
         bdr    = f"border-top:1px solid {_BDR};" if j > 0 else ""
         atitle = _esc(item.get("title","")[:85])
         asrc   = _esc(item.get("source","BSM Intel")[:28])
