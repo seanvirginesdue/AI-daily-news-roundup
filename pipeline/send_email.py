@@ -155,6 +155,14 @@ def _build_html(brief_data: dict, articles: list, display_date: str,
     </p>
     <p style="margin:0;font-size:14px;color:{_B_TEXT};line-height:1.7;
       font-family:{_FONT};">{subtext}</p>
+    <table cellpadding="0" cellspacing="0" style="margin-top:18px;">
+    <tr><td style="background:{_ACC};border-radius:6px;">
+      <a href="{_esc(top_url)}" target="_blank"
+        style="display:inline-block;padding:10px 22px;font-size:13px;
+        font-weight:600;color:#ffffff;text-decoration:none;
+        font-family:{_FONT};letter-spacing:0.2px;">Read Full Article &rarr;</a>
+    </td></tr>
+    </table>
     <div style="border-top:1px solid {_BDR};margin:22px 0;"></div>
     <table cellpadding="0" cellspacing="0" style="width:100%;"><tr>
       <td style="padding-right:16px;vertical-align:top;white-space:nowrap;">
@@ -414,6 +422,14 @@ def _build_html_tier2(brief_data: dict, articles: list, display_date: str,
     </p>
     <p style="margin:0;font-size:14px;color:{_B_TEXT};line-height:1.7;
       font-family:{_FONT};">{subtext}</p>
+    <table cellpadding="0" cellspacing="0" style="margin-top:18px;">
+    <tr><td style="background:{_ACC};border-radius:6px;">
+      <a href="{_esc(top_url)}" target="_blank"
+        style="display:inline-block;padding:10px 22px;font-size:13px;
+        font-weight:600;color:#ffffff;text-decoration:none;
+        font-family:{_FONT};letter-spacing:0.2px;">Read Full Article &rarr;</a>
+    </td></tr>
+    </table>
     <div style="border-top:1px solid {_BDR};margin:22px 0;"></div>
     <table cellpadding="0" cellspacing="0" style="width:100%;"><tr>
       <td style="padding-right:16px;vertical-align:top;white-space:nowrap;">
