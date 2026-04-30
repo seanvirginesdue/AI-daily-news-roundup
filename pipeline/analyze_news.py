@@ -69,28 +69,64 @@ else:
         return response.content[0].text.strip()
 
 
+_BSM_SYSTEM = (
+    "You are BSM Copilot, the AI intelligence officer for Boulder SEO Marketing "
+    "(~10-person SEO agency, ~50 clients, building microseo.ai SaaS). "
+    "Write like a senior strategist: direct, decisive, no filler words.\n\n"
+    "BSM CONTEXT — use this when generating Three Moves:\n"
+    "— 30-35% of BSM's own leads now arrive through ChatGPT, Claude, and Perplexity. "
+    "GEO readiness audits are a live sales conversation, not a future initiative.\n"
+    "— BSM runs virtual client agents for every account. These agents get smarter with "
+    "more context (call transcripts, case studies, results screenshots). "
+    "Knowledge base depth is a direct competitive differentiator.\n"
+    "— BSM's service delivery principle: unless it's legal, medical, or a sensitive "
+    "industry, move forward and notify. Asking for approval on every optimization "
+    "is hesitation dressed up as process.\n"
+    "— PITCH moves must name a specific client-facing conversation BSM can have today. "
+    "BUILD moves must target the virtual agent system or internal tooling BSM already runs. "
+    "KILL moves must name something specific the team is actively doing wrong right now.\n"
+    "— Fhul manages Google Business Profile for the majority of BSM's local clients every day. "
+    "Any GBP policy change, feature release, or ranking signal shift is immediately operational — "
+    "it changes what Fhul does tomorrow morning.\n"
+    "— BSM actively uses Featured.com for E-E-A-T building across client accounts. "
+    "Platform changes or shifts in journalist query patterns directly affect off-page strategy.\n"
+    "— BSM clients pay $2,000–$5,000/month because they trust the team is ahead of the curve. "
+    "The credibility risk is real: if a client hears about a Google update from someone else first, "
+    "trust erodes immediately. Every bsm_note must reflect this urgency — "
+    "not 'this is worth watching' but what BSM is doing about it today."
+)
+
+_RELEVANCE_FILTER = """
+RELEVANCE FILTER — include ONLY items from these 6 categories:
+  (1) Google Search Central or Google Blog: algorithm updates, Search Console features, AI Overview changes — anything Google announces that affects how clients rank or appear in search.
+  (2) Perplexity, ChatGPT (OpenAI), Claude (Anthropic) release notes: actual product or feature releases that change how these platforms surface and cite content. Not funding news. Not partnerships. The changelog.
+  (3) SE Ranking product updates: new features, UI changes, data updates to the platform BSM uses and ambassadors daily.
+  (4) Google Business Profile: policy changes, new features, ranking signal shifts — anything that changes how BSM manages client GBP listings.
+  (5) Featured.com and digital PR signals: platform changes, journalist query pattern shifts, E-E-A-T building opportunities that affect BSM's off-page strategy for clients.
+  (6) AI Overviews research and case studies: actual data on what content formats appear in AI Overviews, citation rate studies, format and structure findings. Not opinion pieces — studies with numbers.
+
+EXCLUDE without exception: corporate AI adoption stories, "AI is changing business" think pieces, image/video/music generators, manufacturing AI, fundraising announcements, general tech news, anything that doesn't change what BSM does for clients by Friday.
+"""
+
+
 def generate_brief(articles: list[dict], display_date: str) -> dict:
-    """Generate structured brief as a dict: top_story, three_moves, client_angles."""
+    """Generate structured brief as a dict: top_story, three_moves, client_angles, top_reads."""
     headlines = "\n".join(
         f"[{i+1}] ({a['source']}) {a['title']}"
         for i, a in enumerate(articles[:18])
     )
-    system = (
-        "You are BSM Copilot, the AI intelligence officer for Boulder SEO Marketing "
-        "(~10-person SEO agency, ~50 clients, building microseo.ai SaaS). "
-        "Write like a senior strategist: direct, decisive, no filler words."
-    )
+    system = _BSM_SYSTEM
     user = f"""Today is {display_date}.
 
 Here are today's AI and marketing news headlines:
 {headlines}
-
+{_RELEVANCE_FILTER}
 Return ONLY valid JSON — no markdown, no code fences, no explanation. Use this exact structure:
 {{
   "top_story": {{
     "headline": "One punchy sentence (max 10 words) naming today's biggest AI shift",
-    "subtext": "2-3 sentences: what happened and exactly why the BSM team should act",
-    "field_note": "1 sharp strategic observation or warning (must differ from the headline)"
+    "subtext": "Exactly 2 sentences. Sentence 1: what happened. Sentence 2: why BSM clients will be affected.",
+    "field_note": "1 sentence stating what BSM is doing about this right now. Start with a direct verb or 'We are'. No hedging — not 'this may signal' but a concrete action or stance."
   }},
   "three_moves": [
     {{
@@ -116,8 +152,18 @@ Return ONLY valid JSON — no markdown, no code fences, no explanation. Use this
     {{"title": "Concrete client talking point or pitch angle for this week", "source": "BSM Intel"}},
     {{"title": "Second specific angle tied to today's news", "source": "BSM Intel"}},
     {{"title": "Third client angle or objection handler", "source": "BSM Intel"}}
+  ],
+  "top_reads": [
+    {{
+      "article_index": 1,
+      "title": "Exact title from the headlines list above",
+      "source": "Source name from the (source) prefix",
+      "bsm_note": "One sentence: what BSM is doing differently because of this. Not 'this may affect' — a specific operational change, client conversation, or deliverable adjustment. Example: 'We are updating our GBP audit checklist to include the new review response policy.' Never write: 'This could impact how clients approach SEO.'"
+    }}
   ]
-}}"""
+}}
+
+For top_reads: select the 2-3 articles that passed the relevance filter above. If only 1 passes, return only 1. Never pad with irrelevant articles to hit a count."""
     import json as _json
     try:
         raw = _call(system, user).strip()
@@ -143,6 +189,87 @@ Return ONLY valid JSON — no markdown, no code fences, no explanation. Use this
                 {"title": "AI workflow audit: how BSM maps automation opportunities for SEO clients", "source": "BSM Intel"},
                 {"title": "Why the agencies winning with AI are charging more, not less", "source": "BSM Intel"},
                 {"title": "Three AI talking points for Q2 client check-ins", "source": "BSM Intel"}
+            ],
+            "top_reads": [
+                {"article_index": 1, "title": "Check today's AI search headlines", "source": "BSM Intel", "bsm_note": "Review manually — LLM fallback active today."}
+            ]
+        }
+
+
+def generate_digest_brief(articles: list[dict], display_date: str) -> dict:
+    """Generate a tight, BSM-relevant brief for the Team Digest (Tier 2)."""
+    headlines = "\n".join(
+        f"[{i+1}] ({a['source']}) {a['title']}"
+        for i, a in enumerate(articles[:18])
+    )
+    system = _BSM_SYSTEM
+    user = f"""Today is {display_date}.
+
+Here are today's AI and marketing news headlines:
+{headlines}
+{_RELEVANCE_FILTER}
+Return ONLY valid JSON — no markdown, no code fences, no explanation. Use this exact structure:
+{{
+  "top_story": {{
+    "headline": "One punchy sentence (max 10 words) naming today's most BSM-relevant AI shift",
+    "subtext": "Exactly 2 sentences. Sentence 1: what happened. Sentence 2: why BSM clients will be affected.",
+    "field_note": "1 sentence stating what BSM is doing about this right now. Start with a direct verb or 'We are'. No hedging — not 'this may signal' but a concrete action or stance."
+  }},
+  "three_moves": [
+    {{
+      "type": "pitch",
+      "title": "Client-facing action to do today (verb-first, imperative)",
+      "description": "2 short sentences: the opportunity and why it matters for BSM clients",
+      "deadline": "BY [specific time like 5 PM or day of week]"
+    }},
+    {{
+      "type": "build",
+      "title": "Internal experiment or capability to build this week",
+      "description": "2 short sentences: what to test and what success looks like",
+      "deadline": "BY [specific day of week]"
+    }}
+  ],
+  "client_angles": [
+    {{"title": "Concrete client talking point or pitch angle for this week", "source": "BSM Intel"}},
+    {{"title": "Second specific angle tied to today's news", "source": "BSM Intel"}}
+  ],
+  "top_reads": [
+    {{
+      "article_index": 1,
+      "title": "Exact title from the headlines list above",
+      "source": "Source name from the (source) prefix",
+      "bsm_note": "One sentence: what BSM is doing differently because of this. Not 'this may affect' — a specific operational change, client conversation, or deliverable adjustment. Example: 'We are updating our GBP audit checklist to include the new review response policy.' Never write: 'This could impact how clients approach SEO.'"
+    }}
+  ]
+}}
+
+For top_reads: select the 2-3 articles that passed the relevance filter above. If only 1 passes, return only 1. Never pad with irrelevant articles to hit a count."""
+    import json as _json
+    try:
+        raw = _call(system, user).strip()
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        return _json.loads(raw.strip())
+    except Exception as e:
+        print(f"  [WARN] digest brief JSON parse failed ({type(e).__name__})")
+        return {
+            "top_story": {
+                "headline": "AI tools are reshaping how agencies compete.",
+                "subtext": "Today's developments signal a shift in how marketing teams operate at scale. BSM has a narrow window to position ahead of this curve before clients ask competitors first.",
+                "field_note": "Agencies that move now capture the transition fee. Those that wait absorb the price pressure."
+            },
+            "three_moves": [
+                {"type": "pitch", "title": "Lead with an AI workflow audit for every client.", "description": "Clients need help mapping which tasks AI can automate today. Position BSM as the guide, not the executor.", "deadline": "BY 5 PM"},
+                {"type": "build", "title": "Run one client brief through each major AI tool.", "description": "Document speed, quality, and gaps. Your differentiation lives in the interpretation layer.", "deadline": "BY FRIDAY"},
+            ],
+            "client_angles": [
+                {"title": "AI workflow audit: how BSM maps automation opportunities for SEO clients", "source": "BSM Intel"},
+                {"title": "Why the agencies winning with AI are charging more, not less", "source": "BSM Intel"},
+            ],
+            "top_reads": [
+                {"article_index": 1, "title": "Check today's AI search headlines", "source": "BSM Intel", "bsm_note": "Review manually — LLM fallback active today."}
             ]
         }
 

@@ -20,9 +20,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from pipeline.fetch_news import fetch_articles, fetch_yt_videos
-from pipeline.analyze_news import generate_brief, generate_subject
+import json as _json
+from pathlib import Path as _Path
+
+from pipeline.fetch_news import fetch_articles
+from pipeline.analyze_news import generate_brief, generate_digest_brief, generate_subject
 from pipeline.send_email import send_newsletter
+
+_CONFIG_FILE = _Path(__file__).parent / "config.json"
 
 
 def run() -> None:
@@ -34,7 +39,7 @@ def run() -> None:
     print(f"{'='*60}\n")
 
     # ── STEP 1: Fetch ──────────────────────────────────────────
-    print("📡 Fetching news from 10 sources...")
+    print("📡 Fetching news from configured sources...")
     articles = fetch_articles()
 
     if not articles:
@@ -45,24 +50,53 @@ def run() -> None:
     for i, a in enumerate(articles, 1):
         print(f"  [{i:2}] [{a['source']}] {a['title'][:65]}")
 
-    # ── STEP 2: Generate brief ─────────────────────────────────
+    # ── Split recipients by tier ───────────────────────────────
+    all_recipients = _json.loads(_CONFIG_FILE.read_text()).get("email", {}).get("recipients", [])
+    tier1 = [r for r in all_recipients if r.get("tier", 1) == 1]
+    tier2 = [r for r in all_recipients if r.get("tier", 1) == 2]
+
+    # ── STEP 2: Generate full brief (Tier 1 — Research Layer) ──
     print(f"\n🤖 Generating brief with AI ({len(articles)} articles)...")
     brief_data = generate_brief(articles, display_date)
 
-    # ── STEP 3: Subject line ───────────────────────────────────
+    # ── Editorial override ─────────────────────────────────────
+    _OVERRIDE_FILE = _Path(__file__).parent / "custom_brief.json"
+    _overrides: dict = {}
+    if _OVERRIDE_FILE.exists():
+        try:
+            _overrides = _json.loads(_OVERRIDE_FILE.read_text(encoding="utf-8"))
+            brief_data.update(_overrides)
+            print(f"  ✓ Applied editorial overrides: {list(_overrides.keys())}")
+            _OVERRIDE_FILE.unlink()
+            print(f"  ✓ custom_brief.json consumed and removed")
+        except Exception as _e:
+            print(f"  [WARN] Could not load custom_brief.json: {_e}")
+
+    # ── STEP 3: Subject line (Tier 1) ─────────────────────────
     subject = generate_subject(brief_data, display_date)
     print(f"✉️  Subject: {subject}")
 
-    # ── STEP 4: Fetch latest AI YouTube videos ─────────────────
-    print("▶ Fetching latest AI tool videos...")
-    yt_videos = fetch_yt_videos()
-    for v in yt_videos:
-        print(f"  ✓ [{v['channel']}] {v['title'][:55]}")
+    # ── STEP 4: Generate digest brief (Tier 2 — Team Digest) ──
+    digest_brief = None
+    digest_subject = None
+    if tier2:
+        print(f"\n🤖 Generating Team Digest brief ({len(tier2)} recipient(s))...")
+        digest_brief = generate_digest_brief(articles, display_date)
+        if _overrides:
+            digest_brief.update(_overrides)
+        digest_subject = generate_subject(digest_brief, display_date)
+        print(f"✉️  Digest subject: {digest_subject}")
 
     # ── STEP 5: Send ───────────────────────────────────────────
     print("\n📬 Sending email...")
     try:
-        send_newsletter(subject, brief_data, articles, display_date, yt_videos)
+        send_newsletter(
+            subject, brief_data, articles, display_date,
+            tier1_recipients=tier1,
+            tier2_recipients=tier2,
+            tier2_brief=digest_brief,
+            tier2_subject=digest_subject,
+        )
     except Exception as exc:
         print(f"❌ Email send failed: {exc}")
         raise

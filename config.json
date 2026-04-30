@@ -1,51 +1,43 @@
 {
   "rss_feeds": [
     {
-      "name": "Google AI / Gemini",
-      "url": "https://news.google.com/rss/search?q=Google+Gemini+AI+update+OR+%22Google+AI+Studio%22&hl=en-US&gl=US&ceid=US:en"
+      "name": "Google Search Central",
+      "url": "https://feeds.feedburner.com/blogspot/amDG"
     },
     {
-      "name": "OpenAI / ChatGPT",
-      "url": "https://news.google.com/rss/search?q=OpenAI+ChatGPT+update+OR+%22GPT+model%22+release&hl=en-US&gl=US&ceid=US:en"
+      "name": "AI Overviews Research",
+      "url": "https://news.google.com/rss/search?q=%22AI+Overviews%22+study+OR+research+OR+%22case+study%22+OR+%22citation+rate%22+OR+%22appearing+in+AI+Overviews%22&hl=en-US&gl=US&ceid=US:en"
     },
     {
-      "name": "Anthropic / Claude",
-      "url": "https://news.google.com/rss/search?q=Anthropic+Claude+update+OR+%22Claude+AI%22+model&hl=en-US&gl=US&ceid=US:en"
+      "name": "OpenAI Release Notes",
+      "url": "https://openai.com/blog/rss.xml"
     },
     {
-      "name": "Claude Products",
-      "url": "https://news.google.com/rss/search?q=%22Claude+Code%22+OR+%22claude.ai%22+feature+OR+%22Anthropic+MCP%22&hl=en-US&gl=US&ceid=US:en"
+      "name": "Anthropic / Claude Releases",
+      "url": "https://news.google.com/rss/search?q=Anthropic+%22release+notes%22+OR+%22Claude%22+%22now+available%22+OR+%22new+capability%22+OR+%22Claude%22+update+feature&hl=en-US&gl=US&ceid=US:en"
     },
     {
-      "name": "Perplexity AI",
-      "url": "https://news.google.com/rss/search?q=Perplexity+AI+update&hl=en-US&gl=US&ceid=US:en"
-    },
-    {
-      "name": "AI Tools",
-      "url": "https://news.google.com/rss/search?q=%22AI+tool%22+launch+OR+%22AI+app%22+review+OR+%22AI+benchmark%22+2026&hl=en-US&gl=US&ceid=US:en"
-    },
-    {
-      "name": "AI Creative",
-      "url": "https://news.google.com/rss/search?q=%22AI+image+generator%22+OR+%22AI+video%22+tool+OR+%22AI+music%22+OR+Midjourney+OR+Runway+OR+Suno&hl=en-US&gl=US&ceid=US:en"
-    },
-    {
-      "name": "AI SEO Tools",
-      "url": "https://news.google.com/rss/search?q=%22AI+SEO+tool%22+OR+%22SEO+automation%22+OR+Surfer+OR+Clearscope+OR+MarketMuse&hl=en-US&gl=US&ceid=US:en"
+      "name": "Perplexity Releases",
+      "url": "https://news.google.com/rss/search?q=Perplexity+%22new+feature%22+OR+%22rolling+out%22+OR+%22update%22+OR+%22search%22+release+site:blog.perplexity.ai+OR+site:perplexity.ai&hl=en-US&gl=US&ceid=US:en"
     },
     {
       "name": "SE Ranking Blog",
       "url": "https://seranking.com/blog/feed/"
     },
     {
-      "name": "Dev Tools / MCP",
-      "url": "https://news.google.com/rss/search?q=%22MCP+server%22+OR+%22AI+SaaS%22+builder+OR+%22n8n%22+automation+OR+%22AI+developer+tool%22&hl=en-US&gl=US&ceid=US:en"
+      "name": "Google Business Profile",
+      "url": "https://news.google.com/rss/search?q=%22Google+Business+Profile%22+update+OR+%22new+feature%22+OR+%22policy+change%22+OR+%22GBP%22+%22Google+Maps%22+business+listing&hl=en-US&gl=US&ceid=US:en"
     },
     {
-      "name": "Chris Raulf AI SEO",
-      "url": "https://chrisraulf.com/feed/"
+      "name": "Featured.com + Digital PR",
+      "url": "https://news.google.com/rss/search?q=Featured.com+update+OR+%22expert+quotes%22+platform+OR+%22digital+PR%22+%22journalist+queries%22+OR+HARO+alternative+OR+Connectively+%22media+queries%22&hl=en-US&gl=US&ceid=US:en"
+    },
+    {
+      "name": "GEO / LLM Citation Signals",
+      "url": "https://news.google.com/rss/search?q=%22generative+engine+optimization%22+OR+%22LLM+citations%22+OR+%22cited+in+ChatGPT%22+OR+%22cited+in+Perplexity%22+OR+%22AI+search+visibility%22&hl=en-US&gl=US&ceid=US:en"
     }
   ],
-  "max_articles": 22,
+  "max_articles": 14,
   "send_hour_utc": 0,
   "email": {
     "from_name": "AI Task Force",
@@ -54,27 +46,12 @@
     "recipients": [
       {
         "first_name": "Sean",
-        "email": "sean@boulderseomarketing.com"
-      },
-      {
-        "first_name": "Harold",
-        "email": "harold@boulderseomarketing.com"
-      },
-
-      {
-        "first_name": "Daniel",
-        "email": "daniel@boulderseomarketing.com"
-      },
-      {
-        "first_name": "Christopher",
-        "email": "christopher@boulderseomarketing.com"
+        "email": "sean@boulderseomarketing.com",
+        "tier": 1
       }
-      
-      
     ],
     "smtp_host": "smtp.gmail.com",
     "smtp_port": 587
   },
-  "seen_articles_file": "seen_articles.json",
-  "seen_videos_file": "seen_videos.json"
+  "seen_articles_file": "seen_articles.json"
 }
