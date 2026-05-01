@@ -203,10 +203,10 @@ def _build_html(brief_data: dict, articles: list, display_date: str,
         </td>
       </tr></table>
     </td>
-    <!-- Right: daily GIF -->
-    <td style="padding:0;vertical-align:top;width:240px;min-width:240px;">
+    <!-- Right: daily GIF — fills full card height -->
+    <td style="padding:0;vertical-align:top;width:220px;min-width:220px;overflow:hidden;">
       <img src="{_gif_url}" alt="{_gif_alt}"
-        style="display:block;width:240px;height:auto;" />
+        style="display:block;width:220px;height:340px;object-fit:cover;object-position:center center;" />
     </td>
   </tr>
   </table>
@@ -505,10 +505,10 @@ def _build_html_tier2(brief_data: dict, articles: list, display_date: str,
         </td>
       </tr></table>
     </td>
-    <!-- Right: daily GIF -->
-    <td style="padding:0;vertical-align:top;width:240px;min-width:240px;">
+    <!-- Right: daily GIF — fills full card height -->
+    <td style="padding:0;vertical-align:top;width:220px;min-width:220px;overflow:hidden;">
       <img src="{_gif_url}" alt="{_gif_alt}"
-        style="display:block;width:240px;height:auto;" />
+        style="display:block;width:220px;height:340px;object-fit:cover;object-position:center center;" />
     </td>
   </tr>
   </table>
