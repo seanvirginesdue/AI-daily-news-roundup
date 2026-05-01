@@ -81,7 +81,17 @@ def _build_html(brief_data: dict, articles: list, display_date: str,
 
     top_url = top_reads[0].get("url", articles[0].get("url","#") if articles else "#") if top_reads else (articles[0].get("url","#") if articles else "#")
     # Skip top_reads[0] in We're Reading — it's already the linked headline above
-    reads_display = top_reads[1:]
+    reads_display = list(top_reads[1:])
+    _used = {top_url} | {r.get("url","") for r in reads_display}
+    for _a in articles:
+        if len(reads_display) >= 3:
+            break
+        _u = _a.get("url","")
+        if _u in _used:
+            continue
+        reads_display.append({"title": _a["title"], "source": _a["source"], "url": _u, "bsm_note": ""})
+        _used.add(_u)
+    reads_display = reads_display[:3]
     total_arts = len(reads_display)
     total_word = _N2W.get(total_arts, str(total_arts))
 
@@ -227,12 +237,12 @@ def _build_html(brief_data: dict, articles: list, display_date: str,
   </table>
 """
 
-    # 4. WE'RE READING — top_reads[1:] only; top_reads[0] is already the top story link
+    # 4. WE'RE READING — 3 fresh articles from feeds
     reading_rows = ""
     for j, item in enumerate(reads_display):
         bdr    = f"border-top:1px solid {_BDR};" if j > 0 else ""
-        atitle = _esc(item.get("title","")[:85])
-        asrc   = _esc(item.get("source","BSM Intel")[:28])
+        atitle = _esc(item.get("title","")[:90])
+        asrc   = _esc(item.get("source","")[:30])
         aurl   = _esc(item.get("url","#"))
         anote  = _esc(item.get("bsm_note",""))
         reading_rows += f"""
@@ -254,45 +264,19 @@ def _build_html(brief_data: dict, articles: list, display_date: str,
       </table>
     </td></tr>"""
 
-    reading_card = f"""
-    <table width="100%" cellpadding="0" cellspacing="0"
-      style="background:{_WHITE};border-radius:8px;border:1px solid {_BDR};">
-    <tr><td height="3"
-      style="background:{_ACC};height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
-    <tr><td style="padding:14px 20px 12px;border-bottom:1px solid {_BDR};">
-      <table width="100%" cellpadding="0" cellspacing="0"><tr>
-        <td valign="middle">
-          <span style="display:inline-block;background:{_ACC};color:#fff;
-            font-size:9px;font-weight:800;text-transform:uppercase;
-            letter-spacing:1.5px;padding:3px 9px;border-radius:50px;
-            font-family:{_FONT};">SIGNAL</span>
-        </td>
-        <td valign="middle" style="text-align:right;">
-          <span style="font-size:11px;font-style:italic;color:{_M_TEXT};
-            font-family:{_FONT};">{total_word}&nbsp;article{"s" if total_arts != 1 else ""}</span>
-        </td>
-      </tr></table>
-    </td></tr>
-    {reading_rows}
-    </table>"""
-
     H += f"""
   <table width="100%" cellpadding="0" cellspacing="0"
     style="background:{_PG_BG};border-top:1px solid {_BDR};">
   <tr><td style="padding:28px 28px 24px;">
+    <span style="font-size:10px;font-weight:700;color:{_H_TEXT};
+      text-transform:uppercase;letter-spacing:2px;
+      font-family:{_FONT};">We&rsquo;re Reading</span>
     <table width="100%" cellpadding="0" cellspacing="0"
-      style="margin-bottom:20px;"><tr>
-      <td valign="middle">
-        <span style="font-size:10px;font-weight:700;color:{_H_TEXT};
-          text-transform:uppercase;letter-spacing:2px;
-          font-family:{_FONT};">We&rsquo;re Reading</span>
-      </td>
-      <td valign="middle" style="text-align:right;">
-        <span style="font-size:12px;font-style:italic;color:{_M_TEXT};
-          font-family:{_FONT};">{total_word}&nbsp;article{"s" if total_arts != 1 else ""}</span>
-      </td>
-    </tr></table>
-    {reading_card}
+      style="margin-top:16px;background:{_WHITE};border-radius:8px;border:1px solid {_BDR};">
+    <tr><td height="3"
+      style="background:{_ACC};height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
+    {reading_rows}
+    </table>
   </td></tr>
   </table>
 """
@@ -388,7 +372,17 @@ def _build_html_tier2(brief_data: dict, articles: list, display_date: str,
         top_reads = [{"title": a["title"], "source": a["source"], "url": a["url"], "bsm_note": ""} for a in articles[:3]]
 
     top_url = top_reads[0].get("url", articles[0].get("url","#") if articles else "#") if top_reads else (articles[0].get("url","#") if articles else "#")
-    reads_display = top_reads[1:]
+    reads_display = list(top_reads[1:])
+    _used = {top_url} | {r.get("url","") for r in reads_display}
+    for _a in articles:
+        if len(reads_display) >= 3:
+            break
+        _u = _a.get("url","")
+        if _u in _used:
+            continue
+        reads_display.append({"title": _a["title"], "source": _a["source"], "url": _u, "bsm_note": ""})
+        _used.add(_u)
+    reads_display = reads_display[:3]
     total_arts = len(reads_display)
     total_word = _N2W.get(total_arts, str(total_arts))
 
@@ -531,12 +525,12 @@ def _build_html_tier2(brief_data: dict, articles: list, display_date: str,
   </table>
 """
 
-    # 4. WE'RE READING — top_reads[1:] only; top_reads[0] is already the top story link
+    # 4. WE'RE READING — 3 fresh articles from feeds
     reading_rows = ""
     for j, item in enumerate(reads_display):
         bdr    = f"border-top:1px solid {_BDR};" if j > 0 else ""
-        atitle = _esc(item.get("title","")[:85])
-        asrc   = _esc(item.get("source","BSM Intel")[:28])
+        atitle = _esc(item.get("title","")[:90])
+        asrc   = _esc(item.get("source","")[:30])
         aurl   = _esc(item.get("url","#"))
         anote  = _esc(item.get("bsm_note",""))
         reading_rows += f"""
@@ -558,45 +552,19 @@ def _build_html_tier2(brief_data: dict, articles: list, display_date: str,
       </table>
     </td></tr>"""
 
-    reading_card = f"""
-    <table width="100%" cellpadding="0" cellspacing="0"
-      style="background:{_WHITE};border-radius:8px;border:1px solid {_BDR};">
-    <tr><td height="3"
-      style="background:{_ACC};height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
-    <tr><td style="padding:14px 20px 12px;border-bottom:1px solid {_BDR};">
-      <table width="100%" cellpadding="0" cellspacing="0"><tr>
-        <td valign="middle">
-          <span style="display:inline-block;background:{_ACC};color:#fff;
-            font-size:9px;font-weight:800;text-transform:uppercase;
-            letter-spacing:1.5px;padding:3px 9px;border-radius:50px;
-            font-family:{_FONT};">SIGNAL</span>
-        </td>
-        <td valign="middle" style="text-align:right;">
-          <span style="font-size:11px;font-style:italic;color:{_M_TEXT};
-            font-family:{_FONT};">{total_word}&nbsp;article{"s" if total_arts != 1 else ""}</span>
-        </td>
-      </tr></table>
-    </td></tr>
-    {reading_rows}
-    </table>"""
-
     H += f"""
   <table width="100%" cellpadding="0" cellspacing="0"
     style="background:{_PG_BG};border-top:1px solid {_BDR};">
   <tr><td style="padding:28px 28px 24px;">
+    <span style="font-size:10px;font-weight:700;color:{_H_TEXT};
+      text-transform:uppercase;letter-spacing:2px;
+      font-family:{_FONT};">We&rsquo;re Reading</span>
     <table width="100%" cellpadding="0" cellspacing="0"
-      style="margin-bottom:20px;"><tr>
-      <td valign="middle">
-        <span style="font-size:10px;font-weight:700;color:{_H_TEXT};
-          text-transform:uppercase;letter-spacing:2px;
-          font-family:{_FONT};">We&rsquo;re Reading</span>
-      </td>
-      <td valign="middle" style="text-align:right;">
-        <span style="font-size:12px;font-style:italic;color:{_M_TEXT};
-          font-family:{_FONT};">{total_word}&nbsp;article{"s" if total_arts != 1 else ""}</span>
-      </td>
-    </tr></table>
-    {reading_card}
+      style="margin-top:16px;background:{_WHITE};border-radius:8px;border:1px solid {_BDR};">
+    <tr><td height="3"
+      style="background:{_ACC};height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
+    {reading_rows}
+    </table>
   </td></tr>
   </table>
 """
