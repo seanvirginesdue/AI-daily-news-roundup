@@ -47,6 +47,18 @@ _N2W = {
 def _esc(t: str) -> str:
     return str(t).replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
 
+# Daily-rotating GIFs — one per day, cycles through the list (all verified)
+_DAILY_GIFS = [
+    ("https://media.giphy.com/media/DrJm6F9poo4aA/giphy.gif",        "Wake up coffee"),
+    ("https://media.giphy.com/media/tD2jaMOEBFXel9Yp5Z/giphy.gif",   "Let's go work"),
+    ("https://media.giphy.com/media/dxJ80m2xjh9TlqwzDi/giphy.gif",   "Monday motivation"),
+    ("https://media.giphy.com/media/oQIwgd77gZJtuwBcxQ/giphy.gif",   "Typing fast"),
+    ("https://media.giphy.com/media/sfxlOSTXORjOobH2QG/giphy.gif",   "High five"),
+    ("https://media.giphy.com/media/UKF08uKqWch0Y/giphy.gif",        "This is fine"),
+    ("https://media.giphy.com/media/U4DswrBiaz0p67ZweH/giphy.gif",   "Celebration"),
+]
+
+
 def _logo(h: int = 32) -> str:
     if _LOGO_FILE.exists():
         return f'<img src="cid:bsm_logo" height="{h}" style="display:block;" alt="BSM">'
@@ -149,43 +161,54 @@ def _build_html(brief_data: dict, articles: list, display_date: str,
   </td></tr>
   </table>
 
+"""
+    _gif_url, _gif_alt = _DAILY_GIFS[_date.today().toordinal() % len(_DAILY_GIFS)]
+    H += f"""
   <!-- 2. ONE THING THAT MATTERS TODAY -->
   <table width="100%" cellpadding="0" cellspacing="0"
     style="background:{_WHITE};border-bottom:1px solid {_BDR};">
-  <tr><td style="padding:36px 28px 32px;">
-    <p style="margin:0 0 14px;">
-      <span style="font-size:10px;font-weight:700;color:{_M_TEXT};
-        text-transform:uppercase;letter-spacing:2px;
-        font-family:{_FONT};">One Thing That Matters Today</span>
-    </p>
-    <p style="margin:0 0 14px;font-size:26px;font-weight:700;color:{_H_TEXT};
-      line-height:1.25;letter-spacing:-0.2px;font-family:{_SERIF};">
-      <a href="{_esc(top_url)}" target="_blank"
-        style="color:{_H_TEXT};text-decoration:none;">{headline}</a>
-    </p>
-    <p style="margin:0;font-size:14px;color:{_B_TEXT};line-height:1.7;
-      font-family:{_FONT};">{subtext}</p>
-    <table cellpadding="0" cellspacing="0" style="margin-top:18px;">
-    <tr><td style="background:{_ACC};border-radius:6px;">
-      <a href="{_esc(top_url)}" target="_blank"
-        style="display:inline-block;padding:10px 22px;font-size:13px;
-        font-weight:600;color:#ffffff;text-decoration:none;
-        font-family:{_FONT};letter-spacing:0.2px;">Read Full Article &rarr;</a>
-    </td></tr>
-    </table>
-    <div style="border-top:1px solid {_BDR};margin:22px 0;"></div>
-    <table cellpadding="0" cellspacing="0" style="width:100%;"><tr>
-      <td style="padding-right:16px;vertical-align:top;white-space:nowrap;">
-        <span style="font-size:9px;font-weight:700;color:{_M_TEXT};
+  <tr>
+    <!-- Left: text content -->
+    <td style="padding:32px 24px 32px 28px;vertical-align:top;">
+      <p style="margin:0 0 12px;">
+        <span style="font-size:10px;font-weight:700;color:{_M_TEXT};
           text-transform:uppercase;letter-spacing:2px;
-          font-family:{_FONT};">What We&rsquo;re Doing</span>
-      </td>
-      <td>
-        <p style="margin:0;font-size:13px;color:{_B_TEXT};line-height:1.6;
-          font-style:italic;font-family:{_SERIF};">{field_note}</p>
-      </td>
-    </tr></table>
-  </td></tr>
+          font-family:{_FONT};">One Thing That Matters Today</span>
+      </p>
+      <p style="margin:0 0 12px;font-size:22px;font-weight:700;color:{_H_TEXT};
+        line-height:1.25;letter-spacing:-0.2px;font-family:{_SERIF};">
+        <a href="{_esc(top_url)}" target="_blank"
+          style="color:{_H_TEXT};text-decoration:none;">{headline}</a>
+      </p>
+      <p style="margin:0;font-size:13px;color:{_B_TEXT};line-height:1.65;
+        font-family:{_FONT};">{subtext}</p>
+      <table cellpadding="0" cellspacing="0" style="margin-top:16px;">
+      <tr><td style="background:{_ACC};border-radius:6px;">
+        <a href="{_esc(top_url)}" target="_blank"
+          style="display:inline-block;padding:9px 18px;font-size:12px;
+          font-weight:600;color:#ffffff;text-decoration:none;
+          font-family:{_FONT};letter-spacing:0.2px;">Read Full Article &rarr;</a>
+      </td></tr>
+      </table>
+      <div style="border-top:1px solid {_BDR};margin:18px 0;"></div>
+      <table cellpadding="0" cellspacing="0" style="width:100%;"><tr>
+        <td style="padding-right:12px;vertical-align:top;white-space:nowrap;">
+          <span style="font-size:9px;font-weight:700;color:{_M_TEXT};
+            text-transform:uppercase;letter-spacing:2px;
+            font-family:{_FONT};">What We&rsquo;re Doing</span>
+        </td>
+        <td>
+          <p style="margin:0;font-size:12px;color:{_B_TEXT};line-height:1.6;
+            font-style:italic;font-family:{_SERIF};">{field_note}</p>
+        </td>
+      </tr></table>
+    </td>
+    <!-- Right: daily GIF -->
+    <td style="padding:0;vertical-align:top;width:240px;min-width:240px;">
+      <img src="{_gif_url}" alt="{_gif_alt}"
+        style="display:block;width:240px;height:auto;" />
+    </td>
+  </tr>
   </table>
 """
 
@@ -440,43 +463,54 @@ def _build_html_tier2(brief_data: dict, articles: list, display_date: str,
   </td></tr>
   </table>
 
+"""
+    _gif_url, _gif_alt = _DAILY_GIFS[_date.today().toordinal() % len(_DAILY_GIFS)]
+    H += f"""
   <!-- 2. ONE THING THAT MATTERS TODAY -->
   <table width="100%" cellpadding="0" cellspacing="0"
     style="background:{_WHITE};border-bottom:1px solid {_BDR};">
-  <tr><td style="padding:36px 28px 32px;">
-    <p style="margin:0 0 14px;">
-      <span style="font-size:10px;font-weight:700;color:{_M_TEXT};
-        text-transform:uppercase;letter-spacing:2px;
-        font-family:{_FONT};">One Thing That Matters Today</span>
-    </p>
-    <p style="margin:0 0 14px;font-size:26px;font-weight:700;color:{_H_TEXT};
-      line-height:1.25;letter-spacing:-0.2px;font-family:{_SERIF};">
-      <a href="{_esc(top_url)}" target="_blank"
-        style="color:{_H_TEXT};text-decoration:none;">{headline}</a>
-    </p>
-    <p style="margin:0;font-size:14px;color:{_B_TEXT};line-height:1.7;
-      font-family:{_FONT};">{subtext}</p>
-    <table cellpadding="0" cellspacing="0" style="margin-top:18px;">
-    <tr><td style="background:{_ACC};border-radius:6px;">
-      <a href="{_esc(top_url)}" target="_blank"
-        style="display:inline-block;padding:10px 22px;font-size:13px;
-        font-weight:600;color:#ffffff;text-decoration:none;
-        font-family:{_FONT};letter-spacing:0.2px;">Read Full Article &rarr;</a>
-    </td></tr>
-    </table>
-    <div style="border-top:1px solid {_BDR};margin:22px 0;"></div>
-    <table cellpadding="0" cellspacing="0" style="width:100%;"><tr>
-      <td style="padding-right:16px;vertical-align:top;white-space:nowrap;">
-        <span style="font-size:9px;font-weight:700;color:{_M_TEXT};
+  <tr>
+    <!-- Left: text content -->
+    <td style="padding:32px 24px 32px 28px;vertical-align:top;">
+      <p style="margin:0 0 12px;">
+        <span style="font-size:10px;font-weight:700;color:{_M_TEXT};
           text-transform:uppercase;letter-spacing:2px;
-          font-family:{_FONT};">What We&rsquo;re Doing</span>
-      </td>
-      <td>
-        <p style="margin:0;font-size:13px;color:{_B_TEXT};line-height:1.6;
-          font-style:italic;font-family:{_SERIF};">{field_note}</p>
-      </td>
-    </tr></table>
-  </td></tr>
+          font-family:{_FONT};">One Thing That Matters Today</span>
+      </p>
+      <p style="margin:0 0 12px;font-size:22px;font-weight:700;color:{_H_TEXT};
+        line-height:1.25;letter-spacing:-0.2px;font-family:{_SERIF};">
+        <a href="{_esc(top_url)}" target="_blank"
+          style="color:{_H_TEXT};text-decoration:none;">{headline}</a>
+      </p>
+      <p style="margin:0;font-size:13px;color:{_B_TEXT};line-height:1.65;
+        font-family:{_FONT};">{subtext}</p>
+      <table cellpadding="0" cellspacing="0" style="margin-top:16px;">
+      <tr><td style="background:{_ACC};border-radius:6px;">
+        <a href="{_esc(top_url)}" target="_blank"
+          style="display:inline-block;padding:9px 18px;font-size:12px;
+          font-weight:600;color:#ffffff;text-decoration:none;
+          font-family:{_FONT};letter-spacing:0.2px;">Read Full Article &rarr;</a>
+      </td></tr>
+      </table>
+      <div style="border-top:1px solid {_BDR};margin:18px 0;"></div>
+      <table cellpadding="0" cellspacing="0" style="width:100%;"><tr>
+        <td style="padding-right:12px;vertical-align:top;white-space:nowrap;">
+          <span style="font-size:9px;font-weight:700;color:{_M_TEXT};
+            text-transform:uppercase;letter-spacing:2px;
+            font-family:{_FONT};">What We&rsquo;re Doing</span>
+        </td>
+        <td>
+          <p style="margin:0;font-size:12px;color:{_B_TEXT};line-height:1.6;
+            font-style:italic;font-family:{_SERIF};">{field_note}</p>
+        </td>
+      </tr></table>
+    </td>
+    <!-- Right: daily GIF -->
+    <td style="padding:0;vertical-align:top;width:240px;min-width:240px;">
+      <img src="{_gif_url}" alt="{_gif_alt}"
+        style="display:block;width:240px;height:auto;" />
+    </td>
+  </tr>
   </table>
 """
 
