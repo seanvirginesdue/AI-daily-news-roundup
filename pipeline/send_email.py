@@ -113,10 +113,6 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
     except Exception:
         short_date = display_date
 
-    # Card widths: 600px - 48px (2×24 padding) = 552px inner
-    # Distribute across n cards with 16px gutters between them
-    n_moves = min(max_moves, len(tms)) or max_moves
-    card_w  = (552 - (n_moves - 1) * 16) // n_moves
 
     # ── OPEN ───────────────────────────────────────────────────────────────────
     H = f"""<!DOCTYPE html>
@@ -213,54 +209,38 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
   </table>
 """
 
-    # ── 3. THREE MOVES ─────────────────────────────────────────────────────────
-    move_cards = ""
+    # ── 3. WHAT THIS MEANS FOR BOULDER SEO MARKETING ──────────────────────────
+    pillar_rows = ""
     for i, move in enumerate(tms[:max_moves]):
         mtype  = move.get("type", "pitch").lower()
         mtitle = _esc(move.get("title", ""))
         mdesc  = _esc(move.get("description", ""))
-        mdeadl = _esc(move.get("deadline", ""))
         mc     = move_colors.get(mtype, _ACC)
-        mlbl   = move_labels.get(mtype, mtype.upper())
-        spacer = f'<td width="16"></td>' if i > 0 else ""
-        move_cards += f"""{spacer}
-<td width="{card_w}" valign="top">
-  <table width="{card_w}" cellpadding="0" cellspacing="0"
-    style="background:{_WHITE};border-radius:8px;border:1px solid {_BDR};">
-  <tr><td height="3"
-    style="background:{mc};height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
-  <tr><td style="padding:16px 14px 12px;">
-    <p style="margin:0 0 10px;">
-      <span style="display:inline-block;background:{mc};color:#fff;font-size:9px;
-        font-weight:800;text-transform:uppercase;letter-spacing:1.5px;
-        padding:3px 9px;border-radius:50px;font-family:{_FONT};">{mlbl}</span>
-    </p>
-    <p style="margin:0 0 8px;font-size:14px;font-weight:700;
-      color:{_H_TEXT};line-height:1.35;font-family:{_SERIF};">{mtitle}</p>
-    <p style="margin:0;font-size:12px;color:{_B_TEXT};line-height:1.55;
-      font-family:{_FONT};">{mdesc}</p>
-  </td></tr>
-  <tr><td style="padding:8px 14px 12px;border-top:1px solid {_BDR};">
-    <p style="margin:0;font-size:11px;font-weight:600;color:{mc};
-      font-family:{_FONT};">{mdeadl}</p>
-  </td></tr>
-  </table>
-</td>"""
+        divider = f'<div style="border-top:1px solid {_BDR};margin:16px 0;"></div>' if i > 0 else ""
+        pillar_rows += f"""{divider}
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td width="3" valign="top"
+        style="background:{mc};border-radius:2px;padding:0;line-height:1;">&nbsp;</td>
+      <td style="padding:0 0 0 14px;">
+        <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:{_H_TEXT};
+          line-height:1.3;font-family:{_SERIF};">{mtitle}</p>
+        <p style="margin:0;font-size:13px;color:{_B_TEXT};line-height:1.6;
+          font-family:{_FONT};">{mdesc}</p>
+      </td>
+    </tr></table>"""
 
     H += f"""
   <table width="100%" cellpadding="0" cellspacing="0"
     style="background:{_PG_BG};border-top:1px solid {_BDR};">
   <tr><td style="padding:32px 24px;">
-    <p style="margin:0 0 4px;">
+    <p style="margin:0 0 24px;">
       <span style="font-size:10px;font-weight:700;color:{_M_TEXT};
         text-transform:uppercase;letter-spacing:2px;
-        font-family:{_FONT};">Today &middot; Three Moves</span>
+        font-family:{_FONT};">What This Means for Boulder SEO Marketing</span>
     </p>
-    <p style="margin:0 0 20px;font-size:14px;font-style:italic;color:{_B_TEXT};
-      font-family:{_SERIF};">What Micro SEO should do before noon.</p>
-    <table cellpadding="0" cellspacing="0" style="width:100%;"><tr>
-      {move_cards}
-    </tr></table>
+    {pillar_rows}
+    <p style="margin:24px 0 0;font-size:13px;font-style:italic;color:{_M_TEXT};
+      font-family:{_SERIF};">This is where Micro SEO gains an edge while others react.</p>
   </td></tr>
   </table>
 """
