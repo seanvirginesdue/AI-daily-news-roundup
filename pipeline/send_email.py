@@ -243,111 +243,27 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
   </table>
 """
 
-    # ── 4. WE'RE READING ───────────────────────────────────────────────────────
-    # First item = featured (larger, with bsm_note), rest = secondary (lighter)
-    reading_rows = ""
-    for j, item in enumerate(reads_display):
-        atitle = _esc(item.get("title", "")[:90])
-        asrc   = _esc(item.get("source", "")[:30])
-        aurl   = _esc(item.get("url", "#"))
-        anote  = _esc(item.get("bsm_note", ""))
-        if j == 0:
-            reading_rows += f"""
-    <tr><td style="padding:16px 20px 14px;">
-      <table width="100%" cellpadding="0" cellspacing="0"><tr>
-        <td>
-          <a href="{aurl}" target="_blank"
-            style="font-size:14px;font-weight:600;color:{_H_TEXT};
-            text-decoration:none;line-height:1.4;font-family:{_SERIF};">{atitle}</a>
-          {"" if not anote else f'<p style="margin:6px 0 0;font-size:12px;color:{_B_TEXT};line-height:1.55;font-style:italic;font-family:{_FONT};">{anote}</p>'}
-        </td>
-        <td valign="top" style="padding-left:16px;text-align:right;white-space:nowrap;">
-          <span style="font-size:10px;color:{_M_TEXT};font-family:{_FONT};">{asrc}</span>
-        </td>
-      </tr></table>
-    </td></tr>"""
-        else:
-            reading_rows += f"""
-    <tr><td style="padding:10px 20px;border-top:1px solid {_BDR};">
-      <table width="100%" cellpadding="0" cellspacing="0"><tr>
-        <td>
-          <a href="{aurl}" target="_blank"
-            style="font-size:13px;color:{_B_TEXT};
-            text-decoration:none;line-height:1.4;font-family:{_FONT};">{atitle}</a>
-        </td>
-        <td valign="middle" style="padding-left:12px;text-align:right;white-space:nowrap;">
-          <span style="font-size:10px;color:{_M_TEXT};font-family:{_FONT};">{asrc}</span>
-        </td>
-      </tr></table>
-    </td></tr>"""
-
-    H += f"""
-  <table width="100%" cellpadding="0" cellspacing="0"
-    style="background:{_WHITE};border-top:1px solid {_BDR};">
-  <tr><td style="padding:24px 24px 20px;">
-    <p style="margin:0 0 16px;">
-      <span style="font-size:10px;font-weight:700;color:{_M_TEXT};
-        text-transform:uppercase;letter-spacing:2px;
-        font-family:{_FONT};">We&rsquo;re Reading</span>
-    </p>
-    <table width="100%" cellpadding="0" cellspacing="0"
-      style="background:{_WHITE};border-radius:8px;border:1px solid {_BDR};">
-    <tr><td height="3"
-      style="background:{_ACC};height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
-    {reading_rows}
-    </table>
-  </td></tr>
-  </table>
-"""
-
-    # ── 5. ON OUR RADAR ────────────────────────────────────────────────────────
-    _on_radar = brief_data.get("on_radar", [])
-    if _on_radar:
-        _radar_items = []
-        for _i, _item in enumerate(_on_radar[:2]):
-            _txt = _esc(str(_item))
-            _top = "12px" if _i == 0 else "8px"
-            _radar_items.append(f"""
-    <tr><td style="padding:{_top} 0 0;">
-      <table width="100%" cellpadding="0" cellspacing="0"><tr>
-        <td width="16" valign="top" style="padding-top:3px;color:{_ACC};
-          font-size:12px;font-family:{_FONT};">&#8226;</td>
-        <td><p style="margin:0;font-size:13px;color:{_B_TEXT};line-height:1.6;
-          font-style:italic;font-family:{_FONT};">{_txt}</p></td>
-      </tr></table>
-    </td></tr>""")
-        _radar_html = "".join(_radar_items)
-        H += f"""
-  <table width="100%" cellpadding="0" cellspacing="0"
-    style="background:{_PG_BG};border-top:1px solid {_BDR};">
-  <tr><td style="padding:24px 24px 20px;">
-    <p style="margin:0 0 4px;"><span style="font-size:10px;font-weight:700;
-      color:{_M_TEXT};text-transform:uppercase;letter-spacing:2px;
-      font-family:{_FONT};">On Our Radar</span></p>
-    <table width="100%" cellpadding="0" cellspacing="0">
-    {_radar_html}
-    </table>
-  </td></tr>
-  </table>
-"""
-
-    # ── 6. CHRIS'S TAKE ────────────────────────────────────────────────────────
-    _chris_take = brief_data.get("chris_take", "")
-    if _chris_take:
+    # ── 4. KEY INSIGHT ─────────────────────────────────────────────────────────
+    _angles = brief_data.get("client_angles", [])
+    _insight_head = _esc((_angles[0].get("title","") if isinstance(_angles[0], dict) else str(_angles[0])) if _angles else brief_data.get("chris_take",""))
+    _insight_body = _esc((_angles[1].get("title","") if isinstance(_angles[1], dict) else str(_angles[1])) if len(_angles) > 1 else "")
+    if _insight_head:
         H += f"""
   <table width="100%" cellpadding="0" cellspacing="0"
     style="background:{_WHITE};border-top:1px solid {_BDR};">
-  <tr><td style="padding:24px 24px;">
-    <p style="margin:0 0 12px;"><span style="font-size:10px;font-weight:700;
-      color:{_M_TEXT};text-transform:uppercase;letter-spacing:2px;
-      font-family:{_FONT};">Chris&rsquo;s Take</span></p>
+  <tr><td style="padding:24px;">
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
-      <td width="3" style="background:{_BDR};border-radius:2px;">&nbsp;</td>
-      <td style="padding:4px 14px;">
-        <p style="margin:0 0 10px;font-size:16px;font-style:italic;color:{_H_TEXT};
-          line-height:1.6;font-family:{_SERIF};">&ldquo;{_esc(_chris_take)}&rdquo;</p>
-        <p style="margin:0;font-size:11px;color:{_M_TEXT};
-          font-family:{_FONT};">— Chris Raulf, Founder &middot; Micro SEO</p>
+      <td width="3" valign="top"
+        style="background:{_ACC};border-radius:2px;padding:0;line-height:1;">&nbsp;</td>
+      <td style="padding:0 0 0 14px;">
+        <p style="margin:0 0 8px;">
+          <span style="font-size:10px;font-weight:700;color:{_M_TEXT};
+            text-transform:uppercase;letter-spacing:2px;
+            font-family:{_FONT};">Key Insight</span>
+        </p>
+        <p style="margin:0 0 12px;font-size:16px;font-weight:700;color:{_H_TEXT};
+          line-height:1.35;font-family:{_SERIF};">{_insight_head}</p>
+        {"" if not _insight_body else f'<p style="margin:0;font-size:14px;color:{_B_TEXT};line-height:1.65;font-family:{_FONT};">{_insight_body}</p>'}
       </td>
     </tr></table>
   </td></tr>
