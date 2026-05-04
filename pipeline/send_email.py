@@ -207,47 +207,12 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
   </table>
 """
 
-    # ── 3. WHAT THIS MEANS FOR BOULDER SEO MARKETING ──────────────────────────
-    pillar_rows = ""
-    for i, move in enumerate(tms[:max_moves]):
-        mtype  = move.get("type", "pitch").lower()
+    # ── 3. KEY INSIGHTS (stacked, one per move) ────────────────────────────────
+    for move in tms[:max_moves]:
         mtitle = _esc(move.get("title", ""))
         mdesc  = _esc(move.get("description", ""))
-        mc     = move_colors.get(mtype, _ACC)
-        divider = f'<div style="border-top:1px solid {_BDR};margin:16px 0;"></div>' if i > 0 else ""
-        pillar_rows += f"""{divider}
-    <table width="100%" cellpadding="0" cellspacing="0"><tr>
-      <td width="3" valign="top"
-        style="background:{mc};border-radius:2px;padding:0;line-height:1;">&nbsp;</td>
-      <td style="padding:0 0 0 14px;">
-        <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:{_H_TEXT};
-          line-height:1.3;font-family:{_SERIF};">{mtitle}</p>
-        <p style="margin:0;font-size:13px;color:{_B_TEXT};line-height:1.6;
-          font-family:{_FONT};">{mdesc}</p>
-      </td>
-    </tr></table>"""
-
-    H += f"""
-  <table width="100%" cellpadding="0" cellspacing="0"
-    style="background:{_PG_BG};border-top:1px solid {_BDR};">
-  <tr><td style="padding:32px 24px;">
-    <p style="margin:0 0 24px;">
-      <span style="font-size:10px;font-weight:700;color:{_M_TEXT};
-        text-transform:uppercase;letter-spacing:2px;
-        font-family:{_FONT};">What This Means for Boulder SEO Marketing</span>
-    </p>
-    {pillar_rows}
-    <p style="margin:24px 0 0;font-size:13px;font-style:italic;color:{_M_TEXT};
-      font-family:{_SERIF};">This is where Micro SEO gains an edge while others react.</p>
-  </td></tr>
-  </table>
-"""
-
-    # ── 4. KEY INSIGHT ─────────────────────────────────────────────────────────
-    _angles = brief_data.get("client_angles", [])
-    _insight_head = _esc((_angles[0].get("title","") if isinstance(_angles[0], dict) else str(_angles[0])) if _angles else brief_data.get("chris_take",""))
-    _insight_body = _esc((_angles[1].get("title","") if isinstance(_angles[1], dict) else str(_angles[1])) if len(_angles) > 1 else "")
-    if _insight_head:
+        if not mtitle:
+            continue
         H += f"""
   <table width="100%" cellpadding="0" cellspacing="0"
     style="background:{_WHITE};border-top:1px solid {_BDR};">
@@ -261,9 +226,10 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
             text-transform:uppercase;letter-spacing:2px;
             font-family:{_FONT};">Key Insight</span>
         </p>
-        <p style="margin:0 0 12px;font-size:16px;font-weight:700;color:{_H_TEXT};
-          line-height:1.35;font-family:{_SERIF};">{_insight_head}</p>
-        {"" if not _insight_body else f'<p style="margin:0;font-size:14px;color:{_B_TEXT};line-height:1.65;font-family:{_FONT};">{_insight_body}</p>'}
+        <p style="margin:0 0 10px;font-size:16px;font-weight:700;color:{_H_TEXT};
+          line-height:1.35;font-family:{_SERIF};">{mtitle}</p>
+        <p style="margin:0;font-size:14px;color:{_B_TEXT};line-height:1.65;
+          font-family:{_FONT};">{mdesc}</p>
       </td>
     </tr></table>
   </td></tr>
