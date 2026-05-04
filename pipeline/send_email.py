@@ -53,6 +53,18 @@ def _logo(h: int = 32) -> str:
             f'color:{_ACC};font-family:{_SERIF};"> SEO</span>')
 
 
+# Daily-rotating GIFs — one per day, cycles through the list (all verified)
+_DAILY_GIFS = [
+    ("https://media.giphy.com/media/DrJm6F9poo4aA/giphy.gif",        "Wake up coffee"),
+    ("https://media.giphy.com/media/tD2jaMOEBFXel9Yp5Z/giphy.gif",   "Let's go work"),
+    ("https://media.giphy.com/media/dxJ80m2xjh9TlqwzDi/giphy.gif",   "Monday motivation"),
+    ("https://media.giphy.com/media/oQIwgd77gZJtuwBcxQ/giphy.gif",   "Typing fast"),
+    ("https://media.giphy.com/media/sfxlOSTXORjOobH2QG/giphy.gif",   "High five"),
+    ("https://media.giphy.com/media/UKF08uKqWch0Y/giphy.gif",        "This is fine"),
+    ("https://media.giphy.com/media/U4DswrBiaz0p67ZweH/giphy.gif",   "Celebration"),
+]
+
+
 # ── Shared email renderer ──────────────────────────────────────────────────────
 def _render_email(brief_data: dict, articles: list, display_date: str,
                   first_name: str, from_name: str, max_moves: int = 3) -> str:
@@ -63,6 +75,8 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
     headline   = _esc(ts.get("headline", "Today's top AI story"))
     subtext    = _esc(ts.get("subtext", ""))
     field_note = _esc(ts.get("field_note", ""))
+
+    _gif_url, _gif_alt = _DAILY_GIFS[_date.today().toordinal() % len(_DAILY_GIFS)]
 
     # Resolve article URLs from LLM-returned index references
     top_reads = brief_data.get("top_reads", [])
@@ -184,6 +198,15 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
         style="display:inline-block;padding:12px 24px;font-size:13px;
         font-weight:600;color:#ffffff;text-decoration:none;
         font-family:{_FONT};letter-spacing:0.2px;">Read Full Article &rarr;</a>
+    </td></tr>
+    </table>
+    <div style="border-top:1px solid {_BDR};margin:24px 0;"></div>
+    <table width="100%" cellpadding="0" cellspacing="0"
+      style="border-radius:12px;overflow:hidden;line-height:0;font-size:0;">
+    <tr><td style="border-radius:12px;overflow:hidden;padding:0;line-height:0;">
+      <img src="{_gif_url}" alt="{_gif_alt}" width="552"
+        style="display:block;width:100%;height:220px;
+        object-fit:cover;object-position:center center;" />
     </td></tr>
     </table>
   </td></tr>
