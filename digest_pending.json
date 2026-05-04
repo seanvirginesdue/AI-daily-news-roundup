@@ -1,0 +1,125 @@
+{
+  "subject": "Google AI Latest Advances",
+  "brief_data": {
+    "top_story": {
+      "headline": "Google AI Overviews",
+      "subtext": "Google AI overviews show early signs of recovery in CTR, but also produce hundreds of millions of inaccurate answers daily. BSM clients will be affected as this change impacts their search visibility and credibility.",
+      "field_note": "We are reviewing client content for AI overview optimization."
+    },
+    "three_moves": [
+      {
+        "type": "pitch",
+        "title": "Optimize Client Content",
+        "description": "Optimize client content for AI overviews to improve search visibility. This matters for BSM clients as it directly impacts their online credibility and customer trust.",
+        "deadline": "BY Friday"
+      },
+      {
+        "type": "build",
+        "title": "Enhance Virtual Agent Knowledge",
+        "description": "Enhance virtual agent knowledge base with AI overview research and case studies. Success looks like improved client satisfaction and increased competitive differentiator.",
+        "deadline": "BY next Monday"
+      }
+    ],
+    "client_angles": [
+      {
+        "title": "AI Overview Optimization",
+        "source": "BSM Intel"
+      },
+      {
+        "title": "Content Accuracy and Credibility",
+        "source": "BSM Intel"
+      }
+    ],
+    "top_reads": [
+      {
+        "article_index": 1,
+        "title": "Google AI overviews CTR shows early signs of recovery: Study",
+        "source": "MSN",
+        "bsm_note": "We are adjusting our SEO strategy to account for recovering CTR in Google AI overviews."
+      },
+      {
+        "article_index": 2,
+        "title": "Google’s AI Overviews Produce Hundreds of Millions of Inaccurate Answers Every Day, Analysis Suggests",
+        "source": "TechRepublic",
+        "bsm_note": "We are emphasizing content accuracy and credibility in our client audits."
+      }
+    ],
+    "on_radar": [
+      "AI Overview Research: Watching how Google AI overview changes impact client search visibility — adjusting our SEO strategy."
+    ],
+    "chris_take": "Watching AI overview CTR recovery"
+  },
+  "articles": [
+    {
+      "title": "Google AI overviews CTR shows early signs of recovery: Study - MSN",
+      "source": "AI Overviews Research",
+      "url": "https://news.google.com/rss/articles/CBMiswFBVV95cUxNV1liNGNKeWczelo2WUl2UmZLbUVVZWRlUXA5Ti0zTUFKOFR0ckFOOEJQdGdleTBUOXNXbmZxUlB2eVExdmYxbUhUQ0w0X3NEbFp4azg4Y0xKTUs1b0NDdE95eGxjUlVPSUxEam5BVmUzeDA3Z050eUlITk1DMlZKUndiOGNsLUpjR0hBWEJrTHpmclFUNHJ6RmVGYWN0VHM3WFRhRndaSXFlcFlsdHdIQXI3NA?oc=5",
+      "content": "Google AI overviews CTR shows early signs of recovery: Study MSN",
+      "image": ""
+    },
+    {
+      "title": "Google’s AI Overviews Produce Hundreds of Millions of Inaccurate Answers Every Day, Analysis Suggests - TechRepublic",
+      "source": "AI Overviews Research",
+      "url": "https://news.google.com/rss/articles/CBMijgFBVV95cUxNcDJFdmRYdkRrMVBMM3pndGo4dWV6RmllelBPSk9FVEdjWkFHWV9RdGRGdk0tTTZXc0w0U1FqWWpDNjI4NmxaN3hFbG50X290NmNxbk94ZWRFMVV4SFRnVmJ5Q2QzNnpBbzhSdkxIY2xCS1Z3ZjRsNXBuTGl5ZE1PbEljeThEZDFNU2RKR1BB?oc=5",
+      "content": "Google’s AI Overviews Produce Hundreds of Millions of Inaccurate Answers Every Day, Analysis Suggests TechRepublic",
+      "image": ""
+    },
+    {
+      "title": "GPT-5.5 System Card",
+      "source": "OpenAI Release Notes",
+      "url": "https://openai.com/index/gpt-5-5-system-card",
+      "content": "GPT-5.5 System Card",
+      "image": "https://images.ctfassets.net/kftzwdyauwt9/4qBEDs71GX4NIuRrjXfZpA/8e5c587702a354616d4d99b1489a49b1/System_Card_Card_SEO_16x9.jpg?w=1600&amp;h=900&amp;fit=fill"
+    },
+    {
+      "title": "What is Codex?",
+      "source": "OpenAI Release Notes",
+      "url": "https://openai.com/academy/what-is-codex",
+      "content": "Learn how Codex helps you go beyond chat by automating tasks, connecting tools, and producing real outputs like docs and dashboards.",
+      "image": ""
+    },
+    {
+      "title": "Scaling Managed Agents: Decoupling the brain from the hands - Anthropic",
+      "source": "Anthropic / Claude Releases",
+      "url": "https://news.google.com/rss/articles/CBMiYkFVX3lxTE5LY3VWakFxdE02bVBBdDNrSEJaY2NqV1ZkZ3hfNUxBeWFXZDdrU21vTTdnSFdNUGNPRVpSMWVyVGp6MWlQWTFYU2JIcVZDdDcwMXcwRlpYNExMeWZBMGxXOWJ3?oc=5",
+      "content": "Scaling Managed Agents: Decoupling the brain from the hands Anthropic",
+      "image": ""
+    },
+    {
+      "title": "Anthropic adds memory to Claude Managed Agents - Techzine Global",
+      "source": "Anthropic / Claude Releases",
+      "url": "https://news.google.com/rss/articles/CBMilAFBVV95cUxPeHFUYXBHdFFsZi1DNUVLV3JzUlc5SWRxd0d2WU55SmZfb0s5ZWhoTjBxdEpMUjByWW82N2dPMWJTX3RjTFlxSDc4WWpWcjkzSEZxeHE3ZU1zaDBqamg0RE42RUpZMmd1VnZRYlRKdS1xSGdBc3JqWDFPQWp6MXJYQXB1X0tRaWZNWERIZW9JLWYxNGFp?oc=5",
+      "content": "Anthropic adds memory to Claude Managed Agents Techzine Global",
+      "image": ""
+    },
+    {
+      "title": "- Perplexity",
+      "source": "Perplexity Releases",
+      "url": "https://news.google.com/rss/articles/CBMiigJBVV95cUxPSC1rZmtESnpMRnhEYW9NenUtRUVJdVFGS1lZS3RUZE5nV0V0bERxR0U0YklwNkdHMHhkMndEU2UzZm81UDQ2OXNkdW9UYzN1d3pfalpGN29uN0JieEowdE9XWjlpQzA2cEE0aW5oTEcwZWRqa0tRNk1GWE9DR2N2UHkxUlY0bHZUbzg0NWI2a3paQnBKZlFPdlpfQVRhbGtTdlJiVzJNalhzRF9heWp0MkpBTWQ1R0t1VFViNm9RZHBqMjdmbUlyVU51RDJ4Z01mQmlFMThTMmJRVFFickhrNkVha181RjNLWF9KZ0d5Nmo1LThIY0staUZodzV5UE9YWkhfamtTNTJOQQ?oc=5",
+      "content": "Perplexity",
+      "image": ""
+    },
+    {
+      "title": "Using Perplexity in Microsoft Teams - Perplexity",
+      "source": "Perplexity Releases",
+      "url": "https://news.google.com/rss/articles/CBMimgFBVV95cUxQQlhiR2RnRWQ3dmg2LUQ1dm9wSFJvcnV3dVRtVWFfdTdTUEJRUUloM282VnJ1a0loY2NDXzV5SGhnSmhKUFJvYmNuN3FDWElCUTNHUVJRb1QycVhNNVUyT2p2Xy1PVkloV2ZPRmg3a3BnQ3hJVjFkVXFlazhZVXpXQnlBVlAtSlJRd0dQRk9hSTA2N3N2UnBRVzlR?oc=5",
+      "content": "Using Perplexity in Microsoft Teams Perplexity",
+      "image": ""
+    },
+    {
+      "title": "5W PR Strengthens Crisis PR and Generative Engine Optimization Services to Meet AI-Driven Reputation Demands - PR Newswire",
+      "source": "GEO / LLM Citation Signals",
+      "url": "https://news.google.com/rss/articles/CBMi9wFBVV95cUxQMlVoaGNLamwtYjg1TmNKWXY2MFFvWEFuODVsc1hjQXZzazdEQlR2R3A1T0htdGFlZmExa1JRdzRLMU9NSDdMbXdrU080X1RmaHhXU25JWHhLeS1uVVNPWmg3OGFxZkVUNnY2YXp5TGFocWZDQVJLRzU3YUpqSm9SRlQ0YVBnTzRzM3hKd01Jb1FkdUx3MnlELVJYVXI2emg3emp4WVcyOFk2LUVFcWIzVzNQOV9rWFAtWlo3VTNzVGpYVXdTM05QUUhZd2tHM00yTXBMMUx2cHFpWHpYWUxqd0tRdUIzakxYeElhbjlVcTZES2hCUmxj?oc=5",
+      "content": "5W PR Strengthens Crisis PR and Generative Engine Optimization Services to Meet AI-Driven Reputation Demands PR Newswire",
+      "image": ""
+    },
+    {
+      "title": "AI traffic grows but retail sites lag in AI search visibility - Adobe for Business",
+      "source": "GEO / LLM Citation Signals",
+      "url": "https://news.google.com/rss/articles/CBMiigFBVV95cUxQYnBVbTNjYTg2QW42ZmQ4LVJuSjdVM1JmbEhQYnJzbFU3eElXNjBlLUhqelk4amlHenRqc1lsOUY2SUczYU5VY1Y2TXo1dFdua21qTTF4cld4MXZobEFWTGpFd0RpS09jOFFfaTN3WUVCWmNUNkFydjloT2d1NmpmX1dxaXBoOVFSUnc?oc=5",
+      "content": "AI traffic grows but retail sites lag in AI search visibility Adobe for Business",
+      "image": ""
+    }
+  ],
+  "display_date": "Monday, May 4, 2026"
+}

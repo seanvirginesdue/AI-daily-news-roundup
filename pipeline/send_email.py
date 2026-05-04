@@ -165,8 +165,15 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
     H += f"""
   <table width="100%" cellpadding="0" cellspacing="0"
     style="background:{_WHITE};border-bottom:1px solid {_BDR};">
-  <tr><td style="padding:32px 24px;">
-    <p style="margin:0 0 12px;">
+  <tr><td style="padding:16px 24px 0 24px;line-height:0;font-size:0;">
+    <img src="{_gif_url}"
+      alt="Illustration representing rapid changes and uncertainty in AI-generated search results"
+      width="552"
+      style="display:block;width:100%;height:220px;border-radius:12px;
+      object-fit:cover;object-position:center center;" />
+  </td></tr>
+  <tr><td style="padding:20px 24px 32px 24px;">
+    <p style="margin:0 0 8px;">
       <span style="font-size:10px;font-weight:700;color:{_M_TEXT};
         text-transform:uppercase;letter-spacing:2px;
         font-family:{_FONT};">One Thing That Matters Today</span>
@@ -185,7 +192,7 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
       </td>
     </tr>
     </table>
-    <p style="margin:0 0 24px;font-size:14px;color:{_B_TEXT};line-height:1.7;
+    <p style="margin:0 0 20px;font-size:14px;color:{_B_TEXT};line-height:1.7;
       font-family:{_FONT};">{subtext}</p>
     <table cellpadding="0" cellspacing="0">
     <tr><td style="background:{_ACC};border-radius:6px;">
@@ -194,15 +201,6 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
         style="display:inline-block;padding:12px 24px;font-size:13px;
         font-weight:600;color:#ffffff;text-decoration:none;
         font-family:{_FONT};letter-spacing:0.2px;">Read Full Article &rarr;</a>
-    </td></tr>
-    </table>
-    <div style="border-top:1px solid {_BDR};margin:24px 0;"></div>
-    <table width="100%" cellpadding="0" cellspacing="0"
-      style="border-radius:12px;overflow:hidden;line-height:0;font-size:0;">
-    <tr><td style="border-radius:12px;overflow:hidden;padding:0;line-height:0;">
-      <img src="{_gif_url}" alt="{_gif_alt}" width="552"
-        style="display:block;width:100%;height:220px;
-        object-fit:cover;object-position:center center;" />
     </td></tr>
     </table>
   </td></tr>

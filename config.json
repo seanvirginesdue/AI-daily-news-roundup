@@ -74,6 +74,7 @@
         "email": "jam@boulderseomarketing.com",
         "tier": 2
       }
+      
     ],
     "smtp_host": "smtp.gmail.com",
     "smtp_port": 587
