@@ -127,9 +127,10 @@ def _build_html(brief_data: dict, articles: list, display_date: str,
 </style>
 </head>
 <body style="margin:0;padding:0;background:{_CANVAS};font-family:{_FONT};">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:{_CANVAS};">
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;opacity:0;">Today: {headline} &mdash; See what BSM should do before noon.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:{_CANVAS};">
 <tr><td align="center" style="padding:32px 16px 48px;">
-<table width="640" cellpadding="0" cellspacing="0"
+<table role="presentation" width="640" cellpadding="0" cellspacing="0"
   style="max-width:640px;width:100%;background:{_WHITE};border-radius:16px;
   overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.18),0 2px 8px rgba(0,0,0,0.10);">
 <tr><td>
@@ -185,7 +186,8 @@ def _build_html(brief_data: dict, articles: list, display_date: str,
       <table cellpadding="0" cellspacing="0" style="margin-top:16px;">
       <tr><td style="background:{_ACC};border-radius:6px;">
         <a href="{_esc(top_url)}" target="_blank"
-          style="display:inline-block;padding:9px 18px;font-size:12px;
+          aria-label="Read full article: {headline}"
+          style="display:inline-block;padding:11px 18px;font-size:12px;
           font-weight:600;color:#ffffff;text-decoration:none;
           font-family:{_FONT};letter-spacing:0.2px;">Read Full Article &rarr;</a>
       </td></tr>
@@ -340,6 +342,8 @@ def _build_html(brief_data: dict, articles: list, display_date: str,
       font-family:{_FONT};">Chris&rsquo;s Take</span></p>
     <p style="margin:0;font-size:15px;font-style:italic;color:{_H_TEXT};
       line-height:1.6;font-family:{_SERIF};">&ldquo;{_esc(_chris_take)}&rdquo;</p>
+    <p style="margin:10px 0 0;font-size:11px;color:{_M_TEXT};
+      font-family:{_FONT};">— Chris Raulf, Founder &middot; Boulder SEO Marketing</p>
   </td></tr>
   </table>
 """
@@ -355,9 +359,15 @@ def _build_html(brief_data: dict, articles: list, display_date: str,
       AI-powered daily intelligence for the BSM team
       &nbsp;&middot;&nbsp; Boulder SEO Marketing
     </p>
-    <p style="margin:0;font-size:11px;color:{_M_TEXT};font-family:{_FONT};">
+    <p style="margin:0 0 8px;font-size:11px;color:{_M_TEXT};font-family:{_FONT};">
       &copy; 2026 Boulder SEO Marketing
       &nbsp;&middot;&nbsp; {_esc(display_date)}
+    </p>
+    <p style="margin:0 0 4px;font-size:11px;color:{_M_TEXT};font-family:{_FONT};">
+      Boulder, Colorado &nbsp;&middot;&nbsp; boulderseomarketing.com
+    </p>
+    <p style="margin:0;font-size:11px;color:{_M_TEXT};font-family:{_FONT};">
+      Reply to this email to share feedback or flag a story for the team.
     </p>
   </td></tr>
   </table>
@@ -429,9 +439,10 @@ def _build_html_tier2(brief_data: dict, articles: list, display_date: str,
 </style>
 </head>
 <body style="margin:0;padding:0;background:{_CANVAS};font-family:{_FONT};">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:{_CANVAS};">
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;opacity:0;">Today: {headline} &mdash; See what BSM should do before noon.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:{_CANVAS};">
 <tr><td align="center" style="padding:32px 16px 48px;">
-<table width="640" cellpadding="0" cellspacing="0"
+<table role="presentation" width="640" cellpadding="0" cellspacing="0"
   style="max-width:640px;width:100%;background:{_WHITE};border-radius:16px;
   overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.18),0 2px 8px rgba(0,0,0,0.10);">
 <tr><td>
@@ -487,7 +498,8 @@ def _build_html_tier2(brief_data: dict, articles: list, display_date: str,
       <table cellpadding="0" cellspacing="0" style="margin-top:16px;">
       <tr><td style="background:{_ACC};border-radius:6px;">
         <a href="{_esc(top_url)}" target="_blank"
-          style="display:inline-block;padding:9px 18px;font-size:12px;
+          aria-label="Read full article: {headline}"
+          style="display:inline-block;padding:11px 18px;font-size:12px;
           font-weight:600;color:#ffffff;text-decoration:none;
           font-family:{_FONT};letter-spacing:0.2px;">Read Full Article &rarr;</a>
       </td></tr>
@@ -639,6 +651,8 @@ def _build_html_tier2(brief_data: dict, articles: list, display_date: str,
       font-family:{_FONT};">Chris&rsquo;s Take</span></p>
     <p style="margin:0;font-size:15px;font-style:italic;color:{_H_TEXT};
       line-height:1.6;font-family:{_SERIF};">&ldquo;{_esc(_chris_take)}&rdquo;</p>
+    <p style="margin:10px 0 0;font-size:11px;color:{_M_TEXT};
+      font-family:{_FONT};">— Chris Raulf, Founder &middot; Boulder SEO Marketing</p>
   </td></tr>
   </table>
 """
@@ -654,9 +668,15 @@ def _build_html_tier2(brief_data: dict, articles: list, display_date: str,
       AI-powered daily intelligence for the BSM team
       &nbsp;&middot;&nbsp; Boulder SEO Marketing
     </p>
-    <p style="margin:0;font-size:11px;color:{_M_TEXT};font-family:{_FONT};">
+    <p style="margin:0 0 8px;font-size:11px;color:{_M_TEXT};font-family:{_FONT};">
       &copy; 2026 Boulder SEO Marketing
       &nbsp;&middot;&nbsp; {_esc(display_date)}
+    </p>
+    <p style="margin:0 0 4px;font-size:11px;color:{_M_TEXT};font-family:{_FONT};">
+      Boulder, Colorado &nbsp;&middot;&nbsp; boulderseomarketing.com
+    </p>
+    <p style="margin:0;font-size:11px;color:{_M_TEXT};font-family:{_FONT};">
+      Reply to this email to share feedback or flag a story for the team.
     </p>
   </td></tr>
   </table>
