@@ -361,8 +361,7 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
   <table width="100%" cellpadding="0" cellspacing="0"
     style="background:{_PG_BG};border-top:1px solid {_BDR};">
   <tr><td style="padding:24px 24px 28px;">
-    <p style="margin:0 0 4px;font-size:14px;font-weight:700;color:{_H_TEXT};
-      font-family:{_FONT};">Micro SEO</p>
+    <div style="margin-bottom:10px;">{_logo(28)}</div>
     <p style="margin:0 0 4px;font-size:12px;color:{_M_TEXT};font-family:{_FONT};">
       AI-powered daily intelligence for the team
     </p>
