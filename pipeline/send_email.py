@@ -207,34 +207,54 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
   </table>
 """
 
-    # ── 3. KEY INSIGHTS (stacked, one per move) ────────────────────────────────
-    for move in tms[:max_moves]:
-        mtitle = _esc(move.get("title", ""))
-        mdesc  = _esc(move.get("description", ""))
-        if not mtitle:
-            continue
-        H += f"""
+    # ── 3. WHAT THIS MEANS FOR BOULDER SEO MARKETING ──────────────────────────
+    _bsm_moves = [
+        (
+            "We Are Rolling Out GEO Readiness Audits Across Clients",
+            "We are proactively auditing client content to identify gaps in AI visibility "
+            "and accuracy. This ensures our clients remain competitive as AI-generated "
+            "search results reshape rankings.",
+        ),
+        (
+            "We Are Expanding Our Virtual Agent Knowledge Systems",
+            "We are strengthening our knowledge bases with structured, high-context data "
+            "to improve how AI systems interpret and surface client information—leading "
+            "to better engagement and trust.",
+        ),
+        (
+            "We Are Removing Approval Bottlenecks in Optimization",
+            "We are accelerating execution by reducing dependency on per-change approvals. "
+            "This allows us to adapt faster to AI-driven search changes while keeping "
+            "clients informed.",
+        ),
+    ]
+    _shown_moves = _bsm_moves[:max_moves]
+    H += f"""
   <table width="100%" cellpadding="0" cellspacing="0"
     style="background:{_WHITE};border-top:1px solid {_BDR};">
-  <tr><td style="padding:24px;">
+  <tr><td style="padding:24px 24px 0;">
+    <p style="margin:0 0 16px;font-size:10px;font-weight:700;color:{_M_TEXT};
+      text-transform:uppercase;letter-spacing:2px;font-family:{_FONT};">
+      What This Means for Boulder SEO Marketing</p>
+  </td></tr>
+"""
+    for _i, (_mt, _md) in enumerate(_shown_moves):
+        _bp = "24px" if _i == len(_shown_moves) - 1 else "16px"
+        H += f"""
+  <tr><td style="padding:0 24px {_bp};">
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
       <td width="3" valign="top"
         style="background:{_ACC};border-radius:2px;padding:0;line-height:1;">&nbsp;</td>
       <td style="padding:0 0 0 14px;">
-        <p style="margin:0 0 8px;">
-          <span style="font-size:10px;font-weight:700;color:{_M_TEXT};
-            text-transform:uppercase;letter-spacing:2px;
-            font-family:{_FONT};">Key Insight</span>
-        </p>
         <p style="margin:0 0 10px;font-size:16px;font-weight:700;color:{_H_TEXT};
-          line-height:1.35;font-family:{_SERIF};">{mtitle}</p>
+          line-height:1.35;font-family:{_SERIF};">{_mt}</p>
         <p style="margin:0;font-size:14px;color:{_B_TEXT};line-height:1.65;
-          font-family:{_FONT};">{mdesc}</p>
+          font-family:{_FONT};">{_md}</p>
       </td>
     </tr></table>
   </td></tr>
-  </table>
 """
+    H += "  </table>\n"
 
     # ── 7. FOOTER ──────────────────────────────────────────────────────────────
     H += f"""
