@@ -3,17 +3,21 @@ FastAPI backend for the AI Daily News dashboard.
 Run: uvicorn api:app --reload --port 8000
 """
 
+import hashlib
+import hmac
 import json
+import secrets as _secrets
 import subprocess
 import sys
 import threading
+from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import Generator
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 
 ROOT = Path(__file__).parent
@@ -37,7 +41,89 @@ if not CONFIG_FILE.exists() and _REPO_CONFIG.exists() and CONFIG_FILE != _REPO_C
     import shutil as _shutil
     _shutil.copy(_REPO_CONFIG, CONFIG_FILE)
 
-app = FastAPI(title="AI Daily News API")
+# ── Preferences token helpers ──────────────────────────────
+def _make_prefs_token(email: str, secret: str) -> str:
+    return hmac.new(secret.encode(), email.encode(), hashlib.sha256).hexdigest()[:24]
+
+def _verify_prefs_token(email: str, token: str, secret: str) -> bool:
+    if not secret:
+        return False
+    return hmac.compare_digest(_make_prefs_token(email, secret), token)
+
+_PREFS_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Manage Email Preferences — Micro SEO</title>
+<style>
+  *,*::before,*::after{{box-sizing:border-box}}
+  body{{margin:0;padding:40px 16px;background:#F4F4F5;
+       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#09090B}}
+  .card{{max-width:480px;margin:0 auto;background:#fff;border-radius:16px;
+         padding:40px;box-shadow:0 4px 24px rgba(0,0,0,.10)}}
+  .brand{{font-size:20px;font-weight:900;letter-spacing:-.3px;margin-bottom:28px}}
+  .brand em{{font-style:italic;font-weight:400;color:#6366F1}}
+  h1{{font-size:22px;font-weight:700;margin:0 0 8px}}
+  .sub{{font-size:14px;color:#52525B;margin:0 0 28px;line-height:1.6}}
+  .option{{display:flex;align-items:flex-start;gap:14px;padding:16px;
+           border:1.5px solid #E4E4E7;border-radius:10px;margin-bottom:12px;cursor:pointer}}
+  .option:has(input:checked){{border-color:#6366F1;background:#FAFAFA}}
+  .option input[type=checkbox]{{margin-top:3px;accent-color:#6366F1;width:17px;height:17px;flex-shrink:0;cursor:pointer}}
+  .opt-title{{font-size:15px;font-weight:600;margin:0 0 4px}}
+  .opt-desc{{font-size:13px;color:#71717A;margin:0;line-height:1.5}}
+  .btn{{width:100%;padding:13px;background:#6366F1;color:#fff;font-size:15px;font-weight:600;
+        border:none;border-radius:8px;cursor:pointer;margin-top:4px;letter-spacing:.2px}}
+  .btn:hover{{background:#4F46E5}}
+  hr{{border:none;border-top:1px solid #E4E4E7;margin:24px 0}}
+  .unsub{{text-align:center;font-size:13px;color:#A1A1AA}}
+  .unsub a{{color:#A1A1AA}}
+  .banner{{background:#F0FDF4;border:1.5px solid #86EFAC;border-radius:10px;
+           padding:14px 18px;color:#166534;font-size:14px;font-weight:500;margin-bottom:24px}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="brand">Micro<em>&nbsp;SEO</em></div>
+  {banner}
+  <h1>Manage Your AI News Preferences</h1>
+  <p class="sub">Choose which updates you want in your daily digest.</p>
+  <form method="POST" action="/preferences">
+    <input type="hidden" name="email" value="{email}">
+    <input type="hidden" name="token" value="{token}">
+    <label class="option">
+      <input type="checkbox" name="marketing" value="1" {marketing_checked}>
+      <div>
+        <p class="opt-title">Marketing Insights</p>
+        <p class="opt-desc">SEO updates, AI Overviews research, Google Business Profile changes, and GEO strategy signals.</p>
+      </div>
+    </label>
+    <label class="option">
+      <input type="checkbox" name="development" value="1" {development_checked}>
+      <div>
+        <p class="opt-title">Development &amp; AI Engineering</p>
+        <p class="opt-desc">OpenAI, Anthropic, and Perplexity product releases, model updates, and API changes.</p>
+      </div>
+    </label>
+    <button type="submit" class="btn">Save Preferences</button>
+  </form>
+  <hr>
+  <p class="unsub"><a href="mailto:{email}?subject=Unsubscribe%20from%20Micro%20SEO">Unsubscribe from all emails</a></p>
+</div>
+</body>
+</html>"""
+
+
+@asynccontextmanager
+async def _lifespan(app: FastAPI):
+    cfg = _load()
+    if not cfg.get("preferences_secret"):
+        cfg["preferences_secret"] = _secrets.token_hex(32)
+        _save(cfg)
+    yield
+
+
+app = FastAPI(title="AI Daily News API", lifespan=_lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -138,7 +224,8 @@ def update_recipient(index: int, r: Recipient):
     recs = cfg["email"]["recipients"]
     if index < 0 or index >= len(recs):
         raise HTTPException(404, "Recipient not found")
-    recs[index] = {"first_name": r.first_name, "email": r.email}
+    existing = recs[index]
+    recs[index] = {**existing, "first_name": r.first_name, "email": r.email}
     _save(cfg)
     return recs
 
@@ -316,3 +403,45 @@ def stream_logs():
     return StreamingResponse(_gen(), media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache",
                                       "X-Accel-Buffering": "no"})
+
+
+# ── Preferences ────────────────────────────────────────────
+def _prefs_page_html(email: str, token: str, saved: bool, prefs: dict) -> str:
+    return _PREFS_HTML.format(
+        email=email,
+        token=token,
+        banner='<div class="banner">&#10003; Your preferences have been updated.</div>' if saved else "",
+        marketing_checked="checked" if prefs.get("marketing", True) else "",
+        development_checked="checked" if prefs.get("development", True) else "",
+    )
+
+@app.get("/preferences", response_class=HTMLResponse)
+def preferences_page(email: str = "", token: str = ""):
+    cfg    = _load()
+    secret = cfg.get("preferences_secret", "")
+    if not email or not _verify_prefs_token(email, token, secret):
+        return HTMLResponse("<p style='font-family:sans-serif;padding:40px'>Invalid or expired link.</p>", status_code=400)
+    recipients = cfg.get("email", {}).get("recipients", [])
+    recip  = next((r for r in recipients if r.get("email") == email), None)
+    prefs  = (recip or {}).get("preferences", {"marketing": True, "development": True})
+    return HTMLResponse(_prefs_page_html(email, token, False, prefs))
+
+@app.post("/preferences", response_class=HTMLResponse)
+async def save_preferences(
+    email:       str = Form(""),
+    token:       str = Form(""),
+    marketing:   str | None = Form(None),
+    development: str | None = Form(None),
+):
+    cfg    = _load()
+    secret = cfg.get("preferences_secret", "")
+    if not email or not _verify_prefs_token(email, token, secret):
+        return HTMLResponse("<p style='font-family:sans-serif;padding:40px'>Invalid or expired link.</p>", status_code=400)
+    prefs = {"marketing": marketing is not None, "development": development is not None}
+    recipients = cfg.get("email", {}).get("recipients", [])
+    for r in recipients:
+        if r.get("email") == email:
+            r["preferences"] = prefs
+            r["preferences_updated"] = datetime.utcnow().isoformat()
+    _save(cfg)
+    return HTMLResponse(_prefs_page_html(email, token, True, prefs))

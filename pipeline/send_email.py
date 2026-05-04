@@ -3,13 +3,18 @@ Email sender — Micro SEO daily intelligence.
 Table-based layout, inline CSS, Gmail-compatible. Max width: 600px.
 """
 
-import os, smtplib, json
+import hashlib
+import hmac
+import os
+import smtplib
+import json
 from datetime import date as _date
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import parseaddr
 from pathlib import Path
+from urllib.parse import urlencode
 
 CONFIG_FILE = Path(__file__).parent.parent / "config.json"
 _LOGO_FILE  = Path(__file__).parent.parent / "assets" / "bsm_logo.png"
@@ -53,6 +58,19 @@ def _logo(h: int = 32) -> str:
             f'color:{_ACC};font-family:{_SERIF};"> SEO</span>')
 
 
+def _prefs_url(email: str) -> str:
+    try:
+        cfg     = json.loads(CONFIG_FILE.read_text())
+        secret  = cfg.get("preferences_secret", "")
+        base    = cfg.get("preferences_url", "")
+        if not secret or not base:
+            return f"mailto:{email}?subject=Manage+Preferences"
+        token = hmac.new(secret.encode(), email.encode(), hashlib.sha256).hexdigest()[:24]
+        return f"{base}/preferences?{urlencode({'email': email, 'token': token})}"
+    except Exception:
+        return f"mailto:{email}?subject=Manage+Preferences"
+
+
 # Daily-rotating GIFs — one per day, cycles through the list (all verified)
 _DAILY_GIFS = [
     ("https://media.giphy.com/media/DrJm6F9poo4aA/giphy.gif",        "Wake up coffee"),
@@ -67,7 +85,8 @@ _DAILY_GIFS = [
 
 # ── Shared email renderer ──────────────────────────────────────────────────────
 def _render_email(brief_data: dict, articles: list, display_date: str,
-                  first_name: str, from_name: str, max_moves: int = 3) -> str:
+                  first_name: str, from_name: str, max_moves: int = 3,
+                  prefs_url: str = "") -> str:
 
     ts  = brief_data.get("top_story", {})
     tms = brief_data.get("three_moves", [])
@@ -273,7 +292,7 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
       <a href="mailto:sean@boulderseomarketing.com?subject=Unsubscribe"
         style="color:{_M_TEXT};text-decoration:underline;">Unsubscribe</a>
       &nbsp;&middot;&nbsp;
-      <a href="mailto:sean@boulderseomarketing.com?subject=Manage+Preferences"
+      <a href="{_esc(prefs_url)}"
         style="color:{_M_TEXT};text-decoration:underline;">Manage Preferences</a>
     </p>
     <p style="margin:0;font-size:12px;color:{_M_TEXT};font-family:{_FONT};">
@@ -294,13 +313,15 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
 
 
 def _build_html(brief_data: dict, articles: list, display_date: str,
-                first_name: str, from_name: str) -> str:
-    return _render_email(brief_data, articles, display_date, first_name, from_name, max_moves=3)
+                first_name: str, from_name: str, recipient_email: str = "") -> str:
+    return _render_email(brief_data, articles, display_date, first_name, from_name,
+                         max_moves=3, prefs_url=_prefs_url(recipient_email))
 
 
 def _build_html_tier2(brief_data: dict, articles: list, display_date: str,
-                      first_name: str, from_name: str) -> str:
-    return _render_email(brief_data, articles, display_date, first_name, from_name, max_moves=2)
+                      first_name: str, from_name: str, recipient_email: str = "") -> str:
+    return _render_email(brief_data, articles, display_date, first_name, from_name,
+                         max_moves=2, prefs_url=_prefs_url(recipient_email))
 
 
 def _build_plain(brief_data: dict, first_name: str, from_name: str) -> str:
@@ -385,7 +406,7 @@ def send_newsletter(subject: str, brief_data: dict,
     for recip in t1:
         fn    = recip.get("first_name", "there")
         to    = recip["email"]
-        html  = _build_html(brief_data, articles, display_date, fn, from_name)
+        html  = _build_html(brief_data, articles, display_date, fn, from_name, recipient_email=to)
         plain = _build_plain(brief_data, fn, from_name)
         if use_resend:
             _send_resend(subject, from_str, to, reply_to, html, plain, logo_data)
@@ -400,7 +421,7 @@ def send_newsletter(subject: str, brief_data: dict,
         for recip in t2:
             fn    = recip.get("first_name", "there")
             to    = recip["email"]
-            html  = _build_html_tier2(tier2_brief, articles, display_date, fn, from_name)
+            html  = _build_html_tier2(tier2_brief, articles, display_date, fn, from_name, recipient_email=to)
             plain = _build_plain(tier2_brief, fn, from_name)
             if use_resend:
                 _send_resend(t2_subj, from_str, to, reply_to, html, plain, logo_data)
