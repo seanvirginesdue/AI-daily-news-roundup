@@ -84,6 +84,17 @@ _DAILY_GIFS = [
 
 
 # ── Shared email renderer ──────────────────────────────────────────────────────
+def _source_color(source: str) -> str:
+    s = source.lower()
+    if "google" in s:      return "#4285F4"
+    if "openai" in s:      return "#10a37f"
+    if "anthropic" in s or "claude" in s: return "#CC785C"
+    if "perplexity" in s:  return "#7B5EA7"
+    if "se ranking" in s:  return "#F59E0B"
+    if "geo" in s or "llm" in s: return "#8B5CF6"
+    return "#6366F1"
+
+
 def _render_email(brief_data: dict, articles: list, display_date: str,
                   first_name: str, from_name: str, max_moves: int = 3,
                   prefs_url: str = "") -> str:
@@ -139,94 +150,146 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400;1,600&display=swap');
-</style>
+<style>@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400;1,600&display=swap');</style>
 </head>
 <body style="margin:0;padding:0;background:{_CANVAS};font-family:{_FONT};">
 <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;opacity:0;">Today: {headline} &mdash; See what Micro SEO should do before noon.</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:{_CANVAS};">
 <tr><td align="center" style="padding:32px 16px 48px;">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0"
-  style="max-width:600px;width:100%;background:{_WHITE};border-radius:16px;
-  overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.18),0 2px 8px rgba(0,0,0,0.10);">
+  style="max-width:600px;width:100%;background:{_WHITE};border-radius:16px;overflow:hidden;
+  box-shadow:0 8px 40px rgba(0,0,0,0.18),0 2px 8px rgba(0,0,0,0.10);">
 <tr><td>
 """
 
-    # ── 1. HEADER ──────────────────────────────────────────────────────────────
+    # ── 1. HEADER (indigo background) ──────────────────────────────────────────
     H += f"""
-  <table width="100%" cellpadding="0" cellspacing="0"
-    style="background:{_WHITE};border-bottom:1px solid {_BDR};">
-  <tr>
-    <td style="padding:20px 24px;vertical-align:middle;">
-      <span style="font-size:18px;font-weight:900;color:{_H_TEXT};
-        font-family:{_FONT};letter-spacing:-0.4px;">Micro</span><span
-        style="font-size:18px;font-style:italic;font-weight:400;color:{_ACC};
-        font-family:{_SERIF};">&nbsp;SEO</span>
-    </td>
-    <td style="padding:20px 24px;text-align:right;vertical-align:middle;">
-      <p style="margin:0 0 2px;font-size:10px;font-weight:600;color:{_M_TEXT};
-        font-family:{_FONT};letter-spacing:0.5px;">{_esc(issue)}</p>
-      <p style="margin:0;font-size:12px;font-style:italic;color:{_B_TEXT};
-        font-family:{_SERIF};">{_esc(short_date)}</p>
-    </td>
-  </tr>
-  <tr><td colspan="2"
-    style="padding:10px 24px 12px;border-top:1px solid {_BDR};">
-    <p style="margin:0;font-size:13px;font-style:italic;color:{_B_TEXT};
-      font-family:{_SERIF};line-height:1.5;">Good morning. Here&rsquo;s what changed
-      overnight and what to do about it.</p>
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:{_ACC};">
+  <tr><td style="padding:24px 28px 22px;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td>
+        <span style="font-size:18px;font-weight:900;color:#ffffff;font-family:{_FONT};letter-spacing:-0.3px;">Micro</span><span
+          style="font-size:18px;font-style:italic;font-weight:400;color:rgba(255,255,255,0.80);font-family:{_SERIF};">&nbsp;SEO</span>&nbsp;&nbsp;<span
+          style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.45);font-family:{_FONT};letter-spacing:1px;">{_esc(issue)}</span>
+      </td>
+      <td align="right">
+        <span style="display:inline-block;background:rgba(0,0,0,0.22);color:#ffffff;
+          padding:5px 14px;border-radius:999px;font-size:11px;font-weight:600;
+          font-family:{_FONT};">{_esc(short_date)}</span>
+      </td>
+    </tr></table>
+    <p style="margin:18px 0 5px;font-size:26px;font-weight:700;color:#ffffff;font-family:{_SERIF};line-height:1.2;">AI Daily Brief</p>
+    <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.72);font-family:{_FONT};">What changed overnight and what Boulder SEO Marketing does about it.</p>
   </td></tr>
   </table>
 """
 
-    # ── 2. PRIMARY INSIGHT (single column) ─────────────────────────────────────
+    # ── 2. HERO: two-column (GIF left + story right) ───────────────────────────
     H += f"""
-  <table width="100%" cellpadding="0" cellspacing="0"
-    style="background:{_WHITE};border-bottom:1px solid {_BDR};">
-  <tr><td style="padding:16px 24px 0 24px;line-height:0;font-size:0;">
-    <img src="{_gif_url}"
-      alt="Illustration representing rapid changes and uncertainty in AI-generated search results"
-      width="552"
-      style="display:block;width:100%;height:220px;border-radius:12px;
-      object-fit:cover;object-position:center center;" />
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:{_WHITE};">
+  <tr><td style="padding:20px 24px 12px;">
+    <p style="margin:0;font-size:11px;font-weight:700;color:{_M_TEXT};
+      text-transform:uppercase;letter-spacing:2px;font-family:{_FONT};">&#128276;&nbsp;&nbsp;Today&rsquo;s Top Story</p>
   </td></tr>
-  <tr><td style="padding:20px 24px 32px 24px;">
-    <p style="margin:0 0 8px;">
-      <span style="font-size:10px;font-weight:700;color:{_M_TEXT};
-        text-transform:uppercase;letter-spacing:2px;
-        font-family:{_FONT};">One Thing That Matters Today</span>
-    </p>
-    <p style="margin:0 0 16px;font-size:26px;font-weight:700;color:{_H_TEXT};
-      line-height:1.25;letter-spacing:-0.3px;font-family:{_SERIF};">
-      <a href="{_esc(top_url)}" target="_blank"
-        style="color:{_H_TEXT};text-decoration:none;">{headline}</a>
-    </p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
-    <tr>
-      <td width="3" style="background:{_ACC};border-radius:2px;">&nbsp;</td>
-      <td style="padding:8px 12px;">
-        <p style="margin:0;font-size:13px;font-weight:600;color:{_H_TEXT};
-          line-height:1.55;font-family:{_FONT};">{field_note}</p>
+  <tr><td style="padding:0 24px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0"
+      style="border:1px solid {_BDR};border-radius:12px;overflow:hidden;">
+    <tr valign="top">
+      <td width="240" style="width:240px;padding:0;line-height:0;font-size:0;vertical-align:top;">
+        <img src="{_gif_url}" alt="{_gif_alt}" width="240"
+          style="display:block;width:240px;height:260px;object-fit:cover;object-position:center;" />
+      </td>
+      <td valign="top" style="padding:20px;border-left:1px solid {_BDR};vertical-align:top;">
+        <p style="margin:0 0 12px;font-size:17px;font-weight:700;color:{_H_TEXT};
+          line-height:1.3;font-family:{_SERIF};">
+          <a href="{_esc(top_url)}" target="_blank"
+            style="color:{_H_TEXT};text-decoration:none;">{headline}</a>
+        </p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
+        <tr>
+          <td width="3" style="background:{_ACC};border-radius:2px;">&nbsp;</td>
+          <td style="padding:6px 10px;font-size:12px;font-weight:600;color:{_H_TEXT};
+            line-height:1.5;font-family:{_FONT};">{field_note}</td>
+        </tr>
+        </table>
+        <p style="margin:0 0 16px;font-size:13px;color:{_B_TEXT};line-height:1.6;
+          font-family:{_FONT};">{subtext}</p>
+        <a href="{_esc(top_url)}" target="_blank"
+          style="display:inline-block;background:{_ACC};color:#ffffff;padding:10px 18px;
+          border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;
+          font-family:{_FONT};letter-spacing:0.2px;">Keep Reading &rarr;</a>
       </td>
     </tr>
     </table>
-    <p style="margin:0 0 20px;font-size:14px;color:{_B_TEXT};line-height:1.7;
-      font-family:{_FONT};">{subtext}</p>
-    <table cellpadding="0" cellspacing="0">
-    <tr><td style="background:{_ACC};border-radius:6px;">
-      <a href="{_esc(top_url)}" target="_blank"
-        aria-label="Read full article: {headline}"
-        style="display:inline-block;padding:12px 24px;font-size:13px;
-        font-weight:600;color:#ffffff;text-decoration:none;
-        font-family:{_FONT};letter-spacing:0.2px;">Read Full Article &rarr;</a>
-    </td></tr>
-    </table>
   </td></tr>
   </table>
 """
 
-    # ── 3. WHAT THIS MEANS FOR BOULDER SEO MARKETING ──────────────────────────
+    # ── 3. ARTICLE CARDS (alternating two-column, from top_reads) ─────────────
+    if reads_display:
+        H += f"""
+  <table width="100%" cellpadding="0" cellspacing="0"
+    style="background:{_WHITE};border-top:1px solid {_BDR};">
+  <tr><td style="padding:20px 24px 8px;">
+    <p style="margin:0;font-size:11px;font-weight:700;color:{_M_TEXT};
+      text-transform:uppercase;letter-spacing:2px;font-family:{_FONT};">Also In Today&rsquo;s Brief</p>
+  </td></tr>
+"""
+        for _ri, _read in enumerate(reads_display):
+            _rt = _esc(_read.get("title",    ""))
+            _rs = _esc(_read.get("source",   ""))
+            _ru = _esc(_read.get("url",      "#"))
+            _rn = _esc(_read.get("bsm_note", ""))
+            _rc = _source_color(_read.get("source", ""))
+            _note_html = (
+                f'<p style="margin:0 0 12px;font-size:12px;color:{_B_TEXT};'
+                f'line-height:1.5;font-family:{_FONT};">{_rn}</p>'
+            ) if _rn else ""
+            _color_cell = (
+                f'<td width="200" valign="top" style="width:200px;background:{_rc};'
+                f'padding:28px 18px;vertical-align:top;">'
+                f'<p style="margin:0 0 8px;font-size:10px;font-weight:700;'
+                f'color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:1.5px;'
+                f'font-family:{_FONT};">{_rs}</p>'
+                f'<p style="margin:0;font-size:32px;color:rgba(255,255,255,0.15);'
+                f'font-family:{_SERIF};">&#9670;</p>'
+                f'</td>'
+            )
+            _text_cell = (
+                f'<td valign="top" style="padding:20px;vertical-align:top;">'
+                f'<p style="margin:0 0 8px;font-size:10px;font-weight:700;color:{_rc};'
+                f'text-transform:uppercase;letter-spacing:1.5px;font-family:{_FONT};">{_rs}</p>'
+                f'<p style="margin:0 0 10px;font-size:15px;font-weight:700;color:{_H_TEXT};'
+                f'line-height:1.35;font-family:{_SERIF};">'
+                f'<a href="{_ru}" target="_blank" style="color:{_H_TEXT};text-decoration:none;">{_rt}</a></p>'
+                f'{_note_html}'
+                f'<a href="{_ru}" target="_blank" '
+                f'style="font-size:12px;font-weight:600;color:{_rc};text-decoration:none;'
+                f'font-family:{_FONT};">Keep Reading &rarr;</a>'
+                f'</td>'
+            )
+            if _ri % 2 == 0:
+                _left  = _color_cell
+                _right = _text_cell.replace(
+                    'style="padding:20px;',
+                    f'style="border-left:1px solid {_BDR};padding:20px;',
+                )
+            else:
+                _left  = _text_cell.replace(
+                    'style="padding:20px;',
+                    f'style="border-right:1px solid {_BDR};padding:20px;',
+                )
+                _right = _color_cell
+            H += (
+                f'  <tr><td style="padding:0 24px 16px;">'
+                f'<table width="100%" cellpadding="0" cellspacing="0" '
+                f'style="border:1px solid {_BDR};border-radius:10px;overflow:hidden;">'
+                f'<tr>{_left}{_right}</tr>'
+                f'</table></td></tr>\n'
+            )
+        H += "  </table>\n"
+
+    # ── 4. WHAT THIS MEANS FOR BOULDER SEO MARKETING ──────────────────────────
     _bsm_moves = [
         (
             "We Are Rolling Out GEO Readiness Audits Across Clients",
@@ -262,8 +325,7 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
         H += f"""
   <tr><td style="padding:0 24px {_bp};">
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
-      <td width="3" valign="top"
-        style="background:{_ACC};border-radius:2px;padding:0;line-height:1;">&nbsp;</td>
+      <td width="3" valign="top" style="background:{_ACC};border-radius:2px;padding:0;line-height:1;">&nbsp;</td>
       <td style="padding:0 0 0 14px;">
         <p style="margin:0 0 10px;font-size:16px;font-weight:700;color:{_H_TEXT};
           line-height:1.35;font-family:{_SERIF};">{_mt}</p>
@@ -275,29 +337,31 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
 """
     H += "  </table>\n"
 
-    # ── 7. FOOTER ──────────────────────────────────────────────────────────────
+    # ── 5. FOOTER (dark) ───────────────────────────────────────────────────────
     H += f"""
-  <table width="100%" cellpadding="0" cellspacing="0"
-    style="background:{_PG_BG};border-top:1px solid {_BDR};">
-  <tr><td style="padding:24px 24px 28px;">
-    <div style="margin-bottom:10px;">{_logo(28)}</div>
-    <p style="margin:0 0 4px;font-size:12px;color:{_M_TEXT};font-family:{_FONT};">
-      AI-powered daily intelligence for the team
-    </p>
-    <p style="margin:0 0 16px;font-size:12px;color:{_M_TEXT};font-family:{_FONT};">
-      Boulder, Colorado &nbsp;&middot;&nbsp; boulderseomarketing.com
-      &nbsp;&middot;&nbsp; {_esc(display_date)}
-    </p>
-    <p style="margin:0 0 8px;font-size:12px;color:{_M_TEXT};font-family:{_FONT};">
-      <a href="mailto:sean@boulderseomarketing.com?subject=Unsubscribe"
-        style="color:{_M_TEXT};text-decoration:underline;">Unsubscribe</a>
-      &nbsp;&middot;&nbsp;
-      <a href="{_esc(prefs_url)}"
-        style="color:{_M_TEXT};text-decoration:underline;">Manage Preferences</a>
-    </p>
-    <p style="margin:0;font-size:12px;color:{_M_TEXT};font-family:{_FONT};">
-      Reply to share feedback or flag a story for the team.
-    </p>
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:{_H_TEXT};">
+  <tr><td style="padding:28px 28px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td valign="top">
+        <p style="margin:0 0 6px;">
+          <span style="font-size:18px;font-weight:900;color:#ffffff;font-family:{_FONT};letter-spacing:-0.3px;">Micro</span><span
+            style="font-size:18px;font-style:italic;font-weight:400;color:{_ACC};font-family:{_SERIF};">&nbsp;SEO</span>
+        </p>
+        <p style="margin:0 0 3px;font-size:12px;color:rgba(255,255,255,0.45);font-family:{_FONT};">AI-powered daily intelligence for the team</p>
+        <p style="margin:0;font-size:12px;color:rgba(255,255,255,0.30);font-family:{_FONT};">Boulder, Colorado &nbsp;&middot;&nbsp; boulderseomarketing.com &nbsp;&middot;&nbsp; {_esc(display_date)}</p>
+      </td>
+      <td valign="top" align="right">
+        <p style="margin:0 0 6px;font-size:12px;font-family:{_FONT};">
+          <a href="mailto:sean@boulderseomarketing.com?subject=Unsubscribe"
+            style="color:rgba(255,255,255,0.45);text-decoration:underline;">Unsubscribe</a>
+        </p>
+        <p style="margin:0;font-size:12px;font-family:{_FONT};">
+          <a href="{_esc(prefs_url)}"
+            style="color:rgba(255,255,255,0.45);text-decoration:underline;">Manage Preferences</a>
+        </p>
+      </td>
+    </tr></table>
+    <p style="margin:16px 0 0;font-size:12px;color:rgba(255,255,255,0.25);font-family:{_FONT};">Reply to share feedback or flag a story for the team.</p>
   </td></tr>
   </table>
 
