@@ -108,23 +108,15 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
 
     _gif_url, _gif_alt = _DAILY_GIFS[_date.today().toordinal() % len(_DAILY_GIFS)]
 
-    # Resolve article URLs and images from LLM-returned index references
+    # Resolve article URLs from LLM-returned index references
     top_reads = brief_data.get("top_reads", [])
     def _resolve_read(read: dict) -> dict:
         idx = read.get("article_index", 0) - 1
-        if 0 <= idx < len(articles):
-            url = articles[idx].get("url", "#")
-            img = articles[idx].get("image", "")
-        else:
-            url, img = "#", ""
-        return {**read, "url": url, "image": img}
+        url = articles[idx].get("url", "#") if 0 <= idx < len(articles) else "#"
+        return {**read, "url": url}
     top_reads = [_resolve_read(r) for r in top_reads[:3]]
     if not top_reads and articles:
-        top_reads = [
-            {"title": a["title"], "source": a["source"], "url": a["url"],
-             "bsm_note": "", "image": a.get("image", "")}
-            for a in articles[:3]
-        ]
+        top_reads = [{"title": a["title"], "source": a["source"], "url": a["url"], "bsm_note": ""} for a in articles[:3]]
 
     top_url = (top_reads[0].get("url", "#") if top_reads else
                (articles[0].get("url", "#") if articles else "#"))
@@ -137,8 +129,7 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
         _u = _a.get("url", "")
         if _u in _used:
             continue
-        reads_display.append({"title": _a["title"], "source": _a["source"], "url": _u,
-                              "bsm_note": "", "image": _a.get("image", "")})
+        reads_display.append({"title": _a["title"], "source": _a["source"], "url": _u, "bsm_note": ""})
         _used.add(_u)
     reads_display = reads_display[:3]
 
@@ -290,7 +281,7 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
             H += _divider + "\n"
     H += '  <tr><td style="height:24px;"></td></tr>\n  </table>\n'
 
-    # ── 4. ARTICLE CARDS (thumbnail left, content right) ──────────────────────
+    # ── 4. ARTICLE CARDS (alternating two-column, from top_reads) ─────────────
     if reads_display:
         H += f"""
   <table width="100%" cellpadding="0" cellspacing="0"
@@ -300,43 +291,31 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
       text-transform:uppercase;letter-spacing:2px;font-family:{_FONT};">Also In Today&rsquo;s Brief</p>
   </td></tr>
 """
-        for _read in reads_display:
-            _rt  = _esc(_read.get("title",    ""))
-            _rs  = _esc(_read.get("source",   ""))
-            _ru  = _esc(_read.get("url",      "#"))
-            _rn  = _esc(_read.get("bsm_note", ""))
-            _img =      _read.get("image",    "")
-            _rc  = _source_color(_read.get("source", ""))
+        for _ri, _read in enumerate(reads_display):
+            _rt = _esc(_read.get("title",    ""))
+            _rs = _esc(_read.get("source",   ""))
+            _ru = _esc(_read.get("url",      "#"))
+            _rn = _esc(_read.get("bsm_note", ""))
+            _rc = _source_color(_read.get("source", ""))
             _note_html = (
-                f'<p style="margin:0 0 10px;font-size:12px;color:{_B_TEXT};'
+                f'<p style="margin:0 0 12px;font-size:12px;color:{_B_TEXT};'
                 f'line-height:1.5;font-family:{_FONT};">{_rn}</p>'
             ) if _rn else ""
-            if _img:
-                _thumb = (
-                    f'<td width="120" style="width:120px;padding:0;line-height:0;'
-                    f'font-size:0;vertical-align:top;">'
-                    f'<img src="{_esc(_img)}" width="120" height="100"'
-                    f' alt="Article thumbnail"'
-                    f' style="display:block;width:120px;height:100px;object-fit:cover;'
-                    f'border-radius:12px 0 0 12px;" /></td>'
-                )
-            else:
-                _thumb = (
-                    f'<td width="120" valign="middle" style="width:120px;background:{_rc};'
-                    f'padding:0;text-align:center;vertical-align:middle;">'
-                    f'<p style="margin:0;font-size:36px;color:rgba(255,255,255,0.18);'
-                    f'font-family:{_SERIF};">&#9670;</p></td>'
-                )
-            H += (
-                f'  <tr><td style="padding:0 24px 12px;">'
-                f'<table width="100%" cellpadding="0" cellspacing="0" '
-                f'style="border:1px solid {_BDR};border-radius:12px;overflow:hidden;">'
-                f'<tr valign="top">'
-                f'{_thumb}'
-                f'<td valign="top" style="padding:14px 16px;border-left:1px solid {_BDR};vertical-align:top;">'
-                f'<p style="margin:0 0 6px;font-size:10px;font-weight:700;color:{_rc};'
+            _color_cell = (
+                f'<td width="200" valign="top" style="width:200px;background:{_rc};'
+                f'padding:28px 18px;vertical-align:top;">'
+                f'<p style="margin:0 0 8px;font-size:10px;font-weight:700;'
+                f'color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:1.5px;'
+                f'font-family:{_FONT};">{_rs}</p>'
+                f'<p style="margin:0;font-size:32px;color:rgba(255,255,255,0.15);'
+                f'font-family:{_SERIF};">&#9670;</p>'
+                f'</td>'
+            )
+            _text_cell = (
+                f'<td valign="top" style="padding:20px;vertical-align:top;">'
+                f'<p style="margin:0 0 8px;font-size:10px;font-weight:700;color:{_rc};'
                 f'text-transform:uppercase;letter-spacing:1.5px;font-family:{_FONT};">{_rs}</p>'
-                f'<p style="margin:0 0 8px;font-size:14px;font-weight:700;color:{_H_TEXT};'
+                f'<p style="margin:0 0 10px;font-size:15px;font-weight:700;color:{_H_TEXT};'
                 f'line-height:1.35;font-family:{_SERIF};">'
                 f'<a href="{_ru}" target="_blank" style="color:{_H_TEXT};text-decoration:none;">{_rt}</a></p>'
                 f'{_note_html}'
@@ -344,7 +323,25 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
                 f'style="font-size:12px;font-weight:600;color:{_rc};text-decoration:none;'
                 f'font-family:{_FONT};">Keep Reading &rarr;</a>'
                 f'</td>'
-                f'</tr></table></td></tr>\n'
+            )
+            if _ri % 2 == 0:
+                _left  = _color_cell
+                _right = _text_cell.replace(
+                    'style="padding:20px;',
+                    f'style="border-left:1px solid {_BDR};padding:20px;',
+                )
+            else:
+                _left  = _text_cell.replace(
+                    'style="padding:20px;',
+                    f'style="border-right:1px solid {_BDR};padding:20px;',
+                )
+                _right = _color_cell
+            H += (
+                f'  <tr><td style="padding:0 24px 16px;">'
+                f'<table width="100%" cellpadding="0" cellspacing="0" '
+                f'style="border:1px solid {_BDR};border-radius:10px;overflow:hidden;">'
+                f'<tr>{_left}{_right}</tr>'
+                f'</table></td></tr>\n'
             )
         H += "  </table>\n"
 
