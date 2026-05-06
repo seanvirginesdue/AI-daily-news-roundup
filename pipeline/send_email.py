@@ -30,12 +30,11 @@ _WHITE   = "#FFFFFF"
 _CANVAS  = "#C9C9CE"
 _PG_BG   = "#F4F4F5"
 _BDR     = "#E4E4E7"
-_H_TEXT  = "#09090B"
-_B_TEXT  = "#52525B"
+_H_TEXT  = "#111111"
+_B_TEXT  = "#666666"
 _M_TEXT  = "#A1A1AA"
-_ACC     = "#6366F1"   # indigo — build
-_GREEN   = "#10B981"   # green  — pitch / opportunity
-_RED     = "#EF4444"   # red    — kill / risk
+_ACC     = "#E5484D"   # BSM brand red
+_ACC2    = "#C93C40"   # BSM brand red — dark
 _FONT    = "-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif"
 _SERIF   = "Lora,Georgia,'Times New Roman',serif"
 
@@ -85,14 +84,7 @@ _DAILY_GIFS = [
 
 # ── Shared email renderer ──────────────────────────────────────────────────────
 def _source_color(source: str) -> str:
-    s = source.lower()
-    if "google" in s:      return "#4285F4"
-    if "openai" in s:      return "#10a37f"
-    if "anthropic" in s or "claude" in s: return "#CC785C"
-    if "perplexity" in s:  return "#7B5EA7"
-    if "se ranking" in s:  return "#F59E0B"
-    if "geo" in s or "llm" in s: return "#8B5CF6"
-    return "#6366F1"
+    return _ACC
 
 
 def _render_email(brief_data: dict, articles: list, display_date: str,
@@ -174,7 +166,7 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
 
     # ── 1. HEADER (indigo background) ──────────────────────────────────────────
     H += f"""
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:{_ACC};">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,{_ACC},{_ACC2});">
   <tr><td style="padding:24px 28px 22px;">
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
       <td align="right">
