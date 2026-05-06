@@ -284,70 +284,47 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
       text-transform:uppercase;letter-spacing:2px;font-family:{_FONT};">Also In Today&rsquo;s Brief</p>
   </td></tr>
 """
-        for _ri, _read in enumerate(reads_display):
+        for _read in reads_display:
             _rt  = _esc(_read.get("title",    ""))
             _rs  = _esc(_read.get("source",   ""))
             _ru  = _esc(_read.get("url",      "#"))
             _rn  = _esc(_read.get("bsm_note", ""))
             _img =      _proxy_img(_read.get("image", ""))
             _rc  = _source_color(_read.get("source", ""))
-            _rn = _rn or "We are monitoring this update to assess its impact on client strategy and performance."
-            _note_html = (
-                f'<p style="margin:0 0 10px;font-size:12px;color:{_B_TEXT};'
-                f'line-height:1.5;min-height:38px;font-family:{_FONT};">{_rn}</p>'
-            )
-            # Two image cell variants — border-radius matches the card corner on each side
+            _rn  = _rn or "We are monitoring this update to assess its impact on client strategy and performance."
+            # Image always left — fixed 140×100, top-aligned
             if _img:
-                _img_left = (
-                    f'<td width="160" style="width:160px;background:#f3f4f6;'
-                    f'vertical-align:top;padding:0;font-size:0;line-height:0;">'
-                    f'<img src="{_esc(_img)}" width="160" height="120" alt="Article thumbnail" '
-                    f'class="thumb-img" style="display:block;width:160px;height:120px;'
-                    f'object-fit:cover;border-radius:10px 0 0 10px;" /></td>'
-                )
-                _img_right = (
-                    f'<td width="160" style="width:160px;background:#f3f4f6;'
-                    f'vertical-align:top;padding:0;font-size:0;line-height:0;">'
-                    f'<img src="{_esc(_img)}" width="160" height="120" alt="Article thumbnail" '
-                    f'class="thumb-img" style="display:block;width:160px;height:120px;'
-                    f'object-fit:cover;border-radius:0 10px 10px 0;" /></td>'
+                _img_cell = (
+                    f'<td width="140" valign="top" style="width:140px;padding:0;'
+                    f'background:#F3F4F6;font-size:0;line-height:0;">'
+                    f'<img src="{_esc(_img)}" width="140" height="100" alt="Article thumbnail" '
+                    f'class="thumb-img" style="display:block;width:140px;height:100px;'
+                    f'border-radius:12px 0 0 12px;" /></td>'
                 )
             else:
-                _img_left = (
-                    f'<td width="160" style="width:160px;background:#f3f4f6;vertical-align:top;'
-                    f'font-size:0;line-height:0;">&nbsp;</td>'
+                _img_cell = (
+                    f'<td width="140" valign="top" style="width:140px;background:#F3F4F6;'
+                    f'border-radius:12px 0 0 12px;font-size:0;line-height:0;">&nbsp;</td>'
                 )
-                _img_right = _img_left
             _text_cell = (
-                f'<td valign="top" style="padding:16px;vertical-align:top;">'
-                f'<p style="margin:0 0 6px;font-size:10px;font-weight:700;color:{_rc};'
-                f'text-transform:uppercase;letter-spacing:1.5px;font-family:{_FONT};">{_rs}</p>'
-                f'<p style="margin:0 0 8px;font-size:14px;font-weight:700;color:{_H_TEXT};'
-                f'line-height:1.35;font-family:{_SERIF};">'
+                f'<td valign="top" style="padding:16px 18px;border-left:1px solid {_BDR};vertical-align:top;">'
+                f'<p style="margin:0 0 6px;font-size:12px;font-weight:600;color:{_rc};'
+                f'text-transform:uppercase;letter-spacing:1px;font-family:{_FONT};">{_rs}</p>'
+                f'<p style="margin:0 0 6px;font-size:15px;font-weight:600;color:{_H_TEXT};'
+                f'line-height:1.35;font-family:{_FONT};">'
                 f'<a href="{_ru}" target="_blank" style="color:{_H_TEXT};text-decoration:none;">{_rt}</a></p>'
-                f'{_note_html}'
+                f'<p style="margin:0 0 10px;font-size:13px;color:{_B_TEXT};line-height:1.5;'
+                f'min-height:38px;font-family:{_FONT};">{_rn}</p>'
                 f'<a href="{_ru}" target="_blank" '
-                f'style="font-size:12px;font-weight:600;color:{_rc};text-decoration:none;'
+                f'style="font-size:12px;font-weight:500;color:{_rc};text-decoration:none;'
                 f'font-family:{_FONT};">Keep Reading &rarr;</a>'
                 f'</td>'
             )
-            if _ri % 2 == 0:
-                _left  = _img_left
-                _right = _text_cell.replace(
-                    'style="padding:16px;',
-                    f'style="border-left:1px solid {_BDR};padding:16px;',
-                )
-            else:
-                _left  = _text_cell.replace(
-                    'style="padding:16px;',
-                    f'style="border-right:1px solid {_BDR};padding:16px;',
-                )
-                _right = _img_right
             H += (
                 f'  <tr><td style="padding:0 24px 16px;">'
                 f'<table width="100%" cellpadding="0" cellspacing="0" '
-                f'style="border:1px solid {_BDR};border-radius:10px;overflow:hidden;">'
-                f'<tr>{_left}{_right}</tr>'
+                f'style="border:1px solid {_BDR};border-radius:12px;overflow:hidden;">'
+                f'<tr>{_img_cell}{_text_cell}</tr>'
                 f'</table></td></tr>\n'
             )
         H += "  </table>\n"
