@@ -98,6 +98,45 @@ _OG_PATTERNS = [
 ]
 
 
+def _validate_img_url(url: str, referer: str = "") -> bool:
+    """Return True if url is publicly accessible and returns an image."""
+    if not url or not url.startswith("http"):
+        return False
+    try:
+        import requests as _req
+        hdrs = {**_BROWSER_HEADERS}
+        if referer:
+            hdrs["Referer"] = referer
+        r = _req.head(url, headers=hdrs, timeout=3, allow_redirects=True)
+        if r.status_code == 405:
+            r = _req.get(url, headers=hdrs, timeout=3, allow_redirects=True, stream=True)
+        if r.status_code != 200:
+            return False
+        ct = r.headers.get("content-type", "")
+        return ct.startswith("image/") or any(
+            url.lower().split("?")[0].endswith(ext)
+            for ext in (".jpg", ".jpeg", ".png", ".webp", ".gif")
+        )
+    except Exception:
+        return False
+
+
+def _picsum_fallback(source: str) -> str:
+    """Resolve a consistent seeded picsum direct URL for the given source."""
+    try:
+        import requests as _req
+        seed = re.sub(r"[^a-z0-9]", "-", source.lower().strip())[:20] or "tech"
+        r = _req.get(
+            f"https://picsum.photos/seed/{seed}/200/150",
+            timeout=5, allow_redirects=True,
+        )
+        if r.status_code == 200 and r.headers.get("content-type", "").startswith("image/"):
+            return r.url
+    except Exception:
+        pass
+    return ""
+
+
 def _parse_og(html: str) -> str:
     for pat in _OG_PATTERNS:
         m = re.search(pat, html, re.IGNORECASE)
@@ -206,7 +245,7 @@ def fetch_articles() -> list[dict]:
     if collected:
         _save_seen(seen_path, seen_urls)
 
-    # Enrich missing images by resolving redirects + fetching og:image in parallel
+    # Enrich missing images via og:image / Microlink
     missing = [a for a in collected if not a["image"]]
     if missing:
         print(f"  [IMG] Resolving images for {len(missing)} article(s)...")
@@ -217,6 +256,31 @@ def fetch_articles() -> list[dict]:
                 img = fut.result()
                 if img:
                     article["image"] = img
+
+    # Validate all image URLs — clear hotlink-blocked or expired CDN URLs
+    with_images = [a for a in collected if a.get("image")]
+    if with_images:
+        with ThreadPoolExecutor(max_workers=12) as pool:
+            val_futures = {
+                pool.submit(_validate_img_url, a["image"], a["url"]): a
+                for a in with_images
+            }
+            for fut in as_completed(val_futures):
+                if not fut.result():
+                    art = val_futures[fut]
+                    print(f"  [IMG] Blocked/invalid, clearing: {art['image'][:70]}")
+                    art["image"] = ""
+
+    # Resolve seeded picsum fallback for articles still without an image
+    still_missing = [a for a in collected if not a["image"]]
+    if still_missing:
+        print(f"  [IMG] Resolving picsum fallbacks for {len(still_missing)} article(s)...")
+        with ThreadPoolExecutor(max_workers=6) as pool:
+            fb_futures = {pool.submit(_picsum_fallback, a["source"]): a for a in still_missing}
+            for fut in as_completed(fb_futures):
+                img = fut.result()
+                if img:
+                    fb_futures[fut]["image"] = img
 
     return collected
 
