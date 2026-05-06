@@ -54,21 +54,19 @@ def _save_seen(path: str, seen: set) -> None:
 
 def _extract_image(entry) -> str:
     """Try to extract a thumbnail/image URL from a feed entry."""
-    # media:thumbnail (Google News, many feeds)
+    candidates: list[str] = []
+
     if hasattr(entry, "media_thumbnail") and entry.media_thumbnail:
-        return entry.media_thumbnail[0].get("url", "")
-    # media:content with image type
+        candidates.append(entry.media_thumbnail[0].get("url", ""))
     if hasattr(entry, "media_content") and entry.media_content:
         for m in entry.media_content:
-            url = m.get("url", "")
-            if url and any(ext in url.lower() for ext in [".jpg", ".jpeg", ".png", ".webp", "image"]):
-                return url
-    # enclosure (podcast/media feeds)
+            u = m.get("url", "")
+            if u and any(ext in u.lower() for ext in [".jpg", ".jpeg", ".png", ".webp", "image"]):
+                candidates.append(u)
     if hasattr(entry, "enclosures") and entry.enclosures:
         for enc in entry.enclosures:
             if "image" in enc.get("type", ""):
-                return enc.get("href", "")
-    # img tag inside summary/content HTML
+                candidates.append(enc.get("href", ""))
     raw = ""
     if hasattr(entry, "content") and entry.content:
         raw = entry.content[0].get("value", "")
@@ -76,7 +74,12 @@ def _extract_image(entry) -> str:
         raw = entry.summary or ""
     m = re.search(r'<img[^>]+src=["\']([^"\']+)["\']', raw)
     if m:
-        return m.group(1)
+        candidates.append(m.group(1))
+
+    for url in candidates:
+        url = _clean_img_url(url)
+        if url and not _is_logo_or_icon(url):
+            return url
     return ""
 
 
@@ -97,10 +100,45 @@ _OG_PATTERNS = [
     r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']twitter:image(?::src)?["\']',
 ]
 
+# Tracking params to strip from image URLs (CDN sizing params are kept)
+_STRIP_PARAMS = frozenset({
+    "utm_source", "utm_medium", "utm_campaign", "utm_content",
+    "utm_term", "utm_id", "fbclid", "gclid", "_ga", "mc_cid", "mc_eid",
+})
+
+# Path patterns that indicate a logo, icon, or other non-article image
+_LOGO_RE = re.compile(
+    r"(logo|favicon|icon|avatar|sprite|watermark|badge|16x16|32x32|48x48|64x64)",
+    re.IGNORECASE,
+)
+
+
+def _clean_img_url(url: str) -> str:
+    """Normalize image URL: force HTTPS, strip tracking params."""
+    if not url:
+        return ""
+    if url.startswith("http://"):
+        url = "https://" + url[7:]
+    try:
+        p = urllib.parse.urlparse(url)
+        qs = {k: v for k, v in urllib.parse.parse_qs(p.query, keep_blank_values=True).items()
+              if k.lower() not in _STRIP_PARAMS}
+        return urllib.parse.urlunparse(p._replace(query=urllib.parse.urlencode(qs, doseq=True)))
+    except Exception:
+        return url
+
+
+def _is_logo_or_icon(url: str) -> bool:
+    """Return True if the URL looks like a logo, favicon, or icon."""
+    path = urllib.parse.urlparse(url).path
+    return bool(_LOGO_RE.search(path))
+
 
 def _validate_img_url(url: str, referer: str = "") -> bool:
     """Return True if url is publicly accessible and returns an image."""
     if not url or not url.startswith("http"):
+        return False
+    if _is_logo_or_icon(url):
         return False
     try:
         import requests as _req
@@ -141,8 +179,8 @@ def _parse_og(html: str) -> str:
     for pat in _OG_PATTERNS:
         m = re.search(pat, html, re.IGNORECASE)
         if m:
-            img = m.group(1).strip()
-            if img.startswith("http"):
+            img = _clean_img_url(m.group(1).strip())
+            if img.startswith("http") and not _is_logo_or_icon(img):
                 return img
     return ""
 
