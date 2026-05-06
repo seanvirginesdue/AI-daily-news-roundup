@@ -112,11 +112,19 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
     top_reads = brief_data.get("top_reads", [])
     def _resolve_read(read: dict) -> dict:
         idx = read.get("article_index", 0) - 1
-        url = articles[idx].get("url", "#") if 0 <= idx < len(articles) else "#"
-        return {**read, "url": url}
+        if 0 <= idx < len(articles):
+            url = articles[idx].get("url", "#")
+            img = articles[idx].get("image", "")
+        else:
+            url, img = "#", ""
+        return {**read, "url": url, "image": img}
     top_reads = [_resolve_read(r) for r in top_reads[:3]]
     if not top_reads and articles:
-        top_reads = [{"title": a["title"], "source": a["source"], "url": a["url"], "bsm_note": ""} for a in articles[:3]]
+        top_reads = [
+            {"title": a["title"], "source": a["source"], "url": a["url"],
+             "bsm_note": "", "image": a.get("image", "")}
+            for a in articles[:3]
+        ]
 
     top_url = (top_reads[0].get("url", "#") if top_reads else
                (articles[0].get("url", "#") if articles else "#"))
@@ -129,7 +137,8 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
         _u = _a.get("url", "")
         if _u in _used:
             continue
-        reads_display.append({"title": _a["title"], "source": _a["source"], "url": _u, "bsm_note": ""})
+        reads_display.append({"title": _a["title"], "source": _a["source"], "url": _u,
+                              "bsm_note": "", "image": _a.get("image", "")})
         _used.add(_u)
     reads_display = reads_display[:3]
 
@@ -292,23 +301,36 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
   </td></tr>
 """
         for _ri, _read in enumerate(reads_display):
-            _rt = _esc(_read.get("title",    ""))
-            _rs = _esc(_read.get("source",   ""))
-            _ru = _esc(_read.get("url",      "#"))
-            _rn = _esc(_read.get("bsm_note", ""))
-            _rc = _source_color(_read.get("source", ""))
+            _rt  = _esc(_read.get("title",    ""))
+            _rs  = _esc(_read.get("source",   ""))
+            _ru  = _esc(_read.get("url",      "#"))
+            _rn  = _esc(_read.get("bsm_note", ""))
+            _img =      _read.get("image",    "")
+            _rc  = _source_color(_read.get("source", ""))
             _note_html = (
                 f'<p style="margin:0 0 12px;font-size:12px;color:{_B_TEXT};'
                 f'line-height:1.5;font-family:{_FONT};">{_rn}</p>'
             ) if _rn else ""
+            if _img:
+                _cell_bg = (
+                    f'background:{_rc};'
+                    f'background-image:url(\'{_esc(_img)}\');'
+                    f'background-size:cover;background-position:center;background-repeat:no-repeat;'
+                )
+                _inner_open  = '<div style="background:rgba(0,0,0,0.28);padding:28px 18px;">'
+                _inner_close = '</div>'
+            else:
+                _cell_bg     = f'background:{_rc};padding:28px 18px;'
+                _inner_open  = _inner_close = ''
             _color_cell = (
-                f'<td width="200" valign="top" style="width:200px;background:{_rc};'
-                f'padding:28px 18px;vertical-align:top;">'
+                f'<td width="200" valign="top" style="width:200px;{_cell_bg}vertical-align:top;">'
+                f'{_inner_open}'
                 f'<p style="margin:0 0 8px;font-size:10px;font-weight:700;'
                 f'color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:1.5px;'
                 f'font-family:{_FONT};">{_rs}</p>'
-                f'<p style="margin:0;font-size:32px;color:rgba(255,255,255,0.15);'
+                f'<p style="margin:0;font-size:32px;color:rgba(255,255,255,0.18);'
                 f'font-family:{_SERIF};">&#9670;</p>'
+                f'{_inner_close}'
                 f'</td>'
             )
             _text_cell = (
