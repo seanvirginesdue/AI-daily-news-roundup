@@ -168,7 +168,6 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
   <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,{_ACC},{_ACC2});">
   <tr><td style="padding:24px 28px 22px;">
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
-      <td valign="middle">{_logo(h=32)}</td>
       <td align="right" valign="middle">
         <span style="display:inline-block;background:rgba(0,0,0,0.22);color:#ffffff;
           padding:5px 14px;border-radius:999px;font-size:11px;font-weight:600;
