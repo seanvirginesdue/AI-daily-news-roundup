@@ -108,15 +108,21 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
 
     _gif_url, _gif_alt = _DAILY_GIFS[_date.today().toordinal() % len(_DAILY_GIFS)]
 
-    # Resolve article URLs from LLM-returned index references
+    # Resolve article URLs — match by title first, fall back to index
     top_reads = brief_data.get("top_reads", [])
     def _resolve_read(read: dict) -> dict:
-        idx = read.get("article_index", 0) - 1
-        if 0 <= idx < len(articles):
-            url = articles[idx].get("url", "#")
-            img = articles[idx].get("image", "")
+        title = read.get("title", "").strip().lower()
+        url, img = "#", ""
+        for a in articles:
+            if a.get("title", "").strip().lower() == title:
+                url = a.get("url", "#")
+                img = a.get("image", "")
+                break
         else:
-            url, img = "#", ""
+            idx = read.get("article_index", 0) - 1
+            if 0 <= idx < len(articles):
+                url = articles[idx].get("url", "#")
+                img = articles[idx].get("image", "")
         return {**read, "url": url, "image": img}
     top_reads = [_resolve_read(r) for r in top_reads[:3]]
     if not top_reads and articles:
