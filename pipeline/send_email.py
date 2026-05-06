@@ -274,57 +274,64 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
         )
     H += '      </table>\n    </td></tr>\n    </table>\n  </td></tr>\n  </table>\n'
 
-    # ── 4. ARTICLE CARDS (alternating two-column, from top_reads) ─────────────
+    # ── 4. EDITORIAL GRID (alternating image-left / image-right) ─────────────
     if reads_display:
         H += f"""
   <table width="100%" cellpadding="0" cellspacing="0"
-    style="background:{_WHITE};border-top:1px solid {_BDR};">
-  <tr><td style="padding:20px 24px 8px;">
+    style="background:#F5F5F5;border-top:1px solid {_BDR};">
+  <tr><td style="padding:24px 24px 8px;">
     <p style="margin:0;font-size:11px;font-weight:700;color:{_M_TEXT};
       text-transform:uppercase;letter-spacing:2px;font-family:{_FONT};">Also In Today&rsquo;s Brief</p>
   </td></tr>
 """
-        for _read in reads_display:
+        for _i, _read in enumerate(reads_display):
             _rt  = _esc(_read.get("title",    ""))
             _rs  = _esc(_read.get("source",   ""))
             _ru  = _esc(_read.get("url",      "#"))
             _rn  = _esc(_read.get("bsm_note", ""))
-            _img =      _proxy_img(_read.get("image", ""))
+            _img =      _proxy_img(_read.get("image", ""), w=280, h=180)
+            if not _img:
+                _seed = (_read.get("source", "tech").lower()
+                         .replace(" ", "-").replace("/", "-")[:20] or "tech")
+                _img = f"https://picsum.photos/seed/{_seed}/280/180"
             _rc  = _source_color(_read.get("source", ""))
             _rn  = _rn or "We are monitoring this update to assess its impact on client strategy and performance."
-            # Image always left — fixed 140×100, top-aligned
-            if _img:
-                _img_cell = (
-                    f'<td width="140" valign="top" style="width:140px;padding:0;'
-                    f'background:#F3F4F6;font-size:0;line-height:0;">'
-                    f'<img src="{_esc(_img)}" width="140" height="100" alt="Article thumbnail" '
-                    f'class="thumb-img" style="display:block;width:140px;height:100px;'
-                    f'border-radius:12px 0 0 12px;" /></td>'
-                )
-            else:
-                _img_cell = (
-                    f'<td width="140" valign="top" style="width:140px;background:#F3F4F6;'
-                    f'border-radius:12px 0 0 12px;font-size:0;line-height:0;">&nbsp;</td>'
-                )
-            _text_cell = (
-                f'<td valign="top" style="padding:16px 18px;border-left:1px solid {_BDR};vertical-align:top;">'
-                f'<p style="margin:0 0 6px;font-size:12px;font-weight:600;color:{_rc};'
+            _pb  = "28px" if _i < len(reads_display) - 1 else "16px"
+
+            _img_td = (
+                f'<td width="48%" valign="top" style="width:48%;padding:0;font-size:0;line-height:0;">'
+                f'<img src="{_esc(_img)}" width="100%" alt="" '
+                f'style="display:block;width:100%;height:auto;border-radius:12px;" /></td>'
+                if _img else
+                f'<td width="48%" valign="top" style="width:48%;"></td>'
+            )
+            _txt_td = (
+                f'<td width="52%" valign="top" style="width:52%;padding-left:16px;vertical-align:top;">'
+                f'<p style="margin:0 0 6px;font-size:11px;font-weight:600;color:#999999;'
                 f'text-transform:uppercase;letter-spacing:1px;font-family:{_FONT};">{_rs}</p>'
-                f'<p style="margin:0 0 6px;font-size:15px;font-weight:600;color:{_H_TEXT};'
-                f'line-height:1.35;font-family:{_FONT};">'
-                f'<a href="{_ru}" target="_blank" style="color:{_H_TEXT};text-decoration:none;">{_rt}</a></p>'
-                f'<p style="margin:0 0 10px;font-size:13px;color:{_B_TEXT};line-height:1.5;'
-                f'min-height:38px;font-family:{_FONT};">{_rn}</p>'
+                f'<p style="margin:0 0 6px;font-size:18px;font-weight:700;color:#111111;'
+                f'line-height:1.3;font-family:{_FONT};">'
+                f'<a href="{_ru}" target="_blank" style="color:#111111;text-decoration:none;">{_rt}</a></p>'
+                f'<p style="margin:0 0 8px;font-size:14px;color:#555555;line-height:1.5;'
+                f'font-family:{_FONT};">{_rn}</p>'
                 f'<a href="{_ru}" target="_blank" '
-                f'style="font-size:12px;font-weight:500;color:{_rc};text-decoration:none;'
+                f'style="font-size:14px;font-weight:500;color:{_rc};text-decoration:none;'
                 f'font-family:{_FONT};">Keep Reading &rarr;</a>'
                 f'</td>'
             )
+
+            # Odd items: image left, text right — even items: text left, image right
+            if _i % 2 == 0:
+                _row = f'{_img_td}{_txt_td}'
+            else:
+                _txt_td_left = _txt_td.replace('padding-left:16px', 'padding-right:16px;padding-left:0')
+                _img_td_right = _img_td
+                _row = f'{_txt_td_left}{_img_td_right}'
+
             H += (
-                f'  <tr><td style="padding:0 24px 16px;">'
-                f'<table width="100%" cellpadding="0" cellspacing="0" '
-                f'style="border:1px solid {_BDR};border-radius:12px;overflow:hidden;">'
-                f'<tr>{_img_cell}{_text_cell}</tr>'
+                f'  <tr><td style="padding:0 24px {_pb};">'
+                f'<table width="100%" cellpadding="0" cellspacing="0">'
+                f'<tr valign="top">{_row}</tr>'
                 f'</table></td></tr>\n'
             )
         H += "  </table>\n"
