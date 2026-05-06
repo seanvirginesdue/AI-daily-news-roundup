@@ -205,10 +205,10 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
     <table width="100%" cellpadding="0" cellspacing="0"
       style="border:1px solid {_BDR};border-radius:12px;overflow:hidden;">
     <tr valign="top">
-      <td width="240" style="width:240px;padding:0;line-height:0;font-size:0;vertical-align:top;">
-        <img src="{_gif_url}" alt="{_gif_alt}" width="240"
-          style="display:block;width:240px;height:260px;object-fit:cover;object-position:center;" />
-      </td>
+      <td width="240" style="width:240px;background:{_ACC};
+        background-image:url('{_gif_url}');background-size:cover;
+        background-position:center;padding:0;vertical-align:top;
+        font-size:0;line-height:0;">&nbsp;</td>
       <td valign="top" style="padding:20px;border-left:1px solid {_BDR};vertical-align:top;">
         <p style="margin:0 0 12px;font-size:17px;font-weight:700;color:{_H_TEXT};
           line-height:1.3;font-family:{_SERIF};">
