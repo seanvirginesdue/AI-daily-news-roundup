@@ -17,7 +17,7 @@ from pathlib import Path
 from urllib.parse import urlencode
 
 CONFIG_FILE = Path(__file__).parent.parent / "config.json"
-_LOGO_FILE  = Path(__file__).parent.parent / "assets" / "bsm_logo.png"
+_LOGO_FILE  = Path(__file__).parent.parent / "assets" / "BSM Logo-01.png"
 
 _LAUNCH = _date(2026, 3, 17)
 
@@ -168,7 +168,8 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
   <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,{_ACC},{_ACC2});">
   <tr><td style="padding:24px 28px 22px;">
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
-      <td align="right">
+      <td valign="middle">{_logo(h=32)}</td>
+      <td align="right" valign="middle">
         <span style="display:inline-block;background:rgba(0,0,0,0.22);color:#ffffff;
           padding:5px 14px;border-radius:999px;font-size:11px;font-weight:600;
           font-family:{_FONT};">{_esc(short_date)}</span>
@@ -348,10 +349,7 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
   <tr><td style="padding:28px 28px 24px;">
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
       <td valign="top">
-        <p style="margin:0 0 6px;">
-          <span style="font-size:18px;font-weight:900;color:#ffffff;font-family:{_FONT};letter-spacing:-0.3px;">Micro</span><span
-            style="font-size:18px;font-style:italic;font-weight:400;color:{_ACC};font-family:{_SERIF};">&nbsp;SEO</span>
-        </p>
+        <p style="margin:0 0 8px;">{_logo(h=28)}</p>
         <p style="margin:0 0 3px;font-size:12px;color:rgba(255,255,255,0.45);font-family:{_FONT};">AI-powered daily intelligence for the team</p>
         <p style="margin:0;font-size:12px;color:rgba(255,255,255,0.30);font-family:{_FONT};">Boulder, Colorado &nbsp;&middot;&nbsp; boulderseomarketing.com &nbsp;&middot;&nbsp; {_esc(display_date)}</p>
       </td>
