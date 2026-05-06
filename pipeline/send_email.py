@@ -165,23 +165,46 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<style>@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400;1,600&display=swap');
-@media only screen and (max-width:600px){{.thumb-img{{width:100% !important;height:auto !important;border-radius:10px 10px 0 0 !important;}}}}</style>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400;1,600&display=swap');
+@media only screen and (max-width:600px){{
+  /* Outer wrapper — edge to edge, no border radius */
+  .ow-pad{{padding:0 !important;}}
+  .ew{{border-radius:0 !important;box-shadow:none !important;}}
+  /* Section padding — tighter on mobile */
+  .sp{{padding-left:14px !important;padding-right:14px !important;}}
+  /* Header */
+  .hd-pad{{padding:18px 14px 16px !important;}}
+  .hd-title{{font-size:22px !important;}}
+  /* Hero section padding */
+  .hero-wrap{{padding:0 14px 18px !important;}}
+  .hero-lbl{{padding:16px 14px 10px !important;}}
+  /* Hero text cell padding */
+  .hero-txt{{padding:12px !important;}}
+  /* Grid section padding */
+  .grid-outer{{padding:0 14px 14px !important;}}
+  /* Grid fonts */
+  .grid-hl{{font-size:15px !important;}}
+  .grid-desc{{font-size:13px !important;}}
+  /* Footer */
+  .ftr-pad{{padding:20px 14px !important;}}
+}}
+</style>
 </head>
 <body style="margin:0;padding:0;background:{_CANVAS};font-family:{_FONT};">
 <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;opacity:0;">Today: {headline} &mdash; See what Micro SEO should do before noon.</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:{_CANVAS};">
-<tr><td align="center" style="padding:32px 16px 48px;">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0"
+<tr><td align="center" class="ow-pad" style="padding:32px 16px 48px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" class="ew"
   style="max-width:600px;width:100%;background:{_WHITE};border-radius:16px;overflow:hidden;
   box-shadow:0 8px 40px rgba(0,0,0,0.18),0 2px 8px rgba(0,0,0,0.10);">
 <tr><td>
 """
 
-    # ── 1. HEADER (indigo background) ──────────────────────────────────────────
+    # ── 1. HEADER ──────────────────────────────────────────────────────────────
     H += f"""
   <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,{_ACC},{_ACC2});">
-  <tr><td style="padding:24px 28px 22px;">
+  <tr><td class="hd-pad" style="padding:24px 28px 22px;">
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
       <td align="right" valign="middle">
         <span style="display:inline-block;background:rgba(0,0,0,0.22);color:#ffffff;
@@ -189,7 +212,7 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
           font-family:{_FONT};">{_esc(short_date)}</span>
       </td>
     </tr></table>
-    <p style="margin:18px 0 5px;font-size:26px;font-weight:700;color:#ffffff;font-family:{_SERIF};line-height:1.2;">AI Daily Brief</p>
+    <p class="hd-title" style="margin:18px 0 5px;font-size:26px;font-weight:700;color:#ffffff;font-family:{_SERIF};line-height:1.2;">AI Daily Brief</p>
     <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.72);font-family:{_FONT};">What changed overnight and what Boulder SEO Marketing does about it.</p>
   </td></tr>
   </table>
@@ -198,20 +221,20 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
     # ── 2. HERO: two-column (GIF left + story right) ───────────────────────────
     H += f"""
   <table width="100%" cellpadding="0" cellspacing="0" style="background:{_WHITE};">
-  <tr><td style="padding:20px 24px 12px;">
+  <tr><td class="hero-lbl sp" style="padding:20px 24px 12px;">
     <p style="margin:0;font-size:11px;font-weight:700;color:{_M_TEXT};
       text-transform:uppercase;letter-spacing:2px;font-family:{_FONT};">&#128276;&nbsp;&nbsp;Today&rsquo;s Top Story</p>
   </td></tr>
-  <tr><td style="padding:0 24px 24px;">
+  <tr><td class="hero-wrap sp" style="padding:0 24px 24px;">
     <table width="100%" cellpadding="0" cellspacing="0"
       style="border:1px solid {_BDR};border-radius:12px;overflow:hidden;">
     <tr><td colspan="2" style="height:3px;background:{_ACC};padding:0;font-size:0;line-height:0;"></td></tr>
     <tr valign="top">
-      <td width="240" style="width:240px;background:{_ACC};
+      <td width="40%" style="width:40%;background:{_ACC};
         background-image:url('{_gif_url}');background-size:cover;
         background-position:center;padding:0;vertical-align:top;
-        font-size:0;line-height:0;">&nbsp;</td>
-      <td valign="top" style="padding:20px;border-left:1px solid {_BDR};vertical-align:top;">
+        font-size:0;line-height:0;min-height:160px;">&nbsp;</td>
+      <td class="hero-txt" valign="top" style="padding:20px;border-left:1px solid {_BDR};vertical-align:top;">
         <p style="margin:0 0 12px;font-size:17px;font-weight:700;color:{_H_TEXT};
           line-height:1.3;font-family:{_SERIF};">
           <a href="{_esc(top_url)}" target="_blank"
@@ -256,7 +279,7 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
     H += f"""
   <table width="100%" cellpadding="0" cellspacing="0"
     style="background:{_WHITE};border-top:1px solid {_BDR};">
-  <tr><td style="padding:20px 24px 20px;">
+  <tr><td class="sp" style="padding:20px 24px 20px;">
     <p style="margin:0 0 14px;font-size:10px;font-weight:700;color:{_M_TEXT};
       text-transform:uppercase;letter-spacing:2px;font-family:{_FONT};">
       What This Means for Boulder SEO Marketing</p>
@@ -286,7 +309,7 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
         H += f"""
   <table width="100%" cellpadding="0" cellspacing="0"
     style="background:#F5F5F5;border-top:1px solid {_BDR};">
-  <tr><td style="padding:24px 24px 8px;">
+  <tr><td class="sp" style="padding:24px 24px 8px;">
     <p style="margin:0;font-size:11px;font-weight:700;color:{_M_TEXT};
       text-transform:uppercase;letter-spacing:2px;font-family:{_FONT};">Also In Today&rsquo;s Brief</p>
   </td></tr>
@@ -318,7 +341,7 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
                 f'<td width="52%" valign="top" style="width:52%;padding-left:16px;vertical-align:top;">'
                 f'<p style="margin:0 0 6px;font-size:11px;font-weight:600;color:#999999;'
                 f'text-transform:uppercase;letter-spacing:1px;font-family:{_FONT};">{_rs}</p>'
-                f'<p style="margin:0 0 6px;font-size:18px;font-weight:700;color:#111111;'
+                f'<p class="grid-hl" style="margin:0 0 6px;font-size:18px;font-weight:700;color:#111111;'
                 f'line-height:1.3;font-family:{_FONT};">'
                 f'<a href="{_ru}" target="_blank" style="color:#111111;text-decoration:none;">{_rt}</a></p>'
                 f'<p style="margin:0 0 8px;font-size:14px;color:#555555;line-height:1.5;'
@@ -338,7 +361,7 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
                 _row = f'{_txt_td_left}{_img_td_right}'
 
             H += (
-                f'  <tr><td style="padding:0 24px {_pb};">'
+                f'  <tr><td class="grid-outer sp" style="padding:0 24px {_pb};">'
                 f'<table width="100%" cellpadding="0" cellspacing="0">'
                 f'<tr valign="top">{_row}</tr>'
                 f'</table></td></tr>\n'
@@ -348,7 +371,7 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
     # ── 5. FOOTER (dark) ───────────────────────────────────────────────────────
     H += f"""
   <table width="100%" cellpadding="0" cellspacing="0" style="background:{_H_TEXT};">
-  <tr><td style="padding:28px 28px 24px;">
+  <tr><td class="ftr-pad" style="padding:28px 28px 24px;">
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
       <td valign="top">
         <p style="margin:0 0 8px;">{_logo(h=28)}</p>
