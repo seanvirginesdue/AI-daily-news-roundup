@@ -259,17 +259,25 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
       text-transform:uppercase;letter-spacing:2px;font-family:{_FONT};">
       What This Means for Boulder SEO Marketing</p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+    <tr><td style="border-left:3px solid {_ACC};padding-left:12px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
 """
     for _i, (_lead, _ctx) in enumerate(_shown_moves):
-        _pb = "10px" if _i < len(_shown_moves) - 1 else "0"
+        _pb = "14px" if _i < len(_shown_moves) - 1 else "0"
         H += (
-            f'      <tr><td valign="top" style="font-size:14px;color:{_H_TEXT};'
-            f'line-height:1.55;font-family:{_FONT};padding-bottom:{_pb};">'
-            f'&bull;&nbsp;<strong>{_esc(_lead)}</strong>'
-            f'&nbsp;&mdash;&nbsp;{_esc(_ctx)}'
+            f'      <tr><td style="padding-bottom:{_pb};">'
+            f'<table width="100%" cellpadding="0" cellspacing="0"><tr>'
+            f'<td width="14" valign="top" style="font-size:18px;font-weight:700;'
+            f'color:{_ACC};line-height:1.2;padding-right:6px;font-family:{_FONT};">&#8226;</td>'
+            f'<td valign="top">'
+            f'<p style="margin:0 0 3px;font-size:15px;font-weight:600;color:{_H_TEXT};'
+            f'line-height:1.4;font-family:{_FONT};">{_esc(_lead)}</p>'
+            f'<p style="margin:0;font-size:13px;color:#666666;line-height:1.5;'
+            f'font-family:{_FONT};">{_esc(_ctx)}</p>'
+            f'</td></tr></table>'
             f'</td></tr>\n'
         )
-    H += '    </table>\n  </td></tr>\n  </table>\n'
+    H += '      </table>\n    </td></tr>\n    </table>\n  </td></tr>\n  </table>\n'
 
     # ── 4. ARTICLE CARDS (alternating two-column, from top_reads) ─────────────
     if reads_display:
