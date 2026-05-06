@@ -14,7 +14,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import parseaddr
 from pathlib import Path
-from urllib.parse import urlencode
+from urllib.parse import urlencode, quote as _url_quote
 
 CONFIG_FILE = Path(__file__).parent.parent / "config.json"
 _LOGO_FILE  = Path(__file__).parent.parent / "assets" / "BSM Logo-01.png"
@@ -85,6 +85,14 @@ _DAILY_GIFS = [
 # ── Shared email renderer ──────────────────────────────────────────────────────
 def _source_color(source: str) -> str:
     return _ACC
+
+
+def _proxy_img(url: str, w: int = 140, h: int = 100) -> str:
+    """Route image through wsrv.nl: enforces HTTPS, center-crops to exact dimensions,
+    and serves from a CDN that email clients won't block."""
+    if not url:
+        return ""
+    return f"https://wsrv.nl/?url={_url_quote(url, safe='')}&w={w}&h={h}&fit=cover&we"
 
 
 def _render_email(brief_data: dict, articles: list, display_date: str,
@@ -281,7 +289,7 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
             _rs  = _esc(_read.get("source",   ""))
             _ru  = _esc(_read.get("url",      "#"))
             _rn  = _esc(_read.get("bsm_note", ""))
-            _img =      _read.get("image",    "")
+            _img =      _proxy_img(_read.get("image", ""))
             _rc  = _source_color(_read.get("source", ""))
             _rn = _rn or "We are monitoring this update to assess its impact on client strategy and performance."
             _note_html = (
