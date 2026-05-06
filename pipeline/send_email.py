@@ -33,8 +33,8 @@ _BDR     = "#E4E4E7"
 _H_TEXT  = "#111111"
 _B_TEXT  = "#666666"
 _M_TEXT  = "#A1A1AA"
-_ACC     = "#E5484D"   # BSM brand red
-_ACC2    = "#C93C40"   # BSM brand red — dark
+_ACC     = "#C42026"   # BSM brand red (primary)
+_ACC2    = "#8B1D1D"   # BSM brand red (dark)
 _FONT    = "-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif"
 _SERIF   = "Lora,Georgia,'Times New Roman',serif"
 
@@ -190,6 +190,7 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
   <tr><td style="padding:0 24px 24px;">
     <table width="100%" cellpadding="0" cellspacing="0"
       style="border:1px solid {_BDR};border-radius:12px;overflow:hidden;">
+    <tr><td colspan="2" style="height:3px;background:{_ACC};padding:0;font-size:0;line-height:0;"></td></tr>
     <tr valign="top">
       <td width="240" style="width:240px;background:{_ACC};
         background-image:url('{_gif_url}');background-size:cover;
