@@ -160,7 +160,7 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400;1,600&display=swap');
-@media only screen and (max-width:600px){{.thumb-img{{width:100% !important;height:auto !important;border-radius:12px 12px 0 0 !important;}}}}</style>
+@media only screen and (max-width:600px){{.thumb-img{{width:100% !important;height:auto !important;border-radius:10px 10px 0 0 !important;}}}}</style>
 </head>
 <body style="margin:0;padding:0;background:{_CANVAS};font-family:{_FONT};">
 <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;opacity:0;">Today: {headline} &mdash; See what Micro SEO should do before noon.</div>
@@ -281,7 +281,7 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
       text-transform:uppercase;letter-spacing:2px;font-family:{_FONT};">Also In Today&rsquo;s Brief</p>
   </td></tr>
 """
-        for _read in reads_display:
+        for _ri, _read in enumerate(reads_display):
             _rt  = _esc(_read.get("title",    ""))
             _rs  = _esc(_read.get("source",   ""))
             _ru  = _esc(_read.get("url",      "#"))
@@ -292,22 +292,30 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
                 f'<p style="margin:0 0 10px;font-size:12px;color:{_B_TEXT};'
                 f'line-height:1.5;font-family:{_FONT};">{_rn}</p>'
             ) if _rn else ""
-            # Image always left, content always right
+            # Two image cell variants — border-radius matches the card corner on each side
             if _img:
-                _left = (
-                    f'<td width="140" style="width:140px;background:#f3f4f6;'
+                _img_left = (
+                    f'<td width="160" style="width:160px;background:#f3f4f6;'
                     f'vertical-align:top;padding:0;font-size:0;line-height:0;">'
-                    f'<img src="{_esc(_img)}" width="140" height="100" alt="Article thumbnail" '
-                    f'class="thumb-img" style="display:block;width:140px;height:100px;'
+                    f'<img src="{_esc(_img)}" width="160" height="120" alt="Article thumbnail" '
+                    f'class="thumb-img" style="display:block;width:160px;height:120px;'
                     f'object-fit:cover;border-radius:10px 0 0 10px;" /></td>'
                 )
+                _img_right = (
+                    f'<td width="160" style="width:160px;background:#f3f4f6;'
+                    f'vertical-align:top;padding:0;font-size:0;line-height:0;">'
+                    f'<img src="{_esc(_img)}" width="160" height="120" alt="Article thumbnail" '
+                    f'class="thumb-img" style="display:block;width:160px;height:120px;'
+                    f'object-fit:cover;border-radius:0 10px 10px 0;" /></td>'
+                )
             else:
-                _left = (
-                    f'<td width="140" style="width:140px;background:#f3f4f6;vertical-align:top;'
+                _img_left = (
+                    f'<td width="160" style="width:160px;background:#f3f4f6;vertical-align:top;'
                     f'font-size:0;line-height:0;">&nbsp;</td>'
                 )
-            _right = (
-                f'<td valign="top" style="border-left:1px solid {_BDR};padding:16px 18px;vertical-align:top;">'
+                _img_right = _img_left
+            _text_cell = (
+                f'<td valign="top" style="padding:16px;vertical-align:top;">'
                 f'<p style="margin:0 0 6px;font-size:10px;font-weight:700;color:{_rc};'
                 f'text-transform:uppercase;letter-spacing:1.5px;font-family:{_FONT};">{_rs}</p>'
                 f'<p style="margin:0 0 8px;font-size:14px;font-weight:700;color:{_H_TEXT};'
@@ -319,6 +327,18 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
                 f'font-family:{_FONT};">Keep Reading &rarr;</a>'
                 f'</td>'
             )
+            if _ri % 2 == 0:
+                _left  = _img_left
+                _right = _text_cell.replace(
+                    'style="padding:16px;',
+                    f'style="border-left:1px solid {_BDR};padding:16px;',
+                )
+            else:
+                _left  = _text_cell.replace(
+                    'style="padding:16px;',
+                    f'style="border-right:1px solid {_BDR};padding:16px;',
+                )
+                _right = _img_right
             H += (
                 f'  <tr><td style="padding:0 24px 16px;">'
                 f'<table width="100%" cellpadding="0" cellspacing="0" '
