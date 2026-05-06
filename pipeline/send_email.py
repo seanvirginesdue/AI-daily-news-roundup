@@ -159,7 +159,8 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<style>@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400;1,600&display=swap');</style>
+<style>@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400;1,600&display=swap');
+@media only screen and (max-width:600px){{.thumb-img{{width:100% !important;height:auto !important;}}}}</style>
 </head>
 <body style="margin:0;padding:0;background:{_CANVAS};font-family:{_FONT};">
 <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;opacity:0;">Today: {headline} &mdash; See what Micro SEO should do before noon.</div>
@@ -312,17 +313,18 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
                 f'line-height:1.5;font-family:{_FONT};">{_rn}</p>'
             ) if _rn else ""
             if _img:
-                _cell_bg = (
-                    f'background:#f3f4f6;'
-                    f'background-image:url(\'{_esc(_img)}\');'
-                    f'background-size:cover;background-position:center;background-repeat:no-repeat;'
+                _color_cell = (
+                    f'<td width="200" style="width:200px;background:#f3f4f6;'
+                    f'vertical-align:top;padding:0;font-size:0;line-height:0;">'
+                    f'<img src="{_esc(_img)}" width="200" height="150" alt="Article thumbnail" '
+                    f'class="thumb-img" '
+                    f'style="display:block;width:200px;height:150px;object-fit:cover;" /></td>'
                 )
             else:
-                _cell_bg = 'background:#f3f4f6;'
-            _color_cell = (
-                f'<td width="200" style="width:200px;{_cell_bg}vertical-align:top;'
-                f'font-size:0;line-height:0;">&nbsp;</td>'
-            )
+                _color_cell = (
+                    f'<td width="200" style="width:200px;background:#f3f4f6;vertical-align:top;'
+                    f'font-size:0;line-height:0;">&nbsp;</td>'
+                )
             _text_cell = (
                 f'<td valign="top" style="padding:20px;vertical-align:top;">'
                 f'<p style="margin:0 0 8px;font-size:10px;font-weight:700;color:{_rc};'
