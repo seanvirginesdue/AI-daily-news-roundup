@@ -283,10 +283,11 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
             _rn  = _esc(_read.get("bsm_note", ""))
             _img =      _read.get("image",    "")
             _rc  = _source_color(_read.get("source", ""))
+            _rn = _rn or "We are monitoring this update to assess its impact on client strategy and performance."
             _note_html = (
                 f'<p style="margin:0 0 10px;font-size:12px;color:{_B_TEXT};'
-                f'line-height:1.5;font-family:{_FONT};">{_rn}</p>'
-            ) if _rn else ""
+                f'line-height:1.5;min-height:38px;font-family:{_FONT};">{_rn}</p>'
+            )
             # Two image cell variants — border-radius matches the card corner on each side
             if _img:
                 _img_left = (
