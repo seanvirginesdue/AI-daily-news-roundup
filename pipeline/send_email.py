@@ -313,25 +313,15 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
             ) if _rn else ""
             if _img:
                 _cell_bg = (
-                    f'background:{_rc};'
+                    f'background:#f3f4f6;'
                     f'background-image:url(\'{_esc(_img)}\');'
                     f'background-size:cover;background-position:center;background-repeat:no-repeat;'
                 )
-                _inner_open  = '<div style="background:rgba(0,0,0,0.28);padding:28px 18px;">'
-                _inner_close = '</div>'
             else:
-                _cell_bg     = f'background:{_rc};padding:28px 18px;'
-                _inner_open  = _inner_close = ''
+                _cell_bg = 'background:#f3f4f6;'
             _color_cell = (
-                f'<td width="200" valign="top" style="width:200px;{_cell_bg}vertical-align:top;">'
-                f'{_inner_open}'
-                f'<p style="margin:0 0 8px;font-size:10px;font-weight:700;'
-                f'color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:1.5px;'
-                f'font-family:{_FONT};">{_rs}</p>'
-                f'<p style="margin:0;font-size:32px;color:rgba(255,255,255,0.18);'
-                f'font-family:{_SERIF};">&#9670;</p>'
-                f'{_inner_close}'
-                f'</td>'
+                f'<td width="200" style="width:200px;{_cell_bg}vertical-align:top;'
+                f'font-size:0;line-height:0;">&nbsp;</td>'
             )
             _text_cell = (
                 f'<td valign="top" style="padding:20px;vertical-align:top;">'
