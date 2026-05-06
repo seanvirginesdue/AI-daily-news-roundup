@@ -160,7 +160,7 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400;1,600&display=swap');
-@media only screen and (max-width:600px){{.thumb-img{{width:100% !important;height:auto !important;}}}}</style>
+@media only screen and (max-width:600px){{.thumb-img{{width:100% !important;height:auto !important;border-radius:10px 10px 0 0 !important;}}}}</style>
 </head>
 <body style="margin:0;padding:0;background:{_CANVAS};font-family:{_FONT};">
 <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;opacity:0;">Today: {headline} &mdash; See what Micro SEO should do before noon.</div>
@@ -289,27 +289,36 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
             _img =      _read.get("image",    "")
             _rc  = _source_color(_read.get("source", ""))
             _note_html = (
-                f'<p style="margin:0 0 12px;font-size:12px;color:{_B_TEXT};'
+                f'<p style="margin:0 0 10px;font-size:12px;color:{_B_TEXT};'
                 f'line-height:1.5;font-family:{_FONT};">{_rn}</p>'
             ) if _rn else ""
+            # Two image cell variants — border-radius matches the card corner on each side
             if _img:
-                _color_cell = (
-                    f'<td width="200" style="width:200px;background:#f3f4f6;'
+                _img_left = (
+                    f'<td width="160" style="width:160px;background:#f3f4f6;'
                     f'vertical-align:top;padding:0;font-size:0;line-height:0;">'
-                    f'<img src="{_esc(_img)}" width="200" height="150" alt="Article thumbnail" '
-                    f'class="thumb-img" '
-                    f'style="display:block;width:200px;height:150px;object-fit:cover;" /></td>'
+                    f'<img src="{_esc(_img)}" width="160" height="120" alt="Article thumbnail" '
+                    f'class="thumb-img" style="display:block;width:160px;height:120px;'
+                    f'object-fit:cover;border-radius:10px 0 0 10px;" /></td>'
+                )
+                _img_right = (
+                    f'<td width="160" style="width:160px;background:#f3f4f6;'
+                    f'vertical-align:top;padding:0;font-size:0;line-height:0;">'
+                    f'<img src="{_esc(_img)}" width="160" height="120" alt="Article thumbnail" '
+                    f'class="thumb-img" style="display:block;width:160px;height:120px;'
+                    f'object-fit:cover;border-radius:0 10px 10px 0;" /></td>'
                 )
             else:
-                _color_cell = (
-                    f'<td width="200" style="width:200px;background:#f3f4f6;vertical-align:top;'
+                _img_left = (
+                    f'<td width="160" style="width:160px;background:#f3f4f6;vertical-align:top;'
                     f'font-size:0;line-height:0;">&nbsp;</td>'
                 )
+                _img_right = _img_left
             _text_cell = (
-                f'<td valign="top" style="padding:20px;vertical-align:top;">'
-                f'<p style="margin:0 0 8px;font-size:10px;font-weight:700;color:{_rc};'
+                f'<td valign="top" style="padding:16px;vertical-align:top;">'
+                f'<p style="margin:0 0 6px;font-size:10px;font-weight:700;color:{_rc};'
                 f'text-transform:uppercase;letter-spacing:1.5px;font-family:{_FONT};">{_rs}</p>'
-                f'<p style="margin:0 0 10px;font-size:15px;font-weight:700;color:{_H_TEXT};'
+                f'<p style="margin:0 0 8px;font-size:14px;font-weight:700;color:{_H_TEXT};'
                 f'line-height:1.35;font-family:{_SERIF};">'
                 f'<a href="{_ru}" target="_blank" style="color:{_H_TEXT};text-decoration:none;">{_rt}</a></p>'
                 f'{_note_html}'
@@ -319,17 +328,17 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
                 f'</td>'
             )
             if _ri % 2 == 0:
-                _left  = _color_cell
+                _left  = _img_left
                 _right = _text_cell.replace(
-                    'style="padding:20px;',
-                    f'style="border-left:1px solid {_BDR};padding:20px;',
+                    'style="padding:16px;',
+                    f'style="border-left:1px solid {_BDR};padding:16px;',
                 )
             else:
                 _left  = _text_cell.replace(
-                    'style="padding:20px;',
-                    f'style="border-right:1px solid {_BDR};padding:20px;',
+                    'style="padding:16px;',
+                    f'style="border-right:1px solid {_BDR};padding:16px;',
                 )
-                _right = _color_cell
+                _right = _img_right
             H += (
                 f'  <tr><td style="padding:0 24px 16px;">'
                 f'<table width="100%" cellpadding="0" cellspacing="0" '
