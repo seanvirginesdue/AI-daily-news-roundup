@@ -179,8 +179,7 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
       <td>
         <span style="font-size:18px;font-weight:900;color:#ffffff;font-family:{_FONT};letter-spacing:-0.3px;">Micro</span><span
-          style="font-size:18px;font-style:italic;font-weight:400;color:rgba(255,255,255,0.80);font-family:{_SERIF};">&nbsp;SEO</span>&nbsp;&nbsp;<span
-          style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.45);font-family:{_FONT};letter-spacing:1px;">{_esc(issue)}</span>
+          style="font-size:18px;font-style:italic;font-weight:400;color:rgba(255,255,255,0.80);font-family:{_SERIF};">&nbsp;SEO</span>
       </td>
       <td align="right">
         <span style="display:inline-block;background:rgba(0,0,0,0.22);color:#ffffff;
