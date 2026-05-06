@@ -361,16 +361,6 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
         <p style="margin:0 0 3px;font-size:12px;color:rgba(255,255,255,0.45);font-family:{_FONT};">AI-powered daily intelligence for the team</p>
         <p style="margin:0;font-size:12px;color:rgba(255,255,255,0.30);font-family:{_FONT};">Boulder, Colorado &nbsp;&middot;&nbsp; boulderseomarketing.com &nbsp;&middot;&nbsp; {_esc(display_date)}</p>
       </td>
-      <td valign="top" align="right">
-        <p style="margin:0 0 6px;font-size:12px;font-family:{_FONT};">
-          <a href="mailto:sean@boulderseomarketing.com?subject=Unsubscribe"
-            style="color:rgba(255,255,255,0.45);text-decoration:underline;">Unsubscribe</a>
-        </p>
-        <p style="margin:0;font-size:12px;font-family:{_FONT};">
-          <a href="{_esc(prefs_url)}"
-            style="color:rgba(255,255,255,0.45);text-decoration:underline;">Manage Preferences</a>
-        </p>
-      </td>
     </tr></table>
     <p style="margin:16px 0 0;font-size:12px;color:rgba(255,255,255,0.25);font-family:{_FONT};">Reply to share feedback or flag a story for the team.</p>
   </td></tr>
