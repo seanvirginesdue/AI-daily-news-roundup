@@ -135,8 +135,7 @@ def _is_logo_or_icon(url: str) -> bool:
 
 
 def _validate_img_url(url: str, referer: str = "") -> bool:
-    """Return False only when the URL is definitively not an image (404 or confirmed wrong type).
-    Keep images that return 403/timeout — CDN bot-blocking doesn't mean email clients can't load them."""
+    """Return True if url is publicly accessible and returns an image."""
     if not url or not url.startswith("http"):
         return False
     if _is_logo_or_icon(url):
@@ -149,19 +148,15 @@ def _validate_img_url(url: str, referer: str = "") -> bool:
         r = _req.head(url, headers=hdrs, timeout=3, allow_redirects=True)
         if r.status_code == 405:
             r = _req.get(url, headers=hdrs, timeout=3, allow_redirects=True, stream=True)
-        if r.status_code == 404:
+        if r.status_code != 200:
             return False
-        if r.status_code == 200:
-            ct = r.headers.get("content-type", "")
-            if ct and not ct.startswith("image/"):
-                return any(
-                    url.lower().split("?")[0].endswith(ext)
-                    for ext in (".jpg", ".jpeg", ".png", ".webp", ".gif")
-                )
-        # 403, 5xx, redirect chains — keep the URL, email clients may load it fine
-        return True
+        ct = r.headers.get("content-type", "")
+        return ct.startswith("image/") or any(
+            url.lower().split("?")[0].endswith(ext)
+            for ext in (".jpg", ".jpeg", ".png", ".webp", ".gif")
+        )
     except Exception:
-        return True  # network error ≠ broken image
+        return False
 
 
 def _picsum_fallback(source: str) -> str:
@@ -197,25 +192,22 @@ def _fetch_og_image(url: str) -> str:
 
     import requests as _req
 
-    _html = ""
+    # Step 1: follow redirects to get the real article URL
     article_url = url
-
-    # Step 1: fetch article page, parse og:image / twitter:image
     try:
         r = _req.get(url, headers=_BROWSER_HEADERS, timeout=4, allow_redirects=True)
+        # If we're no longer on google.com we have the real article URL
         if "google.com" not in r.url and r.status_code == 200:
             article_url = r.url
-            _html = r.content[:131072].decode("utf-8", errors="ignore")
-            img = _parse_og(_html)
+            img = _parse_og(r.content[:131072].decode("utf-8", errors="ignore"))
             if img:
                 return img
     except Exception as e:
         print(f"  [IMG] {type(e).__name__} fetching {url[:70]}")
 
+    # Step 2: Microlink with the resolved (non-Google) URL
     if "google.com" in article_url:
-        return ""
-
-    # Step 2: Microlink metadata API
+        return ""   # couldn't resolve past Google — skip rather than return Google logo
     try:
         api = "https://api.microlink.io/?url=" + urllib.parse.quote(article_url, safe="")
         r = _req.get(api, timeout=5)
@@ -226,13 +218,6 @@ def _fetch_og_image(url: str) -> str:
                 return src
     except Exception:
         pass
-
-    # Step 3: first sizeable <img> in the article body (skips icons/logos)
-    if _html:
-        for m in re.finditer(r'<img\b[^>]+\bsrc=["\']([^"\']{40,})["\']', _html, re.IGNORECASE):
-            src = _clean_img_url(m.group(1))
-            if src.startswith("http") and not _is_logo_or_icon(src) and not src.startswith("data:"):
-                return src
 
     return ""
 
@@ -323,6 +308,17 @@ def fetch_articles() -> list[dict]:
                     art = val_futures[fut]
                     print(f"  [IMG] Blocked/invalid, clearing: {art['image'][:70]}")
                     art["image"] = ""
+
+    # Resolve seeded picsum fallback for articles still without an image
+    still_missing = [a for a in collected if not a["image"]]
+    if still_missing:
+        print(f"  [IMG] Resolving picsum fallbacks for {len(still_missing)} article(s)...")
+        with ThreadPoolExecutor(max_workers=6) as pool:
+            fb_futures = {pool.submit(_picsum_fallback, a["source"]): a for a in still_missing}
+            for fut in as_completed(fb_futures):
+                img = fut.result()
+                if img:
+                    fb_futures[fut]["image"] = img
 
     return collected
 
