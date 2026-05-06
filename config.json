@@ -51,6 +51,31 @@
         "email": "sean@boulderseomarketing.com",
         "tier": 1,
         "preferences": {"marketing": true, "development": true}
+      },
+      {
+        "first_name": "Harold",
+        "email": "harold@boulderseomarketing.com",
+        "tier": 1
+      },
+      {
+        "first_name": "Greg",
+        "email": "greg@boulderseomarketing.com",
+        "tier": 2
+      },
+      {
+        "first_name": "Barb",
+        "email": "barb@boulderseomarketing.com",
+        "tier": 2
+      },
+      {
+        "first_name": "Kathleen",
+        "email": "kathleen@boulderseomarketing.com",
+        "tier": 2
+      },
+      {
+        "first_name": "Jam",
+        "email": "jam@boulderseomarketing.com",
+        "tier": 2
       }
       
     ],
