@@ -138,7 +138,8 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
         if _u in _used:
             continue
         reads_display.append({"title": _a["title"], "source": _a["source"], "url": _u,
-                              "bsm_note": "", "image": _a.get("image", "")})
+                              "bsm_note": "", "content": _a.get("content", ""),
+                              "image": _a.get("image", "")})
         _used.add(_u)
     reads_display = reads_display[:3]
 
@@ -295,7 +296,9 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
                          .replace(" ", "-").replace("/", "-")[:20] or "tech")
                 _img = f"https://picsum.photos/seed/{_seed}/280/180"
             _rc  = _source_color(_read.get("source", ""))
-            _rn  = _rn or "We are monitoring this update to assess its impact on client strategy and performance."
+            if not _rn:
+                _raw_content = _read.get("content", "") or ""
+                _rn = _esc(_raw_content[:180].rsplit(" ", 1)[0] + "…") if len(_raw_content) > 160 else _esc(_raw_content)
             _pb  = "28px" if _i < len(reads_display) - 1 else "16px"
 
             _img_td = (

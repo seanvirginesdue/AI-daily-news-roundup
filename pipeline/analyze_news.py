@@ -333,10 +333,21 @@ def generate_subject(brief_data, display_date: str) -> str:
         headline = brief_data.get("top_story", {}).get("headline", "")
         context  = f"Headline: {headline}"
     else:
+        headline = ""
         context = str(brief_data)[:400]
-    system = "You write short, curiosity-driven email subject lines. Under 8 words. No emojis. No quotes."
+    system = "You write short, curiosity-driven email subject lines. Under 8 words. No emojis. No quotes. Reply with ONLY the subject line — no labels, no date, no prefix."
     user   = f"Write one email subject line for the BSM AI newsletter ({display_date}).\n{context}"
-    return _call(system, user)
+    try:
+        raw = _call(system, user)
+    except Exception:
+        raw = ""
+    lines = [l.strip() for l in raw.splitlines() if l.strip()]
+    subject = lines[-1] if lines else ""
+    if subject.lower().startswith("subject:"):
+        subject = subject[8:].strip()
+    if not subject:
+        subject = headline[:60] if headline else f"BSM AI Brief — {display_date}"
+    return subject
 
 
 def generate_prompt_of_the_day() -> dict:
