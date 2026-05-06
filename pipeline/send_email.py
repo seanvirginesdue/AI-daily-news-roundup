@@ -134,8 +134,7 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
         _used.add(_u)
     reads_display = reads_display[:3]
 
-    move_colors = {"pitch": _GREEN, "build": _ACC, "kill": _RED}
-    move_labels = {"pitch": "PITCH", "build": "BUILD", "kill": "KILL"}
+
     issue = _issue_num()
     try:
         from datetime import datetime as _dt
