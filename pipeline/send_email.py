@@ -260,23 +260,10 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
   </table>
 """
 
-    # ── 3. WHAT THIS MEANS FOR BOULDER SEO MARKETING (directly under hero) ───────
-    _bsm_moves = [
-        (
-            "Rolling out GEO readiness audits",
-            "identifying AI visibility gaps across client content to maintain competitive rankings.",
-        ),
-        (
-            "Expanding virtual agent knowledge systems",
-            "improving how AI interprets and surfaces client information for better engagement.",
-        ),
-        (
-            "Removing approval bottlenecks",
-            "accelerating execution to respond faster to AI-driven search changes.",
-        ),
-    ]
-    _shown_moves = _bsm_moves[:max_moves]
-    H += f"""
+    # ── 3. WHAT THIS MEANS FOR BOULDER SEO MARKETING (dynamic from AI brief) ────
+    _shown_moves = tms[:max_moves]
+    if _shown_moves:
+        H += f"""
   <table width="100%" cellpadding="0" cellspacing="0"
     style="background:{_WHITE};border-top:1px solid {_BDR};">
   <tr><td class="sp" style="padding:20px 24px 20px;">
@@ -287,22 +274,24 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
     <tr><td style="border-left:3px solid {_ACC};padding-left:12px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
 """
-    for _i, (_lead, _ctx) in enumerate(_shown_moves):
-        _pb = "14px" if _i < len(_shown_moves) - 1 else "0"
-        H += (
-            f'      <tr><td style="padding-bottom:{_pb};">'
-            f'<table width="100%" cellpadding="0" cellspacing="0"><tr>'
-            f'<td width="14" valign="top" style="font-size:18px;font-weight:700;'
-            f'color:{_ACC};line-height:1.2;padding-right:6px;font-family:{_FONT};">&#8226;</td>'
-            f'<td valign="top">'
-            f'<p style="margin:0 0 3px;font-size:15px;font-weight:600;color:{_H_TEXT};'
-            f'line-height:1.4;font-family:{_FONT};">{_esc(_lead)}</p>'
-            f'<p style="margin:0;font-size:13px;color:#666666;line-height:1.5;'
-            f'font-family:{_FONT};">{_esc(_ctx)}</p>'
-            f'</td></tr></table>'
-            f'</td></tr>\n'
-        )
-    H += '      </table>\n    </td></tr>\n    </table>\n  </td></tr>\n  </table>\n'
+        for _i, _mv in enumerate(_shown_moves):
+            _pb   = "14px" if _i < len(_shown_moves) - 1 else "0"
+            _lead = _mv.get("title", "")
+            _ctx  = _mv.get("description", "")
+            H += (
+                f'      <tr><td style="padding-bottom:{_pb};">'
+                f'<table width="100%" cellpadding="0" cellspacing="0"><tr>'
+                f'<td width="14" valign="top" style="font-size:18px;font-weight:700;'
+                f'color:{_ACC};line-height:1.2;padding-right:6px;font-family:{_FONT};">&#8226;</td>'
+                f'<td valign="top">'
+                f'<p style="margin:0 0 3px;font-size:15px;font-weight:600;color:{_H_TEXT};'
+                f'line-height:1.4;font-family:{_FONT};">{_esc(_lead)}</p>'
+                f'<p style="margin:0;font-size:13px;color:#666666;line-height:1.5;'
+                f'font-family:{_FONT};">{_esc(_ctx)}</p>'
+                f'</td></tr></table>'
+                f'</td></tr>\n'
+            )
+        H += '      </table>\n    </td></tr>\n    </table>\n  </td></tr>\n  </table>\n'
 
     # ── 4. EDITORIAL GRID (alternating image-left / image-right) ─────────────
     if reads_display:
