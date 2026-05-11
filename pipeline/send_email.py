@@ -70,17 +70,6 @@ def _prefs_url(email: str) -> str:
         return f"mailto:{email}?subject=Manage+Preferences"
 
 
-# Daily-rotating GIFs — one per day, cycles through the list (all verified)
-_DAILY_GIFS = [
-    ("https://media.giphy.com/media/DrJm6F9poo4aA/giphy.gif",        "Wake up coffee"),
-    ("https://media.giphy.com/media/tD2jaMOEBFXel9Yp5Z/giphy.gif",   "Let's go work"),
-    ("https://media.giphy.com/media/dxJ80m2xjh9TlqwzDi/giphy.gif",   "Monday motivation"),
-    ("https://media.giphy.com/media/oQIwgd77gZJtuwBcxQ/giphy.gif",   "Typing fast"),
-    ("https://media.giphy.com/media/sfxlOSTXORjOobH2QG/giphy.gif",   "High five"),
-    ("https://media.giphy.com/media/UKF08uKqWch0Y/giphy.gif",        "This is fine"),
-    ("https://media.giphy.com/media/U4DswrBiaz0p67ZweH/giphy.gif",   "Celebration"),
-]
-
 
 # ── Shared email renderer ──────────────────────────────────────────────────────
 def _source_color(source: str) -> str:
@@ -105,8 +94,6 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
     headline   = _esc(ts.get("headline", "Today's top AI story"))
     subtext    = _esc(ts.get("subtext", ""))
     field_note = _esc(ts.get("field_note", ""))
-
-    _gif_url, _gif_alt = _DAILY_GIFS[_date.today().toordinal() % len(_DAILY_GIFS)]
 
     # Resolve article URLs — match by title first, fall back to index
     top_reads = brief_data.get("top_reads", [])
@@ -218,7 +205,7 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
   </table>
 """
 
-    # ── 2. HERO: two-column (GIF left + story right) ───────────────────────────
+    # ── 2. HERO ────────────────────────────────────────────────────────────────
     H += f"""
   <table width="100%" cellpadding="0" cellspacing="0" style="background:{_WHITE};">
   <tr><td class="hero-lbl sp" style="padding:20px 24px 12px;">
@@ -228,13 +215,9 @@ def _render_email(brief_data: dict, articles: list, display_date: str,
   <tr><td class="hero-wrap sp" style="padding:0 24px 24px;">
     <table width="100%" cellpadding="0" cellspacing="0"
       style="border:1px solid {_BDR};border-radius:12px;overflow:hidden;">
-    <tr><td colspan="2" style="height:3px;background:{_ACC};padding:0;font-size:0;line-height:0;"></td></tr>
-    <tr valign="top">
-      <td width="40%" style="width:40%;background:{_ACC};
-        background-image:url('{_gif_url}');background-size:cover;
-        background-position:center;padding:0;vertical-align:top;
-        font-size:0;line-height:0;min-height:160px;">&nbsp;</td>
-      <td class="hero-txt" valign="top" style="padding:20px;border-left:1px solid {_BDR};vertical-align:top;">
+    <tr><td style="height:3px;background:{_ACC};padding:0;font-size:0;line-height:0;"></td></tr>
+    <tr>
+      <td class="hero-txt" valign="top" style="padding:20px;vertical-align:top;">
         <p style="margin:0 0 12px;font-size:17px;font-weight:700;color:{_H_TEXT};
           line-height:1.3;font-family:{_SERIF};">
           <a href="{_esc(top_url)}" target="_blank"
