@@ -76,8 +76,13 @@
         "first_name": "Jam",
         "email": "jam@boulderseomarketing.com",
         "tier": 2
+      },
+      {
+        "first_name": "Daniel",
+        "email": "daniel@boulderseomarketing.com",
+        "tier": 2
       }
-      
+
     ],
     "smtp_host": "smtp.gmail.com",
     "smtp_port": 587
